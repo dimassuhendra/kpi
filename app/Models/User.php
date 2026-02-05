@@ -17,12 +17,22 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'role', 'division_id'];
 
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(KpiSubmission::class);
+    }
+
+    public function isManager()
+    {
+        return $this->role === 'manager';
+    }
     /**
      * The attributes that should be hidden for serialization.
      *
