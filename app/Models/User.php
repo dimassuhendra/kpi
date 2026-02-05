@@ -55,4 +55,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function kpiSubmissions()
+    {
+        return $this->hasMany(KpiSubmission::class, 'user_id');
+    }
 }

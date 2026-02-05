@@ -16,7 +16,7 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#6366f1', // Indigo untuk Manager
+                        primary: '#6366f1',
                         secondary: '#0f172a',
                         accent: '#818cf8',
                         darkCard: '#1e293b',
@@ -53,13 +53,8 @@
             transition: all 0.3s ease;
         }
 
-        .organic-card:hover {
-            border-radius: 15px 40px 15px 40px;
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
-        }
-
         .glass-nav {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -83,11 +78,11 @@
 
         .nav-link:hover::after,
         .nav-link.active::after {
-            width: 80%;
+            width: 60%;
         }
 
         #mobile-menu {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s ease;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
@@ -101,119 +96,124 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
-    <nav class="glass-nav text-white sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 transition-all duration-300" id="nav-content">
-                <div class="flex items-center">
-                    <a href="{{ route('manager.dashboard') }}" class="flex-shrink-0 flex items-center group">
-                        <img class="h-10 w-auto md:h-12 logo-silhouette group-hover:rotate-12 transition-transform"
-                            src="{{ asset('img/logo.png') }}" alt="Logo">
-                    </a>
+    {{-- NAV FULL WIDTH --}}
+    <nav class="glass-nav text-white sticky top-0 z-50 w-full px-6 lg:px-12">
+        <div class="flex justify-between h-20 items-center">
 
-                    <div class="hidden lg:ml-10 lg:flex lg:space-x-2">
-                        <a href="{{ route('manager.dashboard') }}"
-                            class="nav-link {{ request()->is('manager/dashboard') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
-                            <i class="fas fa-chart-pie mr-1"></i> Overview
-                        </a>
+            {{-- Brand & Desktop Menu --}}
+            <div class="flex items-center gap-8">
+                <a href="{{ route('manager.dashboard') }}" class="flex-shrink-0 flex items-center group">
+                    <img class="h-10 w-auto logo-silhouette group-hover:rotate-12 transition-transform"
+                        src="{{ asset('img/logo.png') }}" alt="Logo">
+                    <span class="ml-3 font-header font-bold text-xl tracking-tighter text-white">MYBOLO <span class="text-primary italic">CONSOLE</span></span>
+                </a>
 
-                        <a href="{{ route('manager.approval.index') }}"
-                            class="nav-link {{ request()->is('manager/approval*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
-                            <i class="fas fa-check-double mr-1"></i> Approval Team
-                        </a>
-
-                        <a href="{{ route('manager.analytics.index') }}"
-                            class="nav-link {{ request()->is('manager/analytics*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
-                            <i class="fas fa-chart-line mr-1"></i> Analisa Mendalam
-                        </a>
-
-                        <a href="{{ route('manager.variables.index') }}"
-                            class="nav-link {{ request()->is('manager/variables*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
-                            <i class="fas fa-sliders-h mr-1"></i> Variabel KPI
-                        </a>
-
-                        <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
-                            <i class="fas fa-users-cog mr-1"></i> Staff IT
-                        </a>
-                    </div>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-4">
-                    <div class="flex flex-col items-end mr-2 text-right">
-                        <span class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold leading-none">Manager {{ Auth::user()->division->name }}</span>
-                        <span class="text-sm font-header font-semibold text-slate-200">{{ Auth::user()->name }}</span>
-                    </div>
-
-                    <div class="relative group">
-                        <div class="w-11 h-11 bg-gradient-to-tr from-primary to-indigo-800 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg transition-all group-hover:scale-110">
-                            <i class="fas fa-user-shield text-xl text-white"></i>
-                        </div>
-                    </div>
-
-                    <div class="h-8 w-[1px] bg-white/10 mx-2"></div>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="group flex items-center justify-center w-11 h-11 bg-red-500/10 hover:bg-red-500 rounded-2xl transition-all duration-300">
-                            <i class="fas fa-power-off text-red-500 group-hover:text-white"></i>
-                        </button>
-                    </form>
-                </div>
-
-                <div class="flex items-center lg:hidden">
-                    <button id="menu-btn" class="inline-flex items-center justify-center p-2 rounded-2xl bg-white/5 hover:bg-white/10 focus:outline-none">
-                        <i id="menu-icon" class="fas fa-bars-staggered text-xl text-primary"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5">
-            <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5">
-                <div class="px-4 pt-4 pb-8 space-y-2">
+                {{-- Desktop Nav with Professional Copywriting --}}
+                <div class="hidden lg:flex lg:space-x-1 items-center">
                     <a href="{{ route('manager.dashboard') }}"
-                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }}">
-                        <i class="fas fa-home mr-3"></i> Dashboard Manager
+                        class="nav-link {{ request()->is('manager/dashboard') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-layer-group mr-2 text-xs"></i> Overview
                     </a>
 
                     <a href="{{ route('manager.approval.index') }}"
-                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
-                        <i class="fas fa-check-circle mr-3"></i> Approval
+                        class="nav-link {{ request()->is('manager/approval*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all relative">
+                        <i class="fas fa-shield-check mr-2 text-xs"></i> Validation Center
+                        @php $pending = \App\Models\KpiSubmission::where('status', 'pending')->count(); @endphp
+                        @if($pending > 0)
+                        <span class="ml-2 bg-primary text-[9px] px-1.5 py-0.5 rounded-md text-white animate-pulse">{{ $pending }}</span>
+                        @endif
                     </a>
 
                     <a href="{{ route('manager.analytics.index') }}"
-                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/analytics*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
-                        <i class="fas fa-chart-line mr-3"></i> Analisa Mendalam
+                        class="nav-link {{ request()->is('manager/analytics*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-chart-line mr-2 text-xs"></i> Performance Insights
                     </a>
 
                     <a href="{{ route('manager.variables.index') }}"
-                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
-                        <i class="fas fa-sliders-h mr-3"></i> Variabel KPI
+                        class="nav-link {{ request()->is('manager/variables*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-sliders-h mr-2 text-xs"></i> KPI Configurator
                     </a>
 
-                    <form action="{{ route('logout') }}" method="POST" class="pt-4">
-                        @csrf
-                        <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Keluar Sistem
-                        </button>
-                    </form>
+                    <a href="{{ route('manager.reports.index') }}"
+                        class="nav-link {{ request()->is('manager/reports*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-file-invoice mr-2 text-xs"></i> Executive Summary
+                    </a>
+
+                    <a href="#" {{-- Nanti arahkan ke route staff --}}
+                        class="nav-link {{ request()->is('manager/staff*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-user-plus mr-2 text-xs"></i> Team Directory
+                    </a>
                 </div>
+            </div>
+
+            {{-- Right Side Profile --}}
+            <div class="hidden md:flex items-center space-x-4">
+                <div class="flex flex-col items-end mr-2 text-right">
+                    <span class="text-[9px] uppercase tracking-[0.2em] text-primary font-bold leading-none mb-1">Manager Access</span>
+                    <span class="text-sm font-header font-semibold text-slate-200">{{ Auth::user()->name }}</span>
+                </div>
+
+                <div class="w-10 h-10 bg-gradient-to-tr from-primary/20 to-primary/5 rounded-xl flex items-center justify-center border border-white/10 shadow-inner group">
+                    <i class="fas fa-user-shield text-primary group-hover:scale-110 transition-transform"></i>
+                </div>
+
+                <div class="h-6 w-[1px] bg-white/10"></div>
+
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all duration-300">
+                        <i class="fas fa-power-off text-sm"></i>
+                    </button>
+                </form>
+            </div>
+
+            {{-- Mobile Toggle --}}
+            <div class="flex items-center lg:hidden">
+                <button id="menu-btn" class="p-2 rounded-xl bg-white/5 text-primary">
+                    <i id="menu-icon" class="fas fa-bars-staggered text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile Menu --}}
+        <div id="mobile-menu" class="lg:hidden">
+            <div class="py-6 space-y-1">
+                <a href="{{ route('manager.dashboard') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-home w-8"></i> Overview
+                </a>
+                <a href="{{ route('manager.approval.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-check-circle w-8"></i> Validation Center
+                </a>
+                <a href="{{ route('manager.analytics.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/analytics*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-chart-line w-8"></i> Performance Insights
+                </a>
+                <a href="{{ route('manager.variables.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-cogs w-8"></i> KPI Configurator
+                </a>
+                <a href="{{ route('manager.reports.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/reports*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-file-alt w-8"></i> Executive Summary
+                </a>
+                <form action="{{ route('logout') }}" method="POST" class="pt-4 px-4">
+                    @csrf
+                    <button type="submit" class="w-full py-3 rounded-2xl bg-red-500/10 text-red-500 font-bold border border-red-500/20">
+                        Logout Session
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
 
+    {{-- CONTENT --}}
     <main class="flex-grow">
-        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="min-h-[70vh]">
-                @yield('content')
-            </div>
+        <div class="max-w-[1600px] mx-auto py-10 px-6 lg:px-12">
+            @yield('content')
         </div>
     </main>
 
-    <footer class="p-8 text-center bg-secondary/50">
-        <div class="max-w-7xl mx-auto border-t border-white/5 pt-8">
-            <p class="text-slate-600 text-sm font-medium italic">
-                &copy; 2026 <span class="text-primary font-bold">MyBolo Console</span> • Manager Access •
-            </p>
-        </div>
+    <footer class="p-8 text-center bg-secondary/30">
+        <p class="text-slate-600 text-xs font-medium italic uppercase tracking-widest">
+            &copy; 2026 <span class="text-primary font-bold">MyBolo Console</span> • Manager Intelligence Interface
+        </p>
     </footer>
 
     <script>

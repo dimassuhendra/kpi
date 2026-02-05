@@ -13,6 +13,8 @@ use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\ApprovalController;
 use App\Http\Controllers\Manager\AnalyticsController;
 use App\Http\Controllers\Manager\VariableController;
+use App\Http\Controllers\Manager\ReportController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
@@ -47,4 +49,8 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('/variables/update-weights', [VariableController::class, 'updateWeights'])->name('variables.updateWeights');
     Route::post('/variables/auto-avg', [VariableController::class, 'autoAverage'])->name('variables.autoAverage');
     Route::delete('/variables/{id}', [VariableController::class, 'destroy'])->name('variables.destroy');
+    // Export & Reporting
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
+    Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 });
