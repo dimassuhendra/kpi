@@ -24,38 +24,39 @@ class KpiController extends Controller
     {
         $request->validate([
             'tickets.*.number' => 'required',
-            'tickets.*.time' => 'required|numeric',
+            // 'time' tidak lagi required strictly numeric jika dipaksa 0 di backend
         ]);
 
         DB::beginTransaction();
         try {
-            // 1. Simpan Header Penilaian
             $submission = KpiSubmission::create([
                 'user_id' => Auth::id(),
                 'assessment_date' => now(),
                 'status' => 'pending',
-                'total_final_score' => 0, // Akan dihitung setelah di-ACC Manager
+                'total_final_score' => 0,
             ]);
 
-            // 2. Simpan Log Tiket (Jika ada input tiket)
             if ($request->has('tickets')) {
                 foreach ($request->tickets as $ticket) {
+                    // Logika: Jika problem detected, paksa time ke 0
+                    $isDetected = isset($ticket['detected']) && $ticket['detected'] == true;
+
                     KpiCaseLog::create([
                         'kpi_submission_id' => $submission->id,
                         'ticket_number' => $ticket['number'],
-                        'response_time_minutes' => $ticket['time'],
-                        'is_problem_detected_by_staff' => isset($ticket['detected']) ? 1 : 0,
+                        'response_time_minutes' => $isDetected ? 0 : $ticket['time'],
+                        'is_problem_detected_by_staff' => $isDetected ? 1 : 0,
                     ]);
                 }
             }
 
-            // 3. Simpan Detail Variabel (Dropdown seperti Reporting, dsb)
+            // Simpan Detail Variabel (Hanya yang diinput staff)
             if ($request->has('vars')) {
                 foreach ($request->vars as $varId => $value) {
                     KpiDetail::create([
                         'kpi_submission_id' => $submission->id,
                         'kpi_variable_id' => $varId,
-                        'staff_value' => $value, // Menyimpan kunci dari scoring matrix
+                        'staff_value' => $value,
                         'calculated_score' => 0,
                     ]);
                 }
