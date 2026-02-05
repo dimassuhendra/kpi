@@ -121,6 +121,11 @@
                             <i class="fas fa-check-double mr-1"></i> Approval Team
                         </a>
 
+                        <a href="{{ route('manager.analytics.index') }}"
+                            class="nav-link {{ request()->is('manager/analytics*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                            <i class="fas fa-chart-line mr-1"></i> Analisa Mendalam
+                        </a>
+
                         <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-sliders-h mr-1"></i> Variabel KPI
                         </a>
@@ -170,6 +175,11 @@
                     <a href="{{ route('manager.approval.index') }}"
                         class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
                         <i class="fas fa-check-circle mr-3"></i> Approval
+                    </a>
+
+                    <a href="{{ route('manager.analytics.index') }}"
+                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/analytics*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
+                        <i class="fas fa-chart-line mr-3"></i> Analisa Mendalam
                     </a>
 
                     <form action="{{ route('logout') }}" method="POST" class="pt-4">
