@@ -74,7 +74,7 @@ class KpiController extends Controller
     {
         $submissions = KpiSubmission::where('user_id', Auth::id())
             ->orderBy('assessment_date', 'desc')
-            ->paginate(10); // Menggunakan pagination agar rapi
+            ->paginate(10);
 
         return view('staff.kpi_history', compact('submissions'));
     }
