@@ -15,6 +15,7 @@ class KpiCaseLog extends Model
 
     public function submission()
     {
-        return $this->belongsTo(KpiSubmission::class);
+        // Tambahkan parameter kedua yaitu 'kpi_submission_id'
+        return $this->belongsTo(KpiSubmission::class, 'kpi_submission_id');
     }
 }

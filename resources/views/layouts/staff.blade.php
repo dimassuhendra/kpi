@@ -61,7 +61,7 @@
             </a>
 
             <div class="pt-4 pb-2 px-3 text-xs uppercase opacity-50 font-bold">Analitik</div>
-            <a href="#" class="flex items-center p-3 rounded-xl hover:bg-white/10">
+            <a href="{{ route('staff.performance') }}" class="flex items-center p-3 rounded-xl hover:bg-white/10">
                 <i class="fas fa-chart-line mr-3"></i> Performa Saya
             </a>
         </nav>

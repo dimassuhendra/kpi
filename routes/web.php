@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\KpiController as StaffKpiController;
+use App\Http\Controllers\Staff\PerformanceController as StaffPerformanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
@@ -20,4 +21,6 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::post('/dashboard/staff/input', [StaffKpiController::class, 'store'])->name('staff.kpi.store');
 
     Route::get('/dashboard/staff/history', [StaffKpiController::class, 'history'])->name('staff.kpi.history');
+
+    Route::get('/dashboard/staff/performance', [StaffPerformanceController::class, 'index'])->name('staff.performance');
 });
