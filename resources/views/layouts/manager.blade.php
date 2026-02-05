@@ -139,7 +139,7 @@
                         <i class="fas fa-file-invoice mr-2 text-xs"></i> Executive Summary
                     </a>
 
-                    <a href="#" {{-- Nanti arahkan ke route staff --}}
+                    <a href="{{ route('manager.staff.index') }}"
                         class="nav-link {{ request()->is('manager/staff*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
                         <i class="fas fa-user-plus mr-2 text-xs"></i> Team Directory
                     </a>
@@ -192,6 +192,9 @@
                 </a>
                 <a href="{{ route('manager.reports.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/reports*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
                     <i class="fas fa-file-alt w-8"></i> Executive Summary
+                </a>
+                <a href="{{ route('manager.staff.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/staff*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-user-alt w-8"></i> Team Directory
                 </a>
                 <form action="{{ route('logout') }}" method="POST" class="pt-4 px-4">
                     @csrf

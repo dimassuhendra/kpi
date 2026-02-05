@@ -14,6 +14,7 @@ use App\Http\Controllers\Manager\ApprovalController;
 use App\Http\Controllers\Manager\AnalyticsController;
 use App\Http\Controllers\Manager\VariableController;
 use App\Http\Controllers\Manager\ReportController;
+use App\Http\Controllers\Manager\StaffController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -53,4 +54,9 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
     Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+    // Team Directory
+    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::put('/staff/{user}', [StaffController::class, 'update'])->name('staff.update');
+    Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
 });
