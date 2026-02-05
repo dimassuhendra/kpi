@@ -126,9 +126,11 @@
                             <i class="fas fa-chart-line mr-1"></i> Analisa Mendalam
                         </a>
 
-                        <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                        <a href="{{ route('manager.variables.index') }}"
+                            class="nav-link {{ request()->is('manager/variables*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-sliders-h mr-1"></i> Variabel KPI
                         </a>
+
                         <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-users-cog mr-1"></i> Staff IT
                         </a>
@@ -180,6 +182,11 @@
                     <a href="{{ route('manager.analytics.index') }}"
                         class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/analytics*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
                         <i class="fas fa-chart-line mr-3"></i> Analisa Mendalam
+                    </a>
+
+                    <a href="{{ route('manager.variables.index') }}"
+                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
+                        <i class="fas fa-sliders-h mr-3"></i> Variabel KPI
                     </a>
 
                     <form action="{{ route('logout') }}" method="POST" class="pt-4">

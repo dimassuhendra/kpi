@@ -32,15 +32,46 @@ class ApprovalController extends Controller
     {
         $submission = KpiSubmission::findOrFail($id);
 
-        $submission->update([
-            'status' => $request->status, // 'approved' atau 'rejected'
-            'is_on_time' => $request->is_on_time,
-            'needs_revision' => $request->needs_revision,
-            'manager_feedback' => $request->manager_feedback,
-            'approved_by' => Auth::id(),
-            'approved_at' => now()
-        ]);
+        if ($request->status == 'approved') {
+            $totalFinalScore = 0;
 
-        return redirect()->back()->with('success', 'Laporan staff berhasil diproses!');
+            // Ambil semua detail input staff untuk laporan ini
+            foreach ($submission->details as $detail) {
+                // Ambil bobot variabel yang berlaku saat ini
+                // Jika variabel dihapus atau bobot 0, kita beri default 0
+                $weight = $detail->variable->weight ?? 0;
+
+                // RUMUS: (Nilai Staff * Bobot) / 100
+                // Contoh: Nilai 90, Bobot 20% -> (90 * 20) / 100 = 18
+                $calculatedScore = ($detail->staff_value * $weight) / 100;
+
+                // Update skor per item
+                $detail->update([
+                    'calculated_score' => $calculatedScore
+                ]);
+
+                // Tambahkan ke total
+                $totalFinalScore += $calculatedScore;
+            }
+
+            // Simpan hasil akhir ke submission
+            $submission->update([
+                'status' => 'approved',
+                'total_final_score' => $totalFinalScore,
+                'is_on_time' => $request->is_on_time,
+                'manager_feedback' => $request->manager_feedback,
+                'approved_at' => now()
+            ]);
+
+            return redirect()->route('manager.approval.index')->with('success', 'Laporan disetujui dengan skor akhir: ' . $totalFinalScore);
+        } else {
+            // Jika ditolak
+            $submission->update([
+                'status' => 'rejected',
+                'manager_feedback' => $request->manager_feedback
+            ]);
+
+            return redirect()->route('manager.approval.index')->with('error', 'Laporan telah ditolak.');
+        }
     }
 }
