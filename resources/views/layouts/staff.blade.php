@@ -142,7 +142,7 @@
 
                     <div class="relative group cursor-pointer">
                         <div class="w-11 h-11 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg group-hover:rotate-6 transition-all">
-                            <i class="fas fa-user-astronaut text-xl text-white"></i>
+                            <a href="{{ route('profile.edit') }}"><i class="fas fa-user-astronaut text-xl text-white"></i></a>
                         </div>
                     </div>
 
@@ -181,7 +181,7 @@
                 <div class="my-6 border-t border-white/5 pt-6">
                     <div class="flex items-center px-4 py-2 mb-6">
                         <div class="w-12 h-12 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-emerald-500/20">
-                            <i class="fas fa-user text-white"></i>
+                            <a href="{{ route('profile.edit') }}"><i class="fas fa-user text-xl text-white"></i></a>
                         </div>
                         <div>
                             <p class="text-base font-bold text-white">{{ Auth::user()->name }}</p>
@@ -211,7 +211,7 @@
     <footer class="p-8 text-center bg-secondary/50">
         <div class="max-w-7xl mx-auto border-t border-white/5 pt-8">
             <p class="text-slate-600 text-sm font-medium italic">
-                &copy; 2024 <span class="text-primary font-bold">KPI System</span> • IT Department.
+                &copy; 2026 <span class="text-primary font-bold">MyBolo KPI System</span> • All Rights Reserved •
             </p>
         </div>
     </footer>

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\KpiController as StaffKpiController;
 use App\Http\Controllers\Staff\PerformanceController as StaffPerformanceController;
+use App\Http\Controllers\Staff\ProfileController as StaffProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
@@ -23,4 +24,8 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/dashboard/staff/history', [StaffKpiController::class, 'history'])->name('staff.kpi.history');
 
     Route::get('/dashboard/staff/performance', [StaffPerformanceController::class, 'index'])->name('staff.performance');
+
+    Route::get('/profile', [StaffProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [StaffProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [StaffProfileController::class, 'updatePassword'])->name('profile.password');
 });
