@@ -12,7 +12,9 @@ class KpiSubmission extends Model
         'total_final_score',
         'status',
         'approved_by',
-        'approved_at'
+        'approved_at',
+        'is_on_time',    
+        'manager_feedback'
     ];
 
     public function user()

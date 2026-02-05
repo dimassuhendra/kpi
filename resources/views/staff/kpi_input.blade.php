@@ -11,11 +11,39 @@
     }
 }">
 
+    {{-- Notifikasi System --}}
+    <div class="mb-6">
+        @if (session('success'))
+        <div class="bg-emerald-500/10 border border-emerald-500 text-emerald-500 p-4 rounded-2xl flex items-center">
+            <i class="fas fa-check-circle mr-3"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+        @endif
+
+        @if (session('error'))
+        <div class="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-2xl flex items-center">
+            <i class="fas fa-exclamation-circle mr-3"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        @endif
+
+        @if ($errors->any())
+        <div class="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-2xl">
+            <div class="font-bold mb-1">Terjadi kesalahan validasi:</div>
+            <ul class="list-disc ml-5 text-sm">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+    </div>
+
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-10 gap-4">
         <div>
             <h2 class="font-header text-2xl md:text-4xl text-primary">Input Laporan Harian</h2>
-            <p class="font-body text-slate-400 text-sm md:text-base opacity-80">Lengkapi data pengerjaan tiket Anda hari ini.</p>
+            <p class="font-body text-slate-400 text-sm md:text-base opacity-80">Input daftar tiket yang Anda kerjakan hari ini.</p>
         </div>
         <div class="bg-darkCard px-5 py-2.5 rounded-2xl border border-white/5 shadow-lg">
             <span class="text-primary font-bold text-xs md:text-sm">
@@ -27,8 +55,8 @@
     <form x-ref="kpiForm" action="{{ route('staff.kpi.store') }}" method="POST">
         @csrf
 
-        {{-- Section 1: Tiket --}}
-        <div class="organic-card bg-darkCard overflow-hidden mb-6">
+        {{-- Section 1: Tiket (Daily Activity) --}}
+        <div class="organic-card bg-darkCard overflow-hidden mb-8">
             <div class="bg-white/5 px-6 md:px-8 py-4 border-b border-white/5">
                 <h3 class="font-header text-lg md:text-xl text-primary flex items-center">
                     <i class="fas fa-ticket-alt mr-3 text-sm md:text-base"></i> Daily Activity
@@ -41,7 +69,7 @@
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">
-                                <th class="pb-4 px-2">Nama Case</th>
+                                <th class="pb-4 px-2">Nama Case / Nomor Tiket</th>
                                 <th class="pb-4 px-2">Response Time (Min)</th>
                                 <th class="pb-4 px-2 text-center">Problem Detected?</th>
                                 <th class="pb-4"></th>
@@ -52,10 +80,9 @@
                                 <tr class="group border-b border-white/5 last:border-none">
                                     <td class="py-4 px-2">
                                         <input type="text" :name="`tickets[${index}][number]`" x-model="ticket.number"
-                                            class="w-full rounded-xl border-none bg-slate-900/50 p-3 focus:ring-2 focus:ring-primary text-slate-200 placeholder-slate-600" placeholder="TKT-001" required>
+                                            class="w-full rounded-xl border-none bg-slate-900/50 p-3 focus:ring-2 focus:ring-primary text-slate-200 placeholder-slate-600" placeholder="Contoh: TKT-001 atau Nama Client" required>
                                     </td>
                                     <td class="py-4 px-2">
-                                        {{-- Waktu otomatis 0 jika detected --}}
                                         <input type="number" :name="`tickets[${index}][time]`" x-model="ticket.time"
                                             :readonly="ticket.detected"
                                             :class="ticket.detected ? 'bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20' : 'bg-slate-900/50 text-slate-200'"
@@ -78,7 +105,7 @@
                     </table>
                 </div>
 
-                {{-- Mobile View Card List (Responsive) --}}
+                {{-- Mobile View Card List --}}
                 <div class="md:hidden space-y-4">
                     <template x-for="(ticket, index) in tickets" :key="index">
                         <div class="p-4 bg-slate-900/30 rounded-2xl border border-white/5 relative" :class="ticket.detected ? 'border-emerald-500/30 bg-emerald-500/5' : ''">
@@ -150,7 +177,7 @@
                     </div>
                     <h3 class="font-header text-xl md:text-2xl text-white mb-2">Konfirmasi Laporan</h3>
                     <p class="font-body text-slate-400 text-sm md:text-base mb-8 leading-relaxed">
-                        Data ini akan dikirim ke Manager untuk divalidasi. Pastikan nomor tiket dan waktu pengerjaan sudah sesuai.
+                        Data tiket Anda akan dikirim ke Manager untuk divalidasi dan dinilai. Pastikan data sudah benar.
                     </p>
                 </div>
 
@@ -172,7 +199,6 @@
         display: none !important;
     }
 
-    /* Custom scrollbar untuk input number agar bersih */
     input[type='number']::-webkit-inner-spin-button,
     input[type='number']::-webkit-outer-spin-button {
         -webkit-appearance: none;
@@ -193,6 +219,6 @@
     }
 </style>
 
-{{-- Alpine.js dikelola di layout atau di sini --}}
+{{-- Pastikan Alpine.js terload dengan benar --}}
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 @endsection

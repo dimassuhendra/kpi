@@ -12,6 +12,7 @@ class KpiCaseLog extends Model
         'response_time_minutes',
         'is_problem_detected_by_staff'
     ];
+    
 
     public function submission()
     {

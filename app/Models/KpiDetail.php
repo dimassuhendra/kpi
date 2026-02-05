@@ -6,13 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class KpiDetail extends Model
 {
-    protected $fillable = [
-        'kpi_submission_id',
-        'kpi_variable_id',
-        'staff_value',
-        'manager_correction',
-        'calculated_score'
-    ];
+    protected $fillable = ['kpi_submission_id', 'kpi_variable_id', 'staff_value', 'manager_correction', 'calculated_score'];
 
     public function variable()
     {
