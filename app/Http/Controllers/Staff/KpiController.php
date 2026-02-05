@@ -68,4 +68,13 @@ class KpiController extends Controller
             return back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
+
+    public function history()
+    {
+        $submissions = KpiSubmission::where('user_id', Auth::id())
+            ->orderBy('assessment_date', 'desc')
+            ->paginate(10); // Menggunakan pagination agar rapi
+
+        return view('staff.kpi_history', compact('submissions'));
+    }
 }

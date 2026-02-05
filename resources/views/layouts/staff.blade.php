@@ -7,7 +7,7 @@
     <title>Staff Dashboard - KPI System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Sniglet:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredokaf&family=Sniglet:wght@400;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -22,7 +22,7 @@
                         background: '#EBF4F6',
                     },
                     fontFamily: {
-                        header: ['"Bree Serif"'],
+                        header: ['"Fredoka"'],
                         body: ['"Sniglet"']
                     }
                 }
@@ -56,7 +56,7 @@
             <a href="{{ route('staff.kpi.create') }}" class="flex items-center p-3 rounded-xl hover:bg-white/10">
                 <i class="fas fa-edit mr-3"></i> Input KPI Harian
             </a>
-            <a href="#" class="flex items-center p-3 rounded-xl hover:bg-white/10">
+            <a href="{{ route('staff.kpi.history') }}" class="flex items-center p-3 rounded-xl hover:bg-white/10">
                 <i class="fas fa-history mr-3"></i> Riwayat Laporan
             </a>
 

@@ -18,4 +18,6 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
 
     Route::get('/dashboard/staff/input', [StaffKpiController::class, 'create'])->name('staff.kpi.create');
     Route::post('/dashboard/staff/input', [StaffKpiController::class, 'store'])->name('staff.kpi.store');
+
+    Route::get('/dashboard/staff/history', [StaffKpiController::class, 'history'])->name('staff.kpi.history');
 });
