@@ -3,10 +3,7 @@
 @section('content')
 <div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
-        <div class="flex items-center gap-2 mb-1">
-            <span class="bg-accent/20 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Workspace</span>
-        </div>
-        <h2 class="font-header text-4xl text-primary leading-tight">Halo, <span class="text-secondary">{{ Auth::user()->name }}</span>!</h2>
+        <h2 class="font-header text-4xl text-primary leading-tight">Halo, <span class="text-primary">{{ Auth::user()->name }}</span>!</h2>
         <p class="text-gray-500 font-medium">Siap untuk mencapai target KPI hari ini?</p>
     </div>
 
@@ -15,7 +12,7 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $todaySubmission ? 'bg-green-400' : 'bg-red-400' }} opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 {{ $todaySubmission ? 'bg-green-500' : 'bg-red-500' }}"></span>
         </div>
-        <span class="text-sm font-bold text-primary italic">Status: {{ $todaySubmission ? 'Laporan Terkirim' : 'Menunggu Laporan' }}</span>
+        <span class="text-sm font-bold text-primary italic">Status hari ini: {{ $todaySubmission ? 'Laporan Terkirim' : 'Menunggu Laporan' }}</span>
     </div>
 </div>
 
@@ -131,8 +128,10 @@
         <h3 class="font-header text-2xl text-primary leading-none mb-8">Skill Radar</h3>
         <div class="h-80 relative flex items-center justify-center">
             @if($variableDistributions->isEmpty())
-            <p class="text-gray-400 text-center italic">Belum ada data distribusi variabel</p>
-            @else
+            <div class="flex flex-col items-center justify-center h-full border-4 border-dashed border-gray-50 rounded-[2rem]">
+                <img src="https://illustrations.popsy.co/teal/falling.svg" class="h-32 mb-4 opacity-50" alt="">
+                <p class="text-gray-400 font-bold tracking-widest uppercase text-xs">No Data Available</p>
+            </div> @else
             <canvas id="donutChart"></canvas>
             @endif
         </div>
