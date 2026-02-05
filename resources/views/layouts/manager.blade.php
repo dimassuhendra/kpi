@@ -111,12 +111,16 @@
                     </a>
 
                     <div class="hidden lg:ml-10 lg:flex lg:space-x-2">
-                        <a href="{{ route('manager.dashboard') }}" class="nav-link {{ request()->is('manager/dashboard') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                        <a href="{{ route('manager.dashboard') }}"
+                            class="nav-link {{ request()->is('manager/dashboard') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-chart-pie mr-1"></i> Overview
                         </a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+
+                        <a href="{{ route('manager.approval.index') }}"
+                            class="nav-link {{ request()->is('manager/approval*') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-check-double mr-1"></i> Approval Team
                         </a>
+
                         <a href="#" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
                             <i class="fas fa-sliders-h mr-1"></i> Variabel KPI
                         </a>
@@ -156,19 +160,25 @@
         </div>
 
         <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5">
-            <div class="px-4 pt-4 pb-8 space-y-2">
-                <a href="{{ route('manager.dashboard') }}" class="flex items-center px-4 py-4 rounded-3xl bg-primary/10 text-primary font-bold">
-                    <i class="fas fa-home mr-3"></i> Dashboard Manager
-                </a>
-                <a href="#" class="flex items-center px-4 py-4 rounded-3xl text-slate-300 hover:bg-white/5">
-                    <i class="fas fa-check-circle mr-3"></i> Approval
-                </a>
-                <form action="{{ route('logout') }}" method="POST" class="pt-4">
-                    @csrf
-                    <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar Sistem
-                    </button>
-                </form>
+            <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5">
+                <div class="px-4 pt-4 pb-8 space-y-2">
+                    <a href="{{ route('manager.dashboard') }}"
+                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }}">
+                        <i class="fas fa-home mr-3"></i> Dashboard Manager
+                    </a>
+
+                    <a href="{{ route('manager.approval.index') }}"
+                        class="flex items-center px-4 py-4 rounded-3xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-300' }} hover:bg-white/5 transition">
+                        <i class="fas fa-check-circle mr-3"></i> Approval
+                    </a>
+
+                    <form action="{{ route('logout') }}" method="POST" class="pt-4">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Keluar Sistem
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>

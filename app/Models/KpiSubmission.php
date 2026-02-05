@@ -29,9 +29,15 @@ class KpiSubmission extends Model
     {
         return $this->hasMany(KpiDetail::class);
     }
-
+    
     public function caseLogs()
     {
-        return $this->hasMany(KpiCaseLog::class);
+        return $this->hasMany(KpiCaseLog::class, 'kpi_submission_id');
     }
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }
