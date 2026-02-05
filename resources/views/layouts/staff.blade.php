@@ -53,7 +53,7 @@
             </a>
 
             <div class="pt-4 pb-2 px-3 text-xs uppercase opacity-50 font-bold">Manajemen KPI</div>
-            <a href="#" class="flex items-center p-3 rounded-xl hover:bg-white/10">
+            <a href="{{ route('staff.kpi.create') }}" class="flex items-center p-3 rounded-xl hover:bg-white/10">
                 <i class="fas fa-edit mr-3"></i> Input KPI Harian
             </a>
             <a href="#" class="flex items-center p-3 rounded-xl hover:bg-white/10">
