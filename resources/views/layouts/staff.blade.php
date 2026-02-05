@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -16,10 +16,10 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#09637E',
-                        secondary: '#088395',
-                        accent: '#7AB2B2',
-                        background: '#EBF4F6',
+                        primary: '#10b981', // Emerald
+                        secondary: '#0f172a', // Deep Dark Slate
+                        accent: '#34d399',
+                        darkCard: '#1e293b',
                     },
                     fontFamily: {
                         header: ['"Fredoka"'],
@@ -33,21 +33,43 @@
         body {
             font-family: 'Bree Serif', serif;
             scroll-behavior: smooth;
+            background-color: #0f172a;
+            /* Warna gelap dasar */
+            color: #e2e8f0;
         }
 
         .font-header {
             font-family: 'Fredoka', sans-serif;
         }
 
-        /* Navbar Glassmorphism */
-        .glass-nav {
-            background: rgba(9, 99, 126, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        /* Logo Silhouette Effect */
+        .logo-silhouette {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
         }
 
-        /* Active Link Animation */
+        /* Organic Shape Card - Tidak kotak kaku */
+        .organic-card {
+            background: #1e293b;
+            border-radius: 40px 15px 40px 15px;
+            /* Bentuk asimetris */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .organic-card:hover {
+            border-radius: 15px 40px 15px 40px;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Navbar Glassmorphism Dark */
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
         .nav-link {
             position: relative;
             transition: all 0.3s ease;
@@ -58,9 +80,9 @@
             position: absolute;
             width: 0;
             height: 2px;
-            bottom: 0;
+            bottom: -2px;
             left: 50%;
-            background-color: #7AB2B2;
+            background-color: #10b981;
             transition: all 0.3s ease;
             transform: translateX(-50%);
         }
@@ -74,52 +96,53 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 0;
             opacity: 0;
+            overflow: hidden;
         }
 
         #mobile-menu.menu-open {
-            max-height: 600px;
+            max-height: 100vh;
             opacity: 1;
         }
     </style>
 </head>
 
-<body class="bg-background min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
     <nav class="glass-nav text-white sticky top-0 z-50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20">
+            <div class="flex justify-between h-20 transition-all duration-300" id="nav-content">
                 <div class="flex items-center">
                     <a href="{{ route('staff.dashboard') }}" class="flex-shrink-0 flex items-center group">
-                        <img class="h-10 w-auto md:h-12 drop-shadow-md group-hover:scale-110 transition-transform"
+                        <img class="h-10 w-auto md:h-12 logo-silhouette group-hover:scale-110 transition-transform"
                             src="{{ asset('img/logo.png') }}"
                             alt="Logo KPI System">
                     </a>
 
                     <div class="hidden lg:ml-10 lg:flex lg:space-x-2">
-                        <a href="{{ route('staff.dashboard') }}" class="nav-link {{ request()->is('dashboard/staff') ? 'active text-accent' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-accent">
-                            <i class="fas fa-grid-2 mr-1"></i> Dashboard
+                        <a href="{{ route('staff.dashboard') }}" class="nav-link {{ request()->is('dashboard/staff') ? 'active text-primary' : '' }} px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                            <i class="fas fa-th-large mr-1"></i> Dashboard
                         </a>
-                        <a href="{{ route('staff.kpi.create') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-accent">
-                            <i class="fas fa-pen-to-square mr-1"></i> Input KPI
+                        <a href="{{ route('staff.kpi.create') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                            <i class="fas fa-edit mr-1"></i> Input KPI
                         </a>
-                        <a href="{{ route('staff.kpi.history') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-accent">
-                            <i class="fas fa-rectangle-list mr-1"></i> Riwayat
+                        <a href="{{ route('staff.kpi.history') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                            <i class="fas fa-list-ul mr-1"></i> Riwayat
                         </a>
-                        <a href="{{ route('staff.performance') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-accent">
-                            <i class="fas fa-chart-simple mr-1"></i> Performa
+                        <a href="{{ route('staff.performance') }}" class="nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-primary">
+                            <i class="fas fa-chart-bar mr-1"></i> Performa
                         </a>
                     </div>
                 </div>
 
                 <div class="hidden md:flex items-center space-x-4">
-                    <div class="flex flex-col items-end mr-2">
-                        <span class="text-[10px] uppercase tracking-widest opacity-60 font-bold">{{ Auth::user()->division->name }}</span>
-                        <span class="text-sm font-header font-semibold">{{ Auth::user()->name }}</span>
+                    <div class="flex flex-col items-end mr-2 text-right">
+                        <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold leading-none">{{ Auth::user()->division->name }}</span>
+                        <span class="text-sm font-header font-semibold text-slate-200">{{ Auth::user()->name }}</span>
                     </div>
 
                     <div class="relative group cursor-pointer">
-                        <div class="w-11 h-11 bg-gradient-to-tr from-accent to-secondary rounded-2xl flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:rotate-6 transition-all">
-                            <i class="fas fa-user-astronaut text-xl"></i>
+                        <div class="w-11 h-11 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg group-hover:rotate-6 transition-all">
+                            <i class="fas fa-user-astronaut text-xl text-white"></i>
                         </div>
                     </div>
 
@@ -133,41 +156,41 @@
                 </div>
 
                 <div class="flex items-center lg:hidden">
-                    <button id="menu-btn" class="inline-flex items-center justify-center p-2 rounded-2xl bg-white/10 hover:bg-white/20 focus:outline-none transition-all">
-                        <i id="menu-icon" class="fas fa-bars-staggered text-xl"></i>
+                    <button id="menu-btn" class="inline-flex items-center justify-center p-2 rounded-2xl bg-white/5 hover:bg-white/10 focus:outline-none transition-all">
+                        <i id="menu-icon" class="fas fa-bars-staggered text-xl text-primary"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div id="mobile-menu" class="lg:hidden bg-primary shadow-2xl overflow-hidden">
-            <div class="px-4 pt-2 pb-6 space-y-2">
-                <a href="{{ route('staff.dashboard') }}" class="flex items-center px-4 py-3 rounded-2xl bg-white/10 text-accent font-bold">
+        <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5 shadow-2xl">
+            <div class="px-4 pt-4 pb-8 space-y-2">
+                <a href="{{ route('staff.dashboard') }}" class="flex items-center px-4 py-4 rounded-3xl bg-primary/10 text-primary font-bold">
                     <i class="fas fa-home mr-3"></i> Dashboard
                 </a>
-                <a href="{{ route('staff.kpi.create') }}" class="flex items-center px-4 py-3 rounded-2xl hover:bg-white/5 transition">
+                <a href="{{ route('staff.kpi.create') }}" class="flex items-center px-4 py-4 rounded-3xl text-slate-300 hover:bg-white/5 transition">
                     <i class="fas fa-edit mr-3"></i> Input KPI Harian
                 </a>
-                <a href="{{ route('staff.kpi.history') }}" class="flex items-center px-4 py-3 rounded-2xl hover:bg-white/5 transition">
+                <a href="{{ route('staff.kpi.history') }}" class="flex items-center px-4 py-4 rounded-3xl text-slate-300 hover:bg-white/5 transition">
                     <i class="fas fa-history mr-3"></i> Riwayat Laporan
                 </a>
-                <a href="{{ route('staff.performance') }}" class="flex items-center px-4 py-3 rounded-2xl hover:bg-white/5 transition">
+                <a href="{{ route('staff.performance') }}" class="flex items-center px-4 py-4 rounded-3xl text-slate-300 hover:bg-white/5 transition">
                     <i class="fas fa-chart-line mr-3"></i> Performa Saya
                 </a>
 
-                <div class="my-4 border-t border-white/10 pt-4">
-                    <div class="flex items-center px-4 py-2 mb-4">
-                        <div class="w-10 h-10 bg-accent rounded-xl flex items-center justify-center mr-3">
-                            <i class="fas fa-user text-sm"></i>
+                <div class="my-6 border-t border-white/5 pt-6">
+                    <div class="flex items-center px-4 py-2 mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-emerald-500/20">
+                            <i class="fas fa-user text-white"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-bold">{{ Auth::user()->name }}</p>
-                            <p class="text-xs opacity-60">{{ Auth::user()->division->name }}</p>
+                            <p class="text-base font-bold text-white">{{ Auth::user()->name }}</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider">{{ Auth::user()->division->name }}</p>
                         </div>
                     </div>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-2xl bg-red-500 text-white font-bold shadow-lg shadow-red-500/30">
+                        <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                             <i class="fas fa-sign-out-alt mr-2"></i> Logout
                         </button>
                     </form>
@@ -175,17 +198,19 @@
             </div>
         </div>
     </nav>
+
     <main class="flex-grow">
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div class="min-h-[70vh]">
+                {{-- Gunakan class organic-card di dalam konten @yield Anda --}}
                 @yield('content')
             </div>
         </div>
     </main>
 
-    <footer class="p-8 text-center">
-        <div class="max-w-7xl mx-auto border-t border-gray-200 pt-8">
-            <p class="text-gray-400 text-sm font-medium italic">
+    <footer class="p-8 text-center bg-secondary/50">
+        <div class="max-w-7xl mx-auto border-t border-white/5 pt-8">
+            <p class="text-slate-600 text-sm font-medium italic">
                 &copy; 2024 <span class="text-primary font-bold">KPI System</span> • IT Department.
             </p>
         </div>
@@ -195,6 +220,7 @@
         const btn = document.getElementById('menu-btn');
         const menu = document.getElementById('mobile-menu');
         const icon = document.getElementById('menu-icon');
+        const navContent = document.getElementById('nav-content');
 
         btn.addEventListener('click', () => {
             menu.classList.toggle('menu-open');
@@ -209,15 +235,12 @@
             }
         });
 
-        // Effect navbar mengecil saat scroll
+        // Navbar Scroll Effect
         window.addEventListener('scroll', () => {
-            const nav = document.querySelector('nav');
             if (window.scrollY > 50) {
-                nav.classList.add('h-16');
-                nav.classList.remove('h-20');
+                navContent.classList.replace('h-20', 'h-16');
             } else {
-                nav.classList.add('h-20');
-                nav.classList.remove('h-16');
+                navContent.classList.replace('h-16', 'h-20');
             }
         });
     </script>

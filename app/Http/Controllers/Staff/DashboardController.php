@@ -33,7 +33,6 @@ class DashboardController extends Controller
             ->get(['assessment_date', 'total_final_score']);
 
         // 3. Data Komposisi Skor per Variabel (Donut Chart)
-        // Kita ambil rata-rata nilai per nama variabel untuk user ini
         $variableDistributions = \App\Models\KpiDetail::join('kpi_variables', 'kpi_details.kpi_variable_id', '=', 'kpi_variables.id')
             ->join('kpi_submissions', 'kpi_details.kpi_submission_id', '=', 'kpi_submissions.id')
             ->where('kpi_submissions.user_id', $user->id)
