@@ -19,7 +19,6 @@ class KpiController extends Controller
         $variables = KpiVariable::where('division_id', Auth::user()->division_id)
             ->where('is_active', true)
             ->get();
-
         return view('staff.kpi_input', compact('variables'));
     }
 
