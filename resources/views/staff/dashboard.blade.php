@@ -144,28 +144,33 @@
     Chart.defaults.font.family = 'Sniglet';
     Chart.defaults.color = '#09637E';
 
-    // 1. Line Chart
+    // 1. Line Chart (Statistik Mingguan)
     const lineCtx = document.getElementById('lineChart')?.getContext('2d');
     if (lineCtx) {
         new Chart(lineCtx, {
             type: 'line',
             data: {
+                // Menampilkan tanggal assessment
                 labels: {
                     !!json_encode($chartData - > map(fn($d) => date('d/m', strtotime($d - > assessment_date)))) !!
                 },
                 datasets: [{
                     label: 'Skor KPI',
+                    // Menampilkan total_final_score hasil perhitungan terbaru
                     data: {
                         !!json_encode($chartData - > pluck('total_final_score')) !!
                     },
                     borderColor: '#088395',
                     backgroundColor: (context) => {
-                        const gradient = context.chart.ctx.createRadialGradient(
-                            context.chart.chartArea.left, 0, 0,
-                            context.chart.chartArea.left, 500, 500
-                        );
-                        gradient.addColorStop(0, 'rgba(8, 131, 149, 0.2)');
-                        gradient.addColorStop(1, 'rgba(8, 131, 149, 0)');
+                        const chart = context.chart;
+                        const {
+                            ctx,
+                            chartArea
+                        } = chart;
+                        if (!chartArea) return null;
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(8, 131, 149, 0)');
+                        gradient.addColorStop(1, 'rgba(8, 131, 149, 0.2)');
                         return gradient;
                     },
                     fill: true,
@@ -190,7 +195,6 @@
                         beginAtZero: true,
                         max: 100,
                         grid: {
-                            display: true,
                             color: '#f3f4f6'
                         }
                     },
@@ -204,20 +208,22 @@
         });
     }
 
-    // 2. Donut Chart
+    // 2. Donut Chart (Skill Radar / Distribusi Per Variabel)
     const donutCtx = document.getElementById('donutChart')?.getContext('2d');
     if (donutCtx) {
         new Chart(donutCtx, {
             type: 'doughnut',
             data: {
+                // Nama variabel (hanya yang aktif)
                 labels: {
                     !!json_encode($variableDistributions - > pluck('variable_name')) !!
                 },
                 datasets: [{
+                    // Data rata-rata skor per variabel (avg_val dari calculated_score)
                     data: {
                         !!json_encode($variableDistributions - > pluck('avg_val')) !!
                     },
-                    backgroundColor: ['#09637E', '#088395', '#05BFDB', '#7AB2B2'],
+                    backgroundColor: ['#09637E', '#088395', '#05BFDB', '#7AB2B2', '#FFD93D'],
                     borderWidth: 5,
                     borderColor: '#ffffff',
                     hoverOffset: 15
