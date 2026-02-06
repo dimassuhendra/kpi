@@ -21,19 +21,22 @@
         <div class="organic-card p-6 border-l-4 border-primary">
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Rata-rata Skor Tim</p>
             <div class="flex items-baseline gap-2 mt-2">
+                {{-- Menampilkan rata-rata skor berdasarkan kalkulasi baru --}}
                 <span class="text-4xl font-header text-white">{{ number_format($avgScore, 1) }}</span>
                 <span class="text-xs text-slate-500">Pts</span>
             </div>
-            <p class="text-[10px] text-emerald-500 mt-2 font-bold"><i class="fas fa-arrow-up"></i> Bulan Ini</p>
+            <p class="text-[10px] text-emerald-500 mt-2 font-bold"><i class="fas fa-users"></i> Performa Divisi</p>
         </div>
 
         <div class="organic-card p-6 border-l-4 border-amber-500 group cursor-pointer hover:bg-amber-500/5 transition-colors">
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Pending Approval</p>
-            <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-4xl font-header text-white">{{ $pendingCount }}</span>
-                <span class="text-xs text-slate-500">Laporan</span>
-            </div>
-            <p class="text-[10px] text-amber-500 mt-2 font-bold group-hover:underline">Review Sekarang <i class="fas fa-chevron-right ml-1"></i></p>
+            <a href="{{ route('manager.approval.index') }}">
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Pending Approval</p>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span class="text-4xl font-header text-white">{{ $pendingCount }}</span>
+                    <span class="text-xs text-slate-500">Laporan</span>
+                </div>
+                <p class="text-[10px] text-amber-500 mt-2 font-bold group-hover:underline">Review Sekarang <i class="fas fa-chevron-right ml-1"></i></p>
+            </a>
         </div>
 
         <div class="organic-card p-6 border-l-4 border-indigo-400">
@@ -48,7 +51,7 @@
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Need Coaching</p>
             <p class="text-white font-header mt-2 truncate">{{ $bottomPerformer->name ?? 'Belum ada data' }}</p>
             <div class="flex items-center gap-1 text-[10px] text-red-500 mt-1">
-                <i class="fas fa-exclamation-triangle"></i> Perlu Pembinaan
+                <i class="fas fa-exclamation-triangle"></i> Skor Terendah
             </div>
         </div>
     </div>
@@ -58,9 +61,7 @@
         <div class="lg:col-span-2 organic-card p-8">
             <div class="flex justify-between items-center mb-8">
                 <h3 class="font-header text-xl text-white"><i class="fas fa-chart-area mr-2 text-primary"></i>Volume Tiket Divisi</h3>
-                <select class="bg-secondary border border-white/10 text-xs rounded-lg px-2 py-1 text-slate-400 outline-none">
-                    <option>7 Hari Terakhir</option>
-                </select>
+                <span class="text-[10px] text-slate-500 font-bold uppercase italic">7 Hari Terakhir</span>
             </div>
             <div class="h-[300px] w-full">
                 <canvas id="managerTrendChart"></canvas>
@@ -104,15 +105,18 @@
                     @endif
                 </div>
 
-                <a href="#" class="block text-center mt-8 py-3 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
-                    Lihat Seluruh Anggota
-                </a>
+                <div class="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saran Manajemen</p>
+                    <p class="text-xs text-white/70 mt-2 leading-relaxed italic">
+                        "Berikan perhatian khusus pada staf dengan skor 'Low' untuk menjaga SLA divisi."
+                    </p>
+                </div>
             </div>
 
             <div class="organic-card p-6 bg-primary/10 border-primary/20 relative overflow-hidden">
-                <i class="fas fa-lightbulb absolute -right-4 -bottom-4 text-7xl text-primary/10"></i>
-                <h4 class="text-primary font-bold text-sm mb-2">Tips Manager</h4>
-                <p class="text-slate-400 text-xs leading-relaxed">Jangan lupa untuk memberikan feedback pada laporan yang direvisi agar staff memahami poin perbaikan.</p>
+                <i class="fas fa-info-circle absolute -right-4 -bottom-4 text-7xl text-primary/10"></i>
+                <h4 class="text-primary font-bold text-sm mb-2">Info Kalkulasi</h4>
+                <p class="text-slate-400 text-xs leading-relaxed">Skor sekarang didasarkan pada kualitas respon per tiket (Aman <= 15 mnt).</p>
             </div>
         </div>
     </div>
@@ -135,7 +139,7 @@
                     !!json_encode($trendData - > pluck('date')) !!
                 },
                 datasets: [{
-                    label: 'Jumlah Tiket',
+                    label: 'Volume Tiket',
                     data: {
                         !!json_encode($trendData - > pluck('total')) !!
                     },
@@ -150,6 +154,7 @@
                 }]
             },
             options: {
+                responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
@@ -160,8 +165,7 @@
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.05)',
-                            drawBorder: false
+                            color: 'rgba(255, 255, 255, 0.05)'
                         },
                         ticks: {
                             color: '#64748b',
