@@ -13,7 +13,7 @@ class ApprovalController extends Controller
     {
         $managerDivId = Auth::user()->division_id;
 
-        $pendingSubmissions = KpiSubmission::with(['user', 'details.variable', 'caseLogs']) // Tambahkan caseLogs
+        $pendingSubmissions = KpiSubmission::with(['user', 'details.variable', 'caseLogs'])
             ->whereHas('user', function ($q) use ($managerDivId) {
                 $q->where('division_id', $managerDivId);
             })->where('status', 'pending')
@@ -30,56 +30,70 @@ class ApprovalController extends Controller
 
     public function process(Request $request, $id)
     {
-        // Load data dengan caseLogs (untuk hitung jumlah tiket & response time)
         $submission = KpiSubmission::with(['details.variable', 'caseLogs'])->findOrFail($id);
 
         if ($request->status == 'approved') {
             $totalFinalScore = 0;
 
-            // 1. Hitung Statistik dari Tiket (Daily Activity)
-            $countTickets = $submission->caseLogs->count();
-            $avgResponseTime = $submission->caseLogs->avg('response_time_minutes') ?? 0;
+            // 1. Pra-kalkulasi Skor Teknis Berdasarkan Case Logs (Per Baris)
+            $caseLogs = $submission->caseLogs;
+            $totalTicketScore = 0;
+            $avgTechnicalScore = 0;
 
-            // 2. Loop setiap variabel KPI untuk memberikan nilai
+            if ($caseLogs->count() > 0) {
+                foreach ($caseLogs as $log) {
+                    // Implementasi Threshold 15 Menit & Klasifikasi Skor
+                    if ($log->response_time_minutes <= 15) {
+                        $totalTicketScore += 100; // Sangat Baik (Aman)
+                    } elseif ($log->response_time_minutes <= 30) {
+                        $totalTicketScore += 80;  // Cukup
+                    } elseif ($log->response_time_minutes <= 60) {
+                        $totalTicketScore += 60;  // Lambat
+                    } else {
+                        $totalTicketScore += 40;  // Sangat Lambat
+                    }
+                }
+                $avgTechnicalScore = $totalTicketScore / $caseLogs->count();
+            }
+
+            // 2. Loop Setiap Variabel KPI untuk Menentukan Nilai Akhir
             foreach ($submission->details as $detail) {
                 $variable = $detail->variable;
-                if (!$variable) continue;
+                if (!$variable || !$variable->is_active) continue;
 
                 $weight = (float) $variable->weight;
                 $scoreBase = 0;
                 $varName = strtolower($variable->variable_name);
 
-                // LOGIKA A: Jika Variabel tentang JUMLAH CASE / TIKET
-                if (str_contains($varName, 'case') || str_contains($varName, 'tiket') || str_contains($varName, 'jumlah')) {
-                    // Contoh: Minimal 5 tiket untuk skor 100, jika kurang diproporsikan
-                    $scoreBase = $countTickets >= 5 ? 100 : ($countTickets * 20);
+                // LOGIKA A: Variabel Teknis (Response Time / Case Detection)
+                // Kita menggunakan rata-rata skor per baris yang sudah dihitung di atas
+                if ($variable->input_type === 'case_list') {
+                    // Semua variabel berbasis case_list mendapatkan skor rata-rata teknis yang sama
+                    $scoreBase = $avgTechnicalScore;
                 }
 
-                // LOGIKA B: Jika Variabel tentang RESPONSE TIME / WAKTU PENGERJAAN
-                elseif (str_contains($varName, 'response') || str_contains($varName, 'waktu pengerjaan')) {
-                    // Contoh: Jika rata-rata <= 30 menit skor 100, jika > 30 skor 70
-                    $scoreBase = $avgResponseTime <= 30 ? 100 : 70;
+                // LOGIKA B: Variabel Managerial (Input Manual Manager)
+                // Mengambil nilai dari dropdown scoring_matrix yang dipilih manager
+                elseif ($variable->input_type === 'dropdown') {
+                    // Manager memilih key (misal: 'tepat_waktu') melalui request
+                    // Request key disesuaikan dengan ID variabel agar unik
+                    $inputKey = "var_" . $variable->id;
+                    $selectedOption = $request->input($inputKey);
+
+                    $matrix = json_decode($variable->scoring_matrix, true) ?? [];
+                    $scoreBase = $matrix[$selectedOption] ?? 0;
+
+                    // Simpan pilihan manager ke correction
+                    $detail->manager_correction = $selectedOption;
                 }
 
-                // LOGIKA C: Mengambil input dari FORM MANAGER (Tepat Waktu?)
-                elseif (str_contains($varName, 'tepat waktu') || str_contains($varName, 'reporting')) {
-                    // Jika manager pilih "Ya (1)", skor 100. Jika "Terlambat (0)", skor 0.
-                    $scoreBase = $request->is_on_time == "1" ? 100 : 0;
-                }
-
-                // LOGIKA D: Mengambil input dari FORM MANAGER (Revisi?)
-                elseif (str_contains($varName, 'revisi') || str_contains($varName, 'kualitas')) {
-                    // Jika manager pilih "Tidak (0)", skor 100. Jika "Ada Revisi (1)", skor 50.
-                    $scoreBase = $request->needs_revision == "0" ? 100 : 50;
-                }
-
-                // Hitung skor akhir untuk variabel ini (Skor Dasar x Bobot / 100)
+                // Hitung skor akhir untuk variabel ini (Skor x Bobot / 100)
                 $calculatedScore = ($scoreBase * $weight) / 100;
 
-                // Update ke tabel kpi_details agar tersimpan di DB
+                // Update detail KPI
                 $detail->update([
-                    'staff_value' => $scoreBase, // Kita simpan angka 100/50/0 ke staff_value
-                    'calculated_score' => $calculatedScore
+                    'calculated_score' => $calculatedScore,
+                    'manager_correction' => $detail->manager_correction ?? $scoreBase
                 ]);
 
                 $totalFinalScore += $calculatedScore;
@@ -94,11 +108,14 @@ class ApprovalController extends Controller
                 'manager_feedback' => $request->manager_feedback
             ]);
 
-            return redirect()->route('manager.approval.index')->with('success', 'Laporan Berhasil Dinilai! Skor Akhir: ' . $totalFinalScore);
+            return redirect()->route('manager.approval.index')
+                ->with('success', 'KPI Disetujui! Skor Akhir: ' . number_format($totalFinalScore, 2));
         } else {
-            // Logika Reject...
-            $submission->update(['status' => 'rejected', 'manager_feedback' => $request->manager_feedback]);
-            return redirect()->route('manager.approval.index')->with('error', 'Laporan Ditolak.');
+            $submission->update([
+                'status' => 'rejected',
+                'manager_feedback' => $request->manager_feedback
+            ]);
+            return redirect()->route('manager.approval.index')->with('error', 'Laporan KPI Ditolak.');
         }
     }
 }
