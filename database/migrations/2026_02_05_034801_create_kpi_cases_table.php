@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kpi_case_logs', function (Blueprint $table) {
+        Schema::create('kpi_cases', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kpi_submission_id')->constrained()->onDelete('cascade');
-            $table->string('ticket_number');
-            $table->integer('response_time_minutes');
-            $table->boolean('is_problem_detected_by_staff');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('case_title');
+            $table->text('description')->nullable();
+            $table->date('entry_date');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kpi_case_logs');
+        Schema::dropIfExists('kpi_cases');
     }
 };

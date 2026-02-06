@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('kpi_variables', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('division_id')->constrained()->onDelete('cascade');
+            $table->foreignId('division_id')->constrained('divisions')->onDelete('cascade');
             $table->string('variable_name');
             $table->decimal('weight', 5, 2)->default(0);
-            $table->enum('input_type', ['case_list', 'dropdown', 'number', 'boolean']);
-            $table->json('scoring_matrix')->nullable();
+            $table->boolean('is_bonus')->default(false);
+            $table->enum('input_type', ['number', 'boolean', 'scale'])->default('number');
             $table->timestamps();
         });
     }

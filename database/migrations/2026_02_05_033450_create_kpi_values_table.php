@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kpi_details', function (Blueprint $table) {
+        Schema::create('kpi_values', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kpi_submission_id')->constrained()->onDelete('cascade');
-            $table->foreignId('kpi_variable_id')->constrained();
-            $table->text('staff_value');
-            $table->text('manager_correction')->nullable();
-            $table->decimal('calculated_score', 8, 2);
+            $table->foreignId('kpi_case_id')->constrained('kpi_cases')->onDelete('cascade');
+            $table->foreignId('kpi_variable_id')->constrained('kpi_variables')->onDelete('cascade');
+            $table->decimal('value', 8, 2);
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kpi_details');
+        Schema::dropIfExists('kpi_submissions');
     }
 };
