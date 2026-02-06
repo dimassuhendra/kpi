@@ -54,7 +54,6 @@ class KpiController extends Controller
             }
 
             // 3. Inisialisasi Detail Variabel KPI
-            // Perubahan: Hanya inisialisasi variabel yang AKTIF saat ini
             $activeVariables = KpiVariable::where('division_id', Auth::user()->division_id)
                 ->where('is_active', true)
                 ->get();
@@ -63,8 +62,8 @@ class KpiController extends Controller
                 KpiDetail::create([
                     'kpi_submission_id' => $submission->id,
                     'kpi_variable_id'   => $var->id,
-                    'staff_value'       => '0', // Nilai awal
-                    'calculated_score'  => 0,   // Akan diupdate saat approval
+                    'staff_value'       => '0',
+                    'calculated_score'  => 0, 
                 ]);
             }
 

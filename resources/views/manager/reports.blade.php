@@ -6,8 +6,34 @@
     selectedStaff: null,
     showDetail: false,
     staffData: @js($reportData),
-    comparisonData: @js($comparisonData)
-}" class="space-y-8">
+    comparisonData: @js($comparisonData),
+
+    // Fungsi untuk update chart besar secara dinamis
+    updateComparisonChart() {
+        const labels = this.staffData.map(s => s.name);
+        let dataValues, labelName, color, bgColor;
+
+        if (this.viewMode === 'performance') {
+            dataValues = this.staffData.map(s => s.avg_score);
+            labelName = 'Avg Performance Score';
+            color = '#3b82f6';
+            bgColor = 'rgba(59, 130, 246, 0.1)';
+        } else {
+            // Menghitung persentase kedisiplinan (On-Time / Total Reports)
+            dataValues = this.staffData.map(s => (s.on_time_count / (s.total_reports || 1)) * 100);
+            labelName = 'Discipline Rate (%)';
+            color = '#f59e0b';
+            bgColor = 'rgba(245, 158, 11, 0.1)';
+        }
+
+        comparisonChart.data.labels = labels;
+        comparisonChart.data.datasets[0].data = dataValues;
+        comparisonChart.data.datasets[0].label = labelName;
+        comparisonChart.data.datasets[0].borderColor = color;
+        comparisonChart.data.datasets[0].backgroundColor = bgColor;
+        comparisonChart.update();
+    }
+}" x-init="$nextTick(() => initBaseChart())" class="space-y-8">
 
     {{-- Header & Export --}}
     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -48,7 +74,7 @@
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" class="flex-1 bg-primary text-white py-2 rounded-xl font-bold text-sm hover:brightness-110 transition">Apply</button>
-                        <a href="{{ route('manager.reports.index') }}" class="px-4 py-2 bg-white/5 text-slate-400 rounded-xl hover:text-white transition border border-white/5" title="Reset Filter">
+                        <a href="{{ route('manager.reports.index') }}" class="px-4 py-2 bg-white/5 text-slate-400 rounded-xl hover:text-white transition border border-white/5">
                             <i class="fas fa-sync-alt"></i>
                         </a>
                     </div>
@@ -57,21 +83,26 @@
 
             {{-- Mode Switcher --}}
             <div class="organic-card p-2 flex bg-darkCard/50 border border-white/5">
-                <button @click="viewMode = 'performance'" :class="viewMode === 'performance' ? 'bg-primary text-white' : 'text-slate-500'" class="flex-1 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Performance</button>
-                <button @click="viewMode = 'conformance'" :class="viewMode === 'conformance' ? 'bg-amber-500 text-white' : 'text-slate-500'" class="flex-1 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Conformance</button>
+                <button @click="viewMode = 'performance'; updateComparisonChart()"
+                    :class="viewMode === 'performance' ? 'bg-primary text-white' : 'text-slate-500'"
+                    class="flex-1 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Performance</button>
+                <button @click="viewMode = 'conformance'; updateComparisonChart()"
+                    :class="viewMode === 'conformance' ? 'bg-amber-500 text-white' : 'text-slate-500'"
+                    class="flex-1 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Conformance</button>
             </div>
         </div>
 
         {{-- Global Rating Comparison Chart --}}
         <div class="lg:col-span-2 organic-card p-6 min-h-[250px]">
-            <h4 class="text-white text-xs font-bold uppercase tracking-widest mb-4 opacity-50 text-center">Team Rating Comparison</h4>
+            <h4 class="text-white text-xs font-bold uppercase tracking-widest mb-4 opacity-50 text-center"
+                x-text="viewMode === 'performance' ? 'Team Performance Rating' : 'Team Discipline Rating (%)'"></h4>
             <div class="h-48">
                 <canvas id="comparisonChart"></canvas>
             </div>
         </div>
     </div>
 
-    {{-- Detail Analytics Section (Radar & Donut) --}}
+    {{-- Detail Analytics Section --}}
     <div x-show="showDetail" x-transition class="organic-card p-8 border-t-4 border-primary bg-gradient-to-b from-primary/5 to-transparent">
         <div class="flex justify-between items-start mb-8">
             <div class="flex items-center gap-4">
@@ -87,7 +118,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-            {{-- Radar Chart: Kompetensi --}}
             <div class="md:col-span-5 bg-black/20 p-6 rounded-3xl border border-white/5">
                 <p class="text-[10px] text-center text-slate-500 uppercase mb-4 font-bold">KPI Variable Balance (Radar)</p>
                 <div class="h-64">
@@ -95,18 +125,17 @@
                 </div>
             </div>
 
-            {{-- Donut Chart: On-Time vs Late --}}
             <div class="md:col-span-3 bg-black/20 p-6 rounded-3xl border border-white/5">
                 <p class="text-[10px] text-center text-slate-500 uppercase mb-4 font-bold">Reporting Discipline</p>
                 <div class="h-48">
                     <canvas id="donutChart"></canvas>
                 </div>
                 <div class="mt-4 text-center">
-                    <p class="text-xs text-white font-bold" x-text="selectedStaff?.on_time_count + ' On-Time'"></p>
+                    <p class="text-xs text-white font-bold" x-text="selectedStaff?.on_time_count + ' On-Time / ' + selectedStaff?.late_count + ' Late'"></p>
+                    <p class="text-[10px] text-slate-500 mt-1">Based on Manager Correction</p>
                 </div>
             </div>
 
-            {{-- Metric Cards --}}
             <div class="md:col-span-4 space-y-4">
                 <div class="bg-primary/10 border border-primary/20 p-4 rounded-2xl">
                     <span class="text-[10px] text-primary uppercase font-bold block">Avg Performance Score</span>
@@ -124,7 +153,7 @@
         </div>
     </div>
 
-    {{-- Main Table (Sama seperti sebelumnya dengan sedikit perbaikan styling) --}}
+    {{-- Main Table --}}
     <div class="organic-card overflow-hidden">
         <table class="w-full text-left">
             <thead class="bg-white/5 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
@@ -151,7 +180,7 @@
                     <td class="p-5 text-center text-slate-400">{{ $row['total_cases'] }}</td>
                     <td class="p-5 text-right font-header text-xl text-primary">{{ number_format($row['avg_score'], 1) }}</td>
                     <td class="p-5 text-center">
-                        <button @click="selectedStaff = @js($row); showDetail = true; $nextTick(() => initCharts(selectedStaff))"
+                        <button @click="selectedStaff = @js($row); showDetail = true; $nextTick(() => initDetailCharts(selectedStaff))"
                             class="bg-primary/20 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold transition border border-primary/20">
                             ANALYZE
                         </button>
@@ -169,17 +198,18 @@
         donutChart = null,
         comparisonChart = null;
 
-    // 1. Comparison Chart (Always Visible)
-    document.addEventListener('DOMContentLoaded', () => {
-        const data = @js($comparisonData);
+    // Inisialisasi Chart Utama (Comparison)
+    function initBaseChart() {
         const ctx = document.getElementById('comparisonChart').getContext('2d');
+        const initialData = @js($comparisonData);
+
         comparisonChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.labels,
+                labels: initialData.labels,
                 datasets: [{
                     label: 'Avg Score',
-                    data: data.scores,
+                    data: initialData.scores,
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     fill: true,
@@ -217,10 +247,10 @@
                 }
             }
         });
-    });
+    }
 
-    // 2. Individual Analysis Charts
-    function initCharts(staff) {
+    // Inisialisasi Chart Detail (Radar & Donut)
+    function initDetailCharts(staff) {
         // Radar Chart
         const radarCtx = document.getElementById('radarChart').getContext('2d');
         if (radarChart) radarChart.destroy();
