@@ -15,7 +15,11 @@ class KpiController extends Controller
 {
     public function create()
     {
-        $variables = KpiVariable::where('division_id', Auth::user()->division_id)->get();
+        // Perubahan: Hanya mengambil variabel yang aktif (is_active = true)
+        $variables = KpiVariable::where('division_id', Auth::user()->division_id)
+            ->where('is_active', true)
+            ->get();
+
         return view('staff.kpi_input', compact('variables'));
     }
 
@@ -36,10 +40,10 @@ class KpiController extends Controller
                 'assessment_date'   => now()->format('Y-m-d'),
                 'status'            => 'pending',
                 'total_final_score' => 0,
-                'manager_feedback'  => '', // Penting: Kolom ini NOT NULL di DB
+                'manager_feedback'  => '',
             ]);
 
-            // 2. Simpan Log Tiket
+            // 2. Simpan Log Tiket (Setiap baris akan dihitung skornya di ApprovalController)
             foreach ($request->tickets as $ticket) {
                 KpiCaseLog::create([
                     'kpi_submission_id'            => $submission->id,
@@ -50,13 +54,17 @@ class KpiController extends Controller
             }
 
             // 3. Inisialisasi Detail Variabel KPI
-            $variables = KpiVariable::where('division_id', Auth::user()->division_id)->get();
-            foreach ($variables as $var) {
+            // Perubahan: Hanya inisialisasi variabel yang AKTIF saat ini
+            $activeVariables = KpiVariable::where('division_id', Auth::user()->division_id)
+                ->where('is_active', true)
+                ->get();
+
+            foreach ($activeVariables as $var) {
                 KpiDetail::create([
                     'kpi_submission_id' => $submission->id,
                     'kpi_variable_id'   => $var->id,
-                    'staff_value'       => '0',
-                    'calculated_score'  => 0,
+                    'staff_value'       => '0', // Nilai awal
+                    'calculated_score'  => 0,   // Akan diupdate saat approval
                 ]);
             }
 
@@ -67,7 +75,7 @@ class KpiController extends Controller
             return back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
-    
+
     public function history()
     {
         $submissions = KpiSubmission::where('user_id', Auth::id())
