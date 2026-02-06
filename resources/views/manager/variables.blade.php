@@ -139,16 +139,39 @@
 
             <form action="{{ route('manager.variables.store') }}" method="POST">
                 @csrf
-                {{-- Input hidden division_id --}}
+                @if ($errors->any())
+                <div class="bg-red-500/10 text-red-500 p-3 rounded-lg text-xs mb-4">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+                {{-- Input hidden division_id (Sudah benar) --}}
                 <input type="hidden" name="division_id" value="{{ $selectedDivisionId }}">
 
                 <div class="space-y-4">
+                    {{-- Input Nama Variabel (Sudah benar) --}}
                     <div>
                         <label class="text-[10px] text-slate-500 uppercase font-bold ml-2 tracking-widest">Nama Variabel / Item</label>
                         <input type="text" name="variable_name" required placeholder="Contoh: Kecepatan Respon"
                             class="w-full bg-secondary border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none mt-1 focus:border-primary transition-all">
                     </div>
+
+                    {{-- TAMBAHKAN INI: Input Tipe Penilaian --}}
+                    <div>
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-2 tracking-widest">Tipe Penilaian</label>
+                        <select name="input_type" required
+                            class="w-full bg-secondary border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none mt-1 focus:border-primary transition-all appearance-none cursor-pointer">
+                            <option value="dropdown">Dropdown (Managerial)</option>
+                            <option value="case_list">Case List (Teknis/Otomatis)</option>
+                            <option value="number">Angka Langsung</option>
+                            <option value="boolean">Ya/Tidak</option>
+                        </select>
+                    </div>
                 </div>
+
                 <div class="mt-8 flex gap-3">
                     <button type="button" onclick="closeModal('addVarModal')" class="flex-1 px-4 py-3 text-slate-400 text-sm font-bold hover:text-white transition-colors">Batal</button>
                     <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:scale-105 active:scale-95 transition-all">Simpan</button>

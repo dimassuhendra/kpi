@@ -30,15 +30,25 @@ class VariableController extends Controller
         $request->validate([
             'division_id' => 'required',
             'variable_name' => 'required|string|max:255',
-            'input_type' => 'required'
+            'input_type' => 'required|in:case_list,dropdown,number,boolean'
         ]);
+
+        $defaultMatrix = null;
+        if ($request->input_type === 'dropdown') {
+            $defaultMatrix = json_encode([
+                'tepat_waktu' => 100,
+                'terlambat' => 50,
+                'tidak_mengisi' => 0
+            ]);
+        }
 
         KpiVariable::create([
             'division_id' => $request->division_id,
             'variable_name' => $request->variable_name,
             'input_type' => $request->input_type,
             'weight' => 0,
-            'is_active' => true, // Variabel baru otomatis aktif
+            'is_active' => true,
+            'scoring_matrix' => $defaultMatrix,
         ]);
 
         return redirect()->back()->with('success', 'Variabel baru berhasil ditambahkan!');
