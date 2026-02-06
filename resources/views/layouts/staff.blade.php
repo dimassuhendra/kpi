@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Bree+Serif:wght@400;800&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -16,8 +17,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#10b981', // Emerald
-                        secondary: '#0f172a', // Deep Dark Slate
+                        primary: '#10b981',
+                        secondary: '#0f172a',
                         accent: '#34d399',
                         darkCard: '#1e293b',
                     },

@@ -67,45 +67,51 @@ class ApprovalController extends Controller
                 $weight = (float) $variable->weight;
                 $scoreBase = 0;
                 $varName = strtolower($variable->variable_name);
+                $selectedOption = null;
 
                 // LOGIKA A: Variabel Teknis (Input dari Case List)
                 if ($variable->input_type === 'case_list') {
                     $scoreBase = $avgTechnicalScore;
                 }
 
-                // LOGIKA B: Variabel Managerial (Input Dropdown: Tepat Waktu / Revisi)
+                // LOGIKA B: Variabel Managerial (Dropdown)
                 elseif ($variable->input_type === 'dropdown') {
-                    // Cek nama variabel untuk menentukan sumber input dari request
-                    if (str_contains($varName, 'waktu')) {
-                        // Mengambil input name="is_on_time", default "1" (Ya)
-                        $selectedOption = $request->input('is_on_time', "1");
-                    } elseif (str_contains($varName, 'revisi')) {
-                        // Mengambil input name="needs_revision", default "0" (Tidak)
-                        $selectedOption = $request->input('needs_revision', "0");
+                    // Cek apakah ini variabel Waktu atau Revisi dengan lebih akurat
+                    if (str_contains($varName, 'waktu') || str_contains($varName, 'time')) {
+                        $selectedOption = $request->input('is_on_time', "1"); // Default "1" (Ya)
+                    } elseif (str_contains($varName, 'revisi') || str_contains($varName, 'perbaikan')) {
+                        $selectedOption = $request->input('needs_revision', "0"); // Default "0" (Tidak)
                     } else {
-                        // Untuk dropdown custom lainnya jika menggunakan ID
-                        $selectedOption = $request->input("var_" . $variable->id, "0");
+                        // Fallback: Gunakan staff_value asli jika manager tidak input variabel spesifik ini
+                        $selectedOption = $detail->staff_value;
                     }
 
-                    // Penanganan Auto-Casting Scoring Matrix (Mencegah TypeError)
+                    // Ambil matrix skor
                     $matrix = is_array($variable->scoring_matrix)
                         ? $variable->scoring_matrix
                         : json_decode($variable->scoring_matrix, true) ?? [];
 
-                    // Mengambil nilai angka dari matrix (misal pilihan "1" bernilai 100)
+                    // Kalkulasi Skor Dasar dari Matrix
+                    // Jika selectedOption adalah "tepat_waktu", matrix harus punya key itu.
+                    // Jika selectedOption adalah "1", matrix harus punya key itu.
                     $scoreBase = $matrix[$selectedOption] ?? 0;
 
-                    // Simpan pilihan manager (0/1) ke database
+                    // Debugging Case: Jika matrix tidak ketemu tapi staff_value ada
+                    if ($scoreBase == 0 && isset($matrix[$detail->staff_value])) {
+                        $scoreBase = $matrix[$detail->staff_value];
+                        $selectedOption = $detail->staff_value;
+                    }
+
                     $detail->manager_correction = $selectedOption;
                 }
 
-                // Hitung skor akhir untuk variabel ini: (Skor Dasar * Bobot) / 100
+                // Hitung skor akhir: (Skor Dasar * Bobot) / 100
                 $calculatedScore = ($scoreBase * $weight) / 100;
 
-                // Update per baris detail KPI
+                // Update baris detail
                 $detail->update([
                     'calculated_score' => $calculatedScore,
-                    'manager_correction' => $detail->manager_correction ?? $selectedOption ?? null
+                    'manager_correction' => $selectedOption
                 ]);
 
                 $totalFinalScore += $calculatedScore;
