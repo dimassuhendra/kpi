@@ -22,6 +22,11 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::get('/dashboard', [StaffKpiController::class, 'dashboard'])->name('staff.dashboard');
     Route::get('/input-case', [StaffKpiController::class, 'index'])->name('staff.input');
     Route::post('/kpi/store', [StaffKpiController::class, 'store'])->name('staff.kpi.store');
+    Route::get('/kpi/logs', [StaffKpiController::class, 'logs'])->name('staff.kpi.logs');
+    Route::put('/kpi/logs/{id}', [StaffKpiController::class, 'update'])->name('staff.kpi.update');
+    Route::delete('/kpi/logs/{id}', [StaffKpiController::class, 'destroy'])->name('staff.kpi.destroy');
+    Route::put('/kpi/case-update/{id}', [StaffKpiController::class, 'updateCase'])->name('staff.kpi.case_update');
+    Route::get('/kpi/export-excel', [StaffKpiController::class, 'exportExcel'])->name('staff.kpi.export.excel');
 });
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {

@@ -15,8 +15,8 @@ class DailyReport extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function kegiatanDetails(): HasMany
+    public function details(): HasMany
     {
-        return $this->hasMany(KegiatanDetail::class);
+        return $this->hasMany(KegiatanDetail::class, 'daily_report_id');
     }
 }
