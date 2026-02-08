@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Division extends Model
+class Divisi extends Model
 {
-    protected $fillable = ['name'];
+    protected $table = 'divisi';
+    protected $fillable = ['nama_divisi'];
 
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
-    public function kpiVariables(): HasMany
+    public function variabelKpis(): HasMany
     {
-        return $this->hasMany(KpiVariable::class);
+        return $this->hasMany(VariabelKpi::class);
     }
 }

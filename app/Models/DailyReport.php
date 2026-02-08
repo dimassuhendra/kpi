@@ -6,17 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class KpiCase extends Model
+class DailyReport extends Model
 {
-    protected $fillable = ['user_id', 'case_title', 'description', 'entry_date'];
+    protected $fillable = ['user_id', 'tanggal', 'total_nilai_harian', 'status', 'catatan_manager'];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function kpiValues(): HasMany
+    public function kegiatanDetails(): HasMany
     {
-        return $this->hasMany(KpiValue::class);
+        return $this->hasMany(KegiatanDetail::class);
     }
 }
