@@ -28,6 +28,8 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::put('/kpi/case-update/{id}', [StaffKpiController::class, 'updateCase'])->name('staff.kpi.case_update');
     Route::get('/kpi/export-excel', [StaffKpiController::class, 'exportExcel'])->name('staff.kpi.export.excel');
     Route::get('/kpi/achievements', [StaffKpiController::class, 'achievements'])->name('staff.kpi.achievements');
+    Route::get('/profile', [StaffKpiController::class, 'editProfile'])->name('staff.profile.edit');
+    Route::put('/profile', [StaffKpiController::class, 'updateProfile'])->name('staff.profile.update');
 });
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {

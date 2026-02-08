@@ -141,16 +141,16 @@
                 <div class="hidden md:flex items-center space-x-4">
                     <div class="flex flex-col items-end mr-2 text-right">
                         <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold leading-none">
-                            {{ Auth::user()->division->name ?? 'TAC DIVISION' }}
+                            {{ Auth::user()->divisi->nama_divisi ?? 'No Desc' }}
                         </span>
                         <span class="text-sm font-header font-semibold text-slate-200">
-                            {{ Auth::user()->name ?? 'Staff Name' }}
+                            {{ Auth::user()->nama_lengkap ?? 'Staff Name' }}
                         </span>
                     </div>
 
                     <div class="relative group cursor-pointer">
                         <div class="w-11 h-11 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg group-hover:rotate-6 transition-all">
-                            <i class="fas fa-user-astronaut text-xl text-white"></i>
+                            <a href="{{ route('staff.profile.edit') }}"><i class="fas fa-user-astronaut text-xl text-white"></i></a>
                         </div>
                     </div>
 
@@ -198,11 +198,11 @@
                 <div class="my-6 border-t border-white/5 pt-6">
                     <div class="flex items-center px-4 py-2 mb-6">
                         <div class="w-12 h-12 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-emerald-500/20">
-                            <a href="#"><i class="fas fa-user text-xl text-white"></i></a>
+                            <a href="{{ route('staff.profile.edit') }}"><i class="fas fa-user text-xl text-white"></i></a>
                         </div>
                         <div>
-                            <p class="text-base font-bold text-white">{{ Auth::user()->name ?? 'Staff Name' }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wider">{{ Auth::user()->division->name ?? 'TAC' }}</p>
+                            <p class="text-base font-bold text-white">{{ Auth::user()->nama_lengkap ?? 'Staff Name' }}</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider">{{ Auth::user()->divisi->nama_divisi ?? 'No Desc' }}</p>
                         </div>
                     </div>
                     <form action="#" method="POST">
