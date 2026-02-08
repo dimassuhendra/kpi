@@ -16,8 +16,8 @@ class User extends Authenticatable
         return $this->belongsTo(Divisi::class);
     }
 
-    public function dailyReports(): HasMany
+    public function reports()
     {
-        return $this->hasMany(DailyReport::class);
+        return $this->hasMany(DailyReport::class, 'user_id');
     }
 }

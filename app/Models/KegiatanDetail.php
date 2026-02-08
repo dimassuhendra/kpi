@@ -19,13 +19,13 @@ class KegiatanDetail extends Model
         'nilai_akhir'
     ];
 
-    public function dailyReport(): BelongsTo
+    public function dailyReport()
     {
-        return $this->belongsTo(DailyReport::class);
+        return $this->belongsTo(DailyReport::class, 'daily_report_id');
     }
 
-    public function variabelKpi(): BelongsTo
+    public function variabelKpi()
     {
-        return $this->belongsTo(VariabelKpi::class);
+        return $this->belongsTo(VariabelKpi::class, 'variabel_kpi_id');
     }
 }

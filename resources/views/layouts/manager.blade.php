@@ -93,6 +93,24 @@
             max-height: 100vh;
             opacity: 1;
         }
+
+        /* Custom Scrollbar for Manager */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
     </style>
 </head>
 
@@ -101,48 +119,43 @@
     <nav class="glass-nav text-white sticky top-0 z-50 w-full px-6 lg:px-12">
         <div class="flex justify-between h-20 items-center">
 
-            {{-- Brand & Desktop Menu --}}
+            {{-- Brand --}}
             <div class="flex items-center gap-8">
                 <a href="{{ route('manager.dashboard') }}" class="flex-shrink-0 flex items-center group">
                     <img class="h-10 w-auto logo-silhouette group-hover:rotate-12 transition-transform"
                         src="{{ asset('img/logo.png') }}" alt="Logo">
-                    <span class="ml-3 font-header font-bold text-xl tracking-tighter text-white">MYBOLO <span class="text-primary italic">CONSOLE</span></span>
+                    <span class="ml-3 font-header font-bold text-xl tracking-tighter text-white uppercase">
+                        MyBolo <span class="text-primary italic">Console</span>
+                    </span>
                 </a>
 
-                {{-- Desktop Nav with Professional Copywriting --}}
+                {{-- Desktop Nav --}}
                 <div class="hidden lg:flex lg:space-x-1 items-center">
                     <a href="{{ route('manager.dashboard') }}"
-                        class="nav-link {{ request()->is('manager/dashboard') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        class="nav-link {{ request()->routeIs('manager.dashboard') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
                         <i class="fas fa-layer-group mr-2 text-xs"></i> Overview
                     </a>
 
                     <a href="{{ route('manager.approval.index') }}"
                         class="nav-link {{ request()->is('manager/approval*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all relative">
-                        <i class="fas fa-shield-check mr-2 text-xs"></i> Validation Center
-                        @php $pending = \App\Models\KpiSubmission::where('status', 'pending')->count(); @endphp
-                        @if($pending > 0)
-                        <span class="ml-2 bg-primary text-[9px] px-1.5 py-0.5 rounded-md text-white animate-pulse">{{ $pending }}</span>
-                        @endif
+                        <i class="fas fa-shield-check mr-2 text-xs"></i> Validation
+                        {{-- Badge Pending (Logic placeholder) --}}
+                        <span class="ml-2 bg-rose-500 text-[9px] px-1.5 py-0.5 rounded-md text-white animate-pulse">4</span>
                     </a>
 
-                    <a href="{{ route('manager.analytics.index') }}"
-                        class="nav-link {{ request()->is('manager/analytics*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
-                        <i class="fas fa-chart-line mr-2 text-xs"></i> Performance Insights
+                    <a href="{{ route('manager.staff.index') }}"
+                        class="nav-link {{ request()->is('manager/staff*') || request()->is('manager/divisi*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        <i class="fas fa-users-cog mr-2 text-xs"></i> User Management
                     </a>
 
                     <a href="{{ route('manager.variables.index') }}"
                         class="nav-link {{ request()->is('manager/variables*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
-                        <i class="fas fa-sliders-h mr-2 text-xs"></i> KPI Configurator
+                        <i class="fas fa-sliders-h mr-2 text-xs"></i> KPI Config
                     </a>
 
                     <a href="{{ route('manager.reports.index') }}"
                         class="nav-link {{ request()->is('manager/reports*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
-                        <i class="fas fa-file-invoice mr-2 text-xs"></i> Executive Summary
-                    </a>
-
-                    <a href="{{ route('manager.staff.index') }}"
-                        class="nav-link {{ request()->is('manager/staff*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
-                        <i class="fas fa-user-plus mr-2 text-xs"></i> Team Directory
+                        <i class="fas fa-file-download mr-2 text-xs"></i> Reports
                     </a>
                 </div>
             </div>
@@ -150,11 +163,11 @@
             {{-- Right Side Profile --}}
             <div class="hidden md:flex items-center space-x-4">
                 <div class="flex flex-col items-end mr-2 text-right">
-                    <span class="text-[9px] uppercase tracking-[0.2em] text-primary font-bold leading-none mb-1">Manager Access</span>
-                    <span class="text-sm font-header font-semibold text-slate-200">{{ Auth::user()->name }}</span>
+                    <span class="text-[9px] uppercase tracking-[0.2em] text-primary font-bold leading-none mb-1">Access Level: Manager</span>
+                    <span class="text-sm font-header font-semibold text-white">{{ Auth::user()->name }}</span>
                 </div>
 
-                <div class="w-10 h-10 bg-gradient-to-tr from-primary/20 to-primary/5 rounded-xl flex items-center justify-center border border-white/10 shadow-inner group">
+                <div class="w-10 h-10 bg-gradient-to-tr from-primary/20 to-primary/5 rounded-xl flex items-center justify-center border border-white/10 group">
                     <i class="fas fa-user-shield text-primary group-hover:scale-110 transition-transform"></i>
                 </div>
 
@@ -179,25 +192,20 @@
         {{-- Mobile Menu --}}
         <div id="mobile-menu" class="lg:hidden">
             <div class="py-6 space-y-1">
-                <a href="{{ route('manager.dashboard') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-home w-8"></i> Overview
+                <a href="{{ route('manager.dashboard') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->routeIs('manager.dashboard') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-home w-8 text-xs"></i> Overview
                 </a>
                 <a href="{{ route('manager.approval.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-check-circle w-8"></i> Validation Center
-                </a>
-                <a href="{{ route('manager.analytics.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/analytics*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-chart-line w-8"></i> Performance Insights
-                </a>
-                <a href="{{ route('manager.variables.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-cogs w-8"></i> KPI Configurator
-                </a>
-                <a href="{{ route('manager.reports.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/reports*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-file-alt w-8"></i> Executive Summary
+                    <i class="fas fa-check-circle w-8 text-xs"></i> Validation Center
                 </a>
                 <a href="{{ route('manager.staff.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/staff*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
-                    <i class="fas fa-user-alt w-8"></i> Team Directory
+                    <i class="fas fa-users w-8 text-xs"></i> User Management
                 </a>
-                <form action="{{ route('logout') }}" method="POST" class="pt-4 px-4">
+                <a href="{{ route('manager.variables.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                    <i class="fas fa-cogs w-8 text-xs"></i> KPI Configuration
+                </a>
+
+                <form action="{{ route('logout') }}" method="POST" class="pt-4 px-4 border-t border-white/5 mt-4">
                     @csrf
                     <button type="submit" class="w-full py-3 rounded-2xl bg-red-500/10 text-red-500 font-bold border border-red-500/20">
                         Logout Session
@@ -207,7 +215,7 @@
         </div>
     </nav>
 
-    {{-- CONTENT --}}
+    {{-- MAIN CONTENT --}}
     <main class="flex-grow">
         <div class="max-w-[1600px] mx-auto py-10 px-6 lg:px-12">
             @yield('content')
@@ -215,7 +223,7 @@
     </main>
 
     <footer class="p-8 text-center bg-secondary/30">
-        <p class="text-slate-600 text-xs font-medium italic uppercase tracking-widest">
+        <p class="text-slate-600 text-[10px] font-medium italic uppercase tracking-widest">
             &copy; 2026 <span class="text-primary font-bold">MyBolo Console</span> • Manager Intelligence Interface
         </p>
     </footer>

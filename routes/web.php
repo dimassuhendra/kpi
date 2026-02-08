@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 
 use App\Http\Controllers\StaffKpiController;
+use App\Http\Controllers\ManagerController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -33,5 +34,11 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
 });
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+
+    // Placeholder untuk route lain agar menu di layout tidak error
+    Route::get('/approval', [ManagerController::class, 'approvalIndex'])->name('approval.index');
+    Route::get('/staff', [ManagerController::class, 'staffIndex'])->name('staff.index');
+    Route::get('/variables', [ManagerController::class, 'variablesIndex'])->name('variables.index');
+    Route::get('/reports', [ManagerController::class, 'reportsIndex'])->name('reports.index');
 });
