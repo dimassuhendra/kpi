@@ -19,4 +19,7 @@ class DailyReport extends Model
     {
         return $this->hasMany(KegiatanDetail::class, 'daily_report_id');
     }
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
 }
