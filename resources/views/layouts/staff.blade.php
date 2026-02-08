@@ -156,7 +156,7 @@
 
                     <div class="h-8 w-[1px] bg-white/10 mx-2"></div>
 
-                    <form action="#" method="POST">
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="group flex items-center justify-center w-11 h-11 bg-red-500/10 hover:bg-red-500 rounded-2xl transition-all duration-300">
                             <i class="fas fa-power-off text-red-500 group-hover:text-white"></i>
@@ -205,7 +205,7 @@
                             <p class="text-xs text-slate-500 uppercase tracking-wider">{{ Auth::user()->divisi->nama_divisi ?? 'No Desc' }}</p>
                         </div>
                     </div>
-                    <form action="#" method="POST">
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                             <i class="fas fa-sign-out-alt mr-2"></i> Logout
