@@ -35,6 +35,9 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/validation', [ManagerController::class, 'validationIndex'])->name('approval.index');
+    Route::get('/validation/{id}', [ManagerController::class, 'validationShow'])->name('approval.show');
+    Route::post('/validation/store', [ManagerController::class, 'validationStore'])->name('approval.store');
 
     // Placeholder untuk route lain agar menu di layout tidak error
     Route::get('/approval', [ManagerController::class, 'approvalIndex'])->name('approval.index');

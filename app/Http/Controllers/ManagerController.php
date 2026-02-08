@@ -74,4 +74,57 @@ class ManagerController extends Controller
 
         return view('manager.dashboard', compact('stats', 'leaderboard', 'pendingApprovals', 'divisis', 'selectedDivisi', 'heatmapData', 'viewType', 'chartData'));
     }
+
+    // ===============================================================
+    // Modul Validation
+    // ===============================================================
+    // ... keep existing dashboard method ...
+
+    public function validationIndex(Request $request)
+    {
+        $pendingReports = DailyReport::with('user')
+            ->where('status', 'pending')
+            ->latest('tanggal')
+            ->get();
+
+        return view('manager.validation', compact('pendingReports'));
+    }
+
+    public function validationShow($id)
+    {
+        $report = DailyReport::with(['user', 'details.variabelKpi'])->findOrFail($id);
+
+        // Mengembalikan partial view untuk ditampilkan di sisi kanan (AJAX)
+        return view('manager.partials.validation-detail', compact('report'))->render();
+    }
+
+    public function validationStore(Request $request)
+    {
+        $request->validate([
+            'report_id' => 'required|exists:daily_reports,id',
+            'status' => 'required|in:approved,rejected',
+            'details' => 'required|array'
+        ]);
+
+        $report = DailyReport::findOrFail($request->report_id);
+        $totalNilai = 0;
+
+        // Update nilai per item kegiatan (Adjust Weight)
+        foreach ($request->details as $detailId => $data) {
+            $detail = KegiatanDetail::find($detailId);
+            if ($detail) {
+                $detail->update(['nilai_akhir' => $data['score']]);
+                $totalNilai += $data['score'];
+            }
+        }
+
+        // Update status final laporan
+        $report->update([
+            'status' => $request->status,
+            'total_nilai_harian' => $totalNilai,
+            'catatan_manager' => $request->catatan
+        ]);
+
+        return redirect()->route('manager.approval.index')->with('success', 'Laporan berhasil diproses.');
+    }
 }
