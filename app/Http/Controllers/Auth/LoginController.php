@@ -33,7 +33,7 @@ class LoginController extends Controller
 
             $request->session()->regenerate();
 
-            return redirect()->intended($user->role == 'manager' ? route('manager.dashboard') : route('staff.dashboard'));
+            return redirect()->intended($user->role == 'manager' ? route('manager.dashboard') : route('staff.input'));
         }
 
         return back()->withErrors(['email' => 'Email atau password salah.'])->withInput($request->only('email'));

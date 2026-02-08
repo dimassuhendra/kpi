@@ -4,17 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 
-use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
-use App\Http\Controllers\Staff\KpiController as StaffKpiController;
-use App\Http\Controllers\Staff\PerformanceController as StaffPerformanceController;
-use App\Http\Controllers\Staff\ProfileController as StaffProfileController;
-
-use App\Http\Controllers\Manager\DashboardController;
-use App\Http\Controllers\Manager\ApprovalController;
-use App\Http\Controllers\Manager\AnalyticsController;
-use App\Http\Controllers\Manager\VariableController;
-use App\Http\Controllers\Manager\ReportController;
-use App\Http\Controllers\Manager\StaffController;
+use App\Http\Controllers\StaffKpiController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -28,12 +18,11 @@ Route::post('/logout', function (Request $request) {
 })->name('logout');
 
 // Grup Route Dashboard (Gunakan Middleware)
-Route::middleware(['auth', 'role:staff'])->group(function () {
-    Route::get('/dashboard/staff', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
-
+Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], function () {
+    Route::get('/input-case', [StaffKpiController::class, 'index'])->name('staff.input');
+    Route::post('/kpi/store', [StaffKpiController::class, 'store'])->name('staff.kpi.store');
 });
 
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
 });

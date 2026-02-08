@@ -11,13 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kegiatan_details', function (Blueprint $table) {
+        Schema::create('kegiatan_detail', function (Blueprint $table) {
             $table->id();
             $table->foreignId('daily_report_id')->constrained('daily_reports')->onDelete('cascade');
-            $table->foreignId('variabel_kpi_id')->constrained('variabel_kpis')->onDelete('cascade');
+            $table->foreignId('variabel_kpi_id')->constrained('variabel_kpi')->onDelete('cascade');
             $table->text('deskripsi_kegiatan');
-            $table->string('value_raw'); // Menyimpan input asli
-            $table->decimal('nilai_akhir', 8, 2); // Hasil perhitungan (value_raw * bobot)
+            $table->string('value_raw');
+
+            $table->boolean('temuan_sendiri')->default(false);
+            $table->boolean('is_mandiri')->default(true);
+            $table->string('pic_name')->nullable();
+
+            $table->decimal('nilai_akhir', 8, 2);
             $table->timestamps();
         });
     }

@@ -13,6 +13,9 @@ class KegiatanDetail extends Model
         'variabel_kpi_id',
         'deskripsi_kegiatan',
         'value_raw',
+        'temuan_sendiri',
+        'is_mandiri',
+        'pic_name',
         'nilai_akhir'
     ];
 
