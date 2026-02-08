@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\VariabelKpi;
 use App\Models\DailyReport;
 use App\Models\KegiatanDetail;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class StaffKpiController extends Controller
 {
@@ -16,42 +18,33 @@ class StaffKpiController extends Controller
         $user = Auth::user();
         $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
 
-        $report = DailyReport::where('user_id', $user->id)
-            ->whereDate('tanggal', now()->toDateString())
-            ->with('kegiatanDetails')
-            ->first();
+        // Selalu mulai dengan form kosong setiap kali halaman dibuka
+        $formattedRows = [[
+            'deskripsi' => '',
+            'respons' => '',
+            'temuan_sendiri' => false,
+            'is_mandiri' => 1,
+            'pic_name' => ''
+        ]];
 
-        $formattedRows = [['deskripsi' => '', 'respons' => '', 'temuan_sendiri' => false, 'is_mandiri' => 1, 'pic_name' => '']];
-
-        if ($report && $report->kegiatanDetails->count() > 0) {
-            $formattedRows = $report->kegiatanDetails->map(function ($d) {
-                return [
-                    'deskripsi' => $d->deskripsi_kegiatan,
-                    'respons' => $d->value_raw,
-                    'temuan_sendiri' => (bool)$d->temuan_sendiri,
-                    'is_mandiri' => $d->is_mandiri ? 1 : 0,
-                    'pic_name' => $d->pic_name ?? ''
-                ];
-            });
-        }
-
-        return view('staff.input_kpi', compact('variabelKpis', 'report', 'formattedRows'));    }
+        return view('staff.input_kpi', compact('variabelKpis', 'formattedRows'));
+    }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-        $report = DailyReport::updateOrCreate(
-            ['user_id' => $user->id, 'tanggal' => now()->toDateString()],
-            ['status' => 'pending']
-        );
 
-        $report->kegiatanDetails()->delete();
+        // Buat report baru setiap kali submit (setiap baris dianggap satu laporan final)
+        // Jika ingin menggabungkan dalam satu laporan harian, kita gunakan updateOrCreate
+        $report = DailyReport::create([
+            'user_id' => $user->id,
+            'tanggal' => now()->toDateString(),
+            'status' => 'pending',
+        ]);
+
         $totalPoinHarian = 0;
-
-        // Ambil semua variabel KPI untuk divisi ini agar kita bisa ambil bobotnya
         $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
 
-        // Mapping ID variabel berdasarkan nama (agar gampang dipanggil)
         $vCount = $variabelKpis->where('nama_variabel', 'Jumlah Case Harian')->first();
         $vRespons = $variabelKpis->where('nama_variabel', 'Durasi Response (Ambang Batas 15 Menit)')->first();
         $vTemuan = $variabelKpis->where('nama_variabel', 'Case Ditemukan Sendiri')->first();
@@ -59,32 +52,29 @@ class StaffKpiController extends Controller
 
         foreach ($request->case as $item) {
             $poinCaseIni = 0;
-
-            // 1. Poin Dasar per Case (Jika ada variabel Jumlah Case)
             if ($vCount) $poinCaseIni += $vCount->bobot;
 
-            // 2. Poin Respons (Hanya jika bukan temuan sendiri)
             $isTemuan = isset($item['temuan_sendiri']);
             if ($isTemuan) {
                 if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
             } else {
                 if ($vRespons) {
-                    // Logika: < 15 menit full bobot, > 15 menit potong 50%
-                    $poinCaseIni += ($item['respons'] <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
+                    $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
                 }
             }
 
-            // 3. Poin Penyelesaian Mandiri
-            if ($item['is_mandiri'] == '1') {
+            if (($item['is_mandiri'] ?? '1') == '1') {
                 if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
             }
 
-            // Simpan Detail
             KegiatanDetail::create([
                 'daily_report_id' => $report->id,
-                'variabel_kpi_id' => $vCount->id ?? null, // Kita hubungkan ke variabel utama
-                'deskripsi_kegiatan' => $item['deskripsi'] . ($item['is_mandiri'] == '0' ? " (PIC: {$item['pic_name']})" : ""),
-                'value_raw' => $item['respons'],
+                'variabel_kpi_id' => $vCount->id ?? null,
+                'deskripsi_kegiatan' => $item['deskripsi'],
+                'value_raw' => $item['respons'] ?? 0,
+                'temuan_sendiri' => $isTemuan ? 1 : 0,
+                'is_mandiri' => $item['is_mandiri'] ?? 1,
+                'pic_name' => ($item['is_mandiri'] ?? '1') == '0' ? ($item['pic_name'] ?? '') : null,
                 'nilai_akhir' => $poinCaseIni
             ]);
 
@@ -93,22 +83,66 @@ class StaffKpiController extends Controller
 
         $report->update(['total_nilai_harian' => $totalPoinHarian]);
 
-        return redirect()->back()->with('success', 'Laporan berhasil terkirim!');
+        return redirect()->route('staff.input')->with('success', 'Laporan Berhasil Disimpan!');
     }
 
     public function dashboard()
     {
         $user = Auth::user();
+        $now = Carbon::now();
 
-        // Contoh pengambilan data untuk Chart (Hanya count per variabel)
-        $stats = \DB::table('kegiatan_detail')
+        // 1. Hitung Total Case (Daily, Weekly, Monthly)
+        $dailyCount = DB::table('kegiatan_detail')
             ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-            ->join('variabel_kpi', 'kegiatan_detail.variabel_kpi_id', '=', 'variabel_kpi.id')
             ->where('daily_reports.user_id', $user->id)
-            ->select('variabel_kpi.nama_variabel', \DB::raw('count(*) as total'))
-            ->groupBy('variabel_kpi.nama_variabel')
+            ->whereDate('daily_reports.tanggal', $now->toDateString())
+            ->count();
+
+        $weeklyCount = DB::table('kegiatan_detail')
+            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+            ->where('daily_reports.user_id', $user->id)
+            ->whereBetween('daily_reports.tanggal', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()])
+            ->count();
+
+        $monthlyCount = DB::table('kegiatan_detail')
+            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+            ->where('daily_reports.user_id', $user->id)
+            ->whereMonth('daily_reports.tanggal', $now->month)
+            ->count();
+
+        // 2. Data Doughnut: Mandiri vs Bantuan
+        $autonomyData = DB::table('kegiatan_detail')
+            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+            ->where('daily_reports.user_id', $user->id)
+            ->selectRaw('is_mandiri, count(*) as total')
+            ->groupBy('is_mandiri')
             ->get();
 
-        return view('staff.dashboard', compact('stats'));
+        // 3. Data Doughnut: Temuan Sendiri vs Laporan
+        $sourceData = DB::table('kegiatan_detail')
+            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+            ->where('daily_reports.user_id', $user->id)
+            ->selectRaw('temuan_sendiri, count(*) as total')
+            ->groupBy('temuan_sendiri')
+            ->get();
+
+        // 4. Data Line Chart (7 Hari Terakhir)
+        $trendData = DB::table('daily_reports')
+            ->leftJoin('kegiatan_detail', 'daily_reports.id', '=', 'kegiatan_detail.daily_report_id')
+            ->where('daily_reports.user_id', $user->id)
+            ->where('daily_reports.tanggal', '>=', Carbon::now()->subDays(6)->toDateString())
+            ->selectRaw('daily_reports.tanggal, count(kegiatan_detail.id) as total')
+            ->groupBy('daily_reports.tanggal')
+            ->orderBy('daily_reports.tanggal', 'ASC')
+            ->get();
+
+        return view('staff.dashboard', compact(
+            'dailyCount',
+            'weeklyCount',
+            'monthlyCount',
+            'autonomyData',
+            'sourceData',
+            'trendData'
+        ));
     }
 }

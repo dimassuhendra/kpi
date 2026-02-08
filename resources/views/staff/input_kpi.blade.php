@@ -17,13 +17,11 @@
         <div class="space-y-6">
             <template x-for="(row, index) in rows" :key="index">
                 <div class="organic-card p-5 border-l-4 border-primary relative">
-
                     <button type="button" @click="removeRow(index)" class="absolute top-2 right-2 text-red-500 hover:bg-red-500/10 p-2 rounded-xl transition">
                         <i class="fas fa-trash-alt"></i>
                     </button>
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-center">
-
                         <div class="lg:col-span-4">
                             <label class="text-[10px] uppercase text-primary font-bold ml-1">Deskripsi / Judul Case</label>
                             <input type="text" :name="'case['+index+'][deskripsi]'" x-model="row.deskripsi"
@@ -35,8 +33,9 @@
                             <div class="w-full">
                                 <label class="text-[10px] uppercase text-primary font-bold ml-1">Respons (Min)</label>
                                 <input type="number" :name="'case['+index+'][respons]'" x-model="row.respons"
-                                    :disabled="row.temuan_sendiri"
-                                    class="w-full bg-secondary/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-primary outline-none disabled:opacity-30"
+                                    :readonly="row.temuan_sendiri"
+                                    :class="row.temuan_sendiri ? 'opacity-30 pointer-events-none' : ''"
+                                    class="w-full bg-secondary/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-primary outline-none"
                                     placeholder="0" required>
                             </div>
                             <div class="w-full flex flex-col items-center justify-center">
@@ -61,28 +60,37 @@
                                     placeholder="Nama PIC yang dihubungi">
                             </div>
                         </div>
-
                     </div>
                 </div>
             </template>
         </div>
 
-        <div class="mt-10 flex flex-col-reverse md:flex-row gap-4 justify-end border-t border-white/5 pt-8 mb-10">
-            <button type="submit" name="submit_type" value="draft" class="w-full md:w-auto px-8 py-4 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition">
-                Simpan Draft
-            </button>
-            <button type="submit" name="submit_type" value="final" class="w-full md:w-auto px-10 py-4 rounded-xl bg-primary text-secondary font-bold hover:bg-accent transition shadow-lg shadow-primary/20">
+        <div class="mt-10 flex justify-end border-t border-white/5 pt-8 mb-10">
+            <button type="submit" class="w-full md:w-auto px-10 py-4 rounded-xl bg-primary text-secondary font-bold hover:bg-accent transition shadow-lg shadow-primary/20">
                 Submit Laporan
             </button>
         </div>
     </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if(session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: "{{ session('success') }}",
+        background: '#0f172a',
+        color: '#ffffff',
+        confirmButtonColor: '#10b981',
+    });
+</script>
+@endif
+
 <script>
     function kpiForm() {
         return {
             rows: @json($formattedRows),
-
             addRow() {
                 this.rows.push({
                     deskripsi: '',
@@ -92,7 +100,6 @@
                     pic_name: ''
                 });
             },
-
             removeRow(index) {
                 if (this.rows.length > 1) {
                     this.rows.splice(index, 1);

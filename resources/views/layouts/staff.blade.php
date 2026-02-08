@@ -116,7 +116,7 @@
                     </a>
 
                     <div class="hidden lg:ml-10 lg:flex lg:space-x-2">
-                        <a href="#"
+                        <a href="{{ route('staff.dashboard') }}"
                             class="nav-link px-4 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs('staff.dashboard') ? 'active text-primary' : 'text-slate-300 hover:text-primary' }}">
                             <i class="fas fa-th-large mr-1"></i> Main Station
                         </a>
@@ -175,7 +175,7 @@
 
         <div id="mobile-menu" class="lg:hidden bg-secondary border-t border-white/5 shadow-2xl">
             <div class="px-4 pt-4 pb-8 space-y-2">
-                <a href="#"
+                <a href="{{ route('staff.dashboard') }}"
                     class="flex items-center px-4 py-4 rounded-3xl transition-all {{ request()->routeIs('staff.dashboard') ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 'text-slate-300 hover:bg-white/5' }}">
                     <i class="fas fa-home mr-3"></i> Main Station
                 </a>

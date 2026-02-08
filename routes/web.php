@@ -19,6 +19,7 @@ Route::post('/logout', function (Request $request) {
 
 // Grup Route Dashboard (Gunakan Middleware)
 Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], function () {
+    Route::get('/dashboard', [StaffKpiController::class, 'dashboard'])->name('staff.dashboard');
     Route::get('/input-case', [StaffKpiController::class, 'index'])->name('staff.input');
     Route::post('/kpi/store', [StaffKpiController::class, 'store'])->name('staff.kpi.store');
 });
