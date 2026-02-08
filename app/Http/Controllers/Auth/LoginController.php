@@ -21,18 +21,21 @@ class LoginController extends Controller
             'role' => 'required|in:staff,manager'
         ]);
 
-        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+        $loginData = $request->only('email', 'password');
+
+        if (Auth::attempt($loginData)) {
             $user = Auth::user();
 
-            if ($user->role !== $request->role) {
+            if ($user->role !== $credentials['role']) {
                 Auth::logout();
-                return back()->withErrors(['role' => 'Akun tidak terdaftar sebagai ' . $request->role]);
+                return back()->withErrors(['email' => 'Akses ditolak. Peran Anda tidak sesuai.']);
             }
 
             $request->session()->regenerate();
+
             return redirect()->intended($user->role == 'manager' ? route('manager.dashboard') : route('staff.dashboard'));
         }
 
-        return back()->withErrors(['email' => 'Email atau password salah.']);
+        return back()->withErrors(['email' => 'Email atau password salah.'])->withInput($request->only('email'));
     }
 }
