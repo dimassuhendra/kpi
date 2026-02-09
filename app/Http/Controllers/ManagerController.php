@@ -30,7 +30,7 @@ class ManagerController extends Controller
         $reportQuery = DailyReport::whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
         $staffQuery = User::where('role', 'staff')->where('divisi_id', 1);
 
-        // 1. STATS UTAMA (Tetap Bulanan)
+        // 1. STATS UTAMA
         $stats = [
             'pending' => DailyReport::where('status', 'pending')->count(),
 
@@ -49,15 +49,14 @@ class ManagerController extends Controller
             'active_today' => DailyReport::whereDate('tanggal', today())->distinct('user_id')->count('user_id'),
         ];
 
-        // 2. HEATMAP (Tetap 1 Tahun)
+        // 2. HEATMAP
         $heatmapData = DailyReport::select(DB::raw('DATE(tanggal) as date'), DB::raw('count(*) as count'))
             ->where('tanggal', '>=', now()->startOfYear())
             ->groupBy('date')
             ->pluck('count', 'date');
 
-        // 3. DIAGRAM ANALYTICS (Switchable)
+        // 3. DIAGRAM ANALYTICS
         if ($viewType == 'compare') {
-            // Data Per Staff (Hanya Bulan Ini)
             $chartData = User::where('role', 'staff')
                 ->where('divisi_id', 1)
                 ->withCount([
@@ -71,13 +70,11 @@ class ManagerController extends Controller
                         $q->where('temuan_sendiri', 1)->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
                     }
                 ])
-                // MENGHITUNG RATA-RATA JAM RESPON
                 ->withAvg(['details as avg_time' => function ($q) use ($currentMonth, $currentYear) {
                     $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
                 }], 'value_raw')
                 ->get();
         } else {
-            // Global Summary (Hanya Bulan Ini)
             $totalDetailBulanIni = KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
                 $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
             })->count();
@@ -94,15 +91,24 @@ class ManagerController extends Controller
                 'total_case' => $totalDetailBulanIni,
                 'avg_time' => $stats['avg_response_time'],
                 'mandiri' => $mandiriCount,
-                'bantuan' => $totalDetailBulanIni - $mandiriCount, // Bukan mandiri
+                'bantuan' => $totalDetailBulanIni - $mandiriCount,
                 'proaktif' => $inisiatifCount,
-                'penugasan' => $totalDetailBulanIni - $inisiatifCount, // Bukan temuan sendiri
+                'penugasan' => $totalDetailBulanIni - $inisiatifCount,
             ];
         }
 
+        // 4. LEADERBOARD (Diubah dari Avg Nilai ke Total Kuantitas Pekerjaan)
         $leaderboard = (clone $staffQuery)
-            ->withAvg(['reports' => fn($q) => $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)], 'total_nilai_harian')
-            ->orderByDesc('reports_avg_total_nilai_harian')->take(5)->get();
+            ->withCount(['details as solved_cases' => function ($q) use ($currentMonth) {
+                $q->whereHas(
+                    'dailyReport',
+                    fn($qr) =>
+                    $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)
+                );
+            }])
+            ->orderByDesc('solved_cases')
+            ->take(5)
+            ->get();
 
         $divisis = Divisi::all();
 
