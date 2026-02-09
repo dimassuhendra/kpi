@@ -112,7 +112,6 @@ class ManagerController extends Controller
     // ===============================================================
     // Modul Validation
     // ===============================================================
-
     public function validationIndex(Request $request)
     {
         $pendingReports = DailyReport::with('user')
@@ -133,42 +132,27 @@ class ManagerController extends Controller
 
     public function validationStore(Request $request)
     {
-        $report = DailyReport::findOrFail($request->report_id);
-
-        $totalPoinDapat = 0;
-        $totalBobotMaksimal = 0;
-
-        foreach ($request->details as $detailId => $data) {
-            $detail = KegiatanDetail::with('variabelKpi')->find($detailId);
-
-            if ($detail && $detail->variabelKpi) {
-                $skorInput = $data['score']; // Manager input 0 - 5
-                $bobotVariabel = $detail->variabelKpi->bobot;
-
-                // Hitung poin yang didapat untuk variabel ini
-                // (Skor / 5) * Bobot
-                $poinVariabel = ($skorInput / 5) * $bobotVariabel;
-
-                $detail->update([
-                    'nilai_akhir' => $poinVariabel
-                ]);
-
-                $totalPoinDapat += $poinVariabel;
-                $totalBobotMaksimal += $bobotVariabel;
-            }
-        }
-
-        // NORMALISASI KE 100
-        // Jadi mau total bobot lu 135 atau 1000 pun, hasilnya tetep skala 100
-        $nilaiFinal = ($totalBobotMaksimal > 0) ? ($totalPoinDapat / $totalBobotMaksimal) * 100 : 0;
-
-        $report->update([
-            'status' => $request->status,
-            'total_nilai_harian' => $nilaiFinal,
-            'catatan_manager' => $request->catatan
+        $request->validate([
+            'report_id' => 'required|exists:daily_reports,id',
+            'status'    => 'required|in:approved,rejected',
+            'catatan'   => 'nullable|string'
         ]);
 
-        return redirect()->route('manager.approval.index')->with('success', 'Validasi Berhasil. Skor Akhir: ' . number_format($nilaiFinal, 1));
+        $report = DailyReport::findOrFail($request->report_id);
+
+        // Update status dan catatan saja, tanpa menyentuh nilai/skor
+        $report->update([
+            'status'           => $request->status,
+            'catatan_manager'  => $request->catatan,
+            // Jika kolom nilai di DB belum dihapus, kita bisa set 0 atau biarkan null
+            // 'total_nilai_harian' => 0 
+        ]);
+
+        $message = $request->status === 'approved'
+            ? 'Laporan berhasil disetujui.'
+            : 'Laporan telah ditolak untuk revisi.';
+
+        return redirect()->route('manager.approval.index')->with('success', $message);
     }
 
     // =================================================================
@@ -176,8 +160,12 @@ class ManagerController extends Controller
     // =================================================================
     public function variablesIndex()
     {
-        // Menggunakan pagination lebih disarankan jika data mulai banyak
-        $variables = VariabelKpi::with('divisi')->where('divisi_id', 1)->get();
+        // Mengambil variabel hanya berdasarkan divisi manager (Divisi 1/TAC)
+        $variables = VariabelKpi::with('divisi')
+            ->where('divisi_id', 1)
+            ->latest()
+            ->get();
+
         $divisis = Divisi::all();
         return view('manager.variables', compact('variables', 'divisis'));
     }
@@ -186,33 +174,41 @@ class ManagerController extends Controller
     {
         $request->validate([
             'nama_variabel' => 'required|string|max:255',
-            'bobot' => 'required|numeric|min:0', // Tambah validasi minimal 0
-            'divisi_id' => 'required|exists:divisi,id'
+            'divisi_id'     => 'required|exists:divisi,id'
         ]);
 
-        VariabelKpi::create($request->all());
-        return back()->with('success', 'Variabel KPI berhasil ditambahkan.');
+        // Hanya menyimpan nama_variabel dan divisi_id
+        VariabelKpi::create([
+            'nama_variabel' => $request->nama_variabel,
+            'divisi_id'     => $request->divisi_id,
+        ]);
+
+        return back()->with('success', 'Kategori aktivitas berhasil ditambahkan.');
     }
 
-    // Ubah $id menjadi $variable agar sinkron dengan Laravel Resource
     public function variablesUpdate(Request $request, $id)
     {
         $request->validate([
             'nama_variabel' => 'required|string|max:255',
-            'bobot' => 'required|numeric|min:0',
         ]);
 
         $variable = VariabelKpi::findOrFail($id);
-        $variable->update($request->all());
+        $variable->update([
+            'nama_variabel' => $request->nama_variabel
+        ]);
 
-        return redirect()->route('manager.variables.index')->with('success', 'Variabel berhasil diperbarui.');
+        return redirect()->route('manager.variables.index')->with('success', 'Kategori aktivitas berhasil diperbarui.');
     }
 
     public function variablesDestroy($id)
     {
         $variable = VariabelKpi::findOrFail($id);
+
+        // Opsional: Cek apakah variabel ini sudah digunakan di laporan detail
+        // Jika sudah digunakan, sebaiknya jangan dihapus (atau gunakan soft delete)
+
         $variable->delete();
 
-        return back()->with('success', 'Variabel berhasil dihapus.');
+        return back()->with('success', 'Kategori aktivitas berhasil dihapus.');
     }
 }

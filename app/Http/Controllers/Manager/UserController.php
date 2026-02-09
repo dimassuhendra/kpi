@@ -7,8 +7,6 @@ use App\Models\User;
 use App\Models\Divisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\StaffPerformanceExport; // Nanti kita buat file exportnya
 
 class UserController extends Controller
 {
@@ -16,18 +14,17 @@ class UserController extends Controller
     {
         $divisis = Divisi::all();
 
-        $users = User::where('role', 'staff') // Pastikan ada kutip di 'staff'
+        $users = User::where('role', 'staff')
             ->with('divisi')
             ->withCount([
                 'details as total_case',
                 'details as mandiri_count' => function ($q) {
-                    $q->where('is_mandiri', 1); // Di SQL lu tipe datanya tinyint, pake 1
+                    $q->where('is_mandiri', 1);
                 },
                 'details as inisiatif_count' => function ($q) {
-                    $q->where('temuan_sendiri', 1); // Di SQL lu tipe datanya tinyint, pake 1
+                    $q->where('temuan_sendiri', 1);
                 }
             ])
-            ->withAvg('dailyReports as avg_kpi', 'total_nilai_harian')
             ->latest()
             ->get();
 
@@ -43,10 +40,9 @@ class UserController extends Controller
             'divisi_id'    => 'required|exists:divisi,id'
         ]);
 
-        // 2. Create User
         User::create([
             'nama_lengkap' => $request->nama_lengkap,
-            'username'     => explode('@', $request->email)[0], // Bikin username otomatis dari email
+            'username'     => explode('@', $request->email)[0],
             'email'        => $request->email,
             'password'     => Hash::make($request->password),
             'role'         => 'staff',

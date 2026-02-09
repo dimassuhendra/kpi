@@ -20,7 +20,7 @@
             <thead>
                 <tr class="bg-white/5 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
                     <th class="px-6 py-4">Informasi Staff</th>
-                    <th class="px-6 py-4 text-center">Avg KPI</th>
+                    <!-- <th class="px-6 py-4 text-center">Avg KPI</th> -->
                     <th class="px-6 py-4 text-center">Total Case</th>
                     <th class="px-6 py-4 text-center">Autonomy</th>
                     <th class="px-6 py-4 text-right">Aksi</th>
@@ -35,11 +35,11 @@
                             <span class="text-[10px] text-primary uppercase font-bold italic">{{ $u->divisi->nama_divisi ?? 'No Division' }}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center">
+                    <!-- <td class="px-6 py-4 text-center">
                         <div class="inline-block px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
                             <span class="font-header font-bold text-primary">{{ number_format($u->avg_kpi ?? 0, 1) }}</span>
                         </div>
-                    </td>
+                    </td> -->
                     <td class="px-6 py-4 text-center">
                         <span class="text-white font-bold">{{ $u->total_case }}</span>
                         <span class="text-[10px] text-slate-500 block uppercase">Cases</span>
