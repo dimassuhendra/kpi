@@ -144,7 +144,7 @@
                     </a>
 
                     <a href="{{ route('manager.users.index') }}"
-                        class="nav-link {{ request()->is('manager/staff*') || request()->is('manager/divisi*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
+                        class="nav-link {{ request()->is('manager/users*') || request()->is('manager/divisi*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
                         <i class="fas fa-users-cog mr-2 text-xs"></i> User Management
                     </a>
 
@@ -198,7 +198,7 @@
                 <a href="{{ route('manager.approval.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/approval*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
                     <i class="fas fa-check-circle w-8 text-xs"></i> Validation Center
                 </a>
-                <a href="{{ route('manager.staff.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/staff*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
+                <a href="{{ route('manager.users.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/users*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
                     <i class="fas fa-users w-8 text-xs"></i> User Management
                 </a>
                 <a href="{{ route('manager.variables.index') }}" class="flex items-center px-4 py-3 rounded-2xl {{ request()->is('manager/variables*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-400' }}">
