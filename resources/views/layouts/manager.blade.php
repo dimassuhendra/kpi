@@ -143,7 +143,7 @@
                         <span class="ml-2 bg-rose-500 text-[9px] px-1.5 py-0.5 rounded-md text-white animate-pulse">4</span>
                     </a>
 
-                    <a href="{{ route('manager.staff.index') }}"
+                    <a href="{{ route('manager.users.index') }}"
                         class="nav-link {{ request()->is('manager/staff*') || request()->is('manager/divisi*') ? 'active text-primary bg-primary/5' : 'text-slate-400' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:text-primary transition-all">
                         <i class="fas fa-users-cog mr-2 text-xs"></i> User Management
                     </a>

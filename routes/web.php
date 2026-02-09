@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\StaffKpiController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\Manager\ReportController;
+use App\Http\Controllers\Manager\UserController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,10 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::delete('/variables/{id}', [ManagerController::class, 'variablesDestroy'])->name('variables.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // Placeholder untuk route lain agar menu di layout tidak error
     Route::get('/approval', [ManagerController::class, 'approvalIndex'])->name('approval.index');
