@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\DailyReport;
 use App\Models\User;
 use App\Models\Divisi;
-use App\Models\KegiatanDetail; // Tambahkan ini
+use App\Models\KegiatanDetail;
+use App\Models\VariabelKpi;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -78,7 +79,6 @@ class ManagerController extends Controller
     // ===============================================================
     // Modul Validation
     // ===============================================================
-    // ... keep existing dashboard method ...
 
     public function validationIndex(Request $request)
     {
@@ -100,31 +100,86 @@ class ManagerController extends Controller
 
     public function validationStore(Request $request)
     {
-        $request->validate([
-            'report_id' => 'required|exists:daily_reports,id',
-            'status' => 'required|in:approved,rejected',
-            'details' => 'required|array'
-        ]);
-
         $report = DailyReport::findOrFail($request->report_id);
-        $totalNilai = 0;
 
-        // Update nilai per item kegiatan (Adjust Weight)
+        $totalPoinDapat = 0;
+        $totalBobotMaksimal = 0;
+
         foreach ($request->details as $detailId => $data) {
-            $detail = KegiatanDetail::find($detailId);
-            if ($detail) {
-                $detail->update(['nilai_akhir' => $data['score']]);
-                $totalNilai += $data['score'];
+            $detail = KegiatanDetail::with('variabelKpi')->find($detailId);
+
+            if ($detail && $detail->variabelKpi) {
+                $skorInput = $data['score']; // Manager input 0 - 5
+                $bobotVariabel = $detail->variabelKpi->bobot;
+
+                // Hitung poin yang didapat untuk variabel ini
+                // (Skor / 5) * Bobot
+                $poinVariabel = ($skorInput / 5) * $bobotVariabel;
+
+                $detail->update([
+                    'nilai_akhir' => $poinVariabel
+                ]);
+
+                $totalPoinDapat += $poinVariabel;
+                $totalBobotMaksimal += $bobotVariabel;
             }
         }
 
-        // Update status final laporan
+        // NORMALISASI KE 100
+        // Jadi mau total bobot lu 135 atau 1000 pun, hasilnya tetep skala 100
+        $nilaiFinal = ($totalBobotMaksimal > 0) ? ($totalPoinDapat / $totalBobotMaksimal) * 100 : 0;
+
         $report->update([
             'status' => $request->status,
-            'total_nilai_harian' => $totalNilai,
+            'total_nilai_harian' => $nilaiFinal,
             'catatan_manager' => $request->catatan
         ]);
 
-        return redirect()->route('manager.approval.index')->with('success', 'Laporan berhasil diproses.');
+        return redirect()->route('manager.approval.index')->with('success', 'Validasi Berhasil. Skor Akhir: ' . number_format($nilaiFinal, 1));
+    }
+
+    // =================================================================
+    // Modul KPI Config
+    // =================================================================
+    public function variablesIndex()
+    {
+        // Menggunakan pagination lebih disarankan jika data mulai banyak
+        $variables = VariabelKpi::with('divisi')->where('divisi_id', 1)->get();
+        $divisis = Divisi::all();
+        return view('manager.variables', compact('variables', 'divisis'));
+    }
+
+    public function variablesStore(Request $request)
+    {
+        $request->validate([
+            'nama_variabel' => 'required|string|max:255',
+            'bobot' => 'required|numeric|min:0', // Tambah validasi minimal 0
+            'divisi_id' => 'required|exists:divisi,id'
+        ]);
+
+        VariabelKpi::create($request->all());
+        return back()->with('success', 'Variabel KPI berhasil ditambahkan.');
+    }
+
+    // Ubah $id menjadi $variable agar sinkron dengan Laravel Resource
+    public function variablesUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'nama_variabel' => 'required|string|max:255',
+            'bobot' => 'required|numeric|min:0',
+        ]);
+
+        $variable = VariabelKpi::findOrFail($id);
+        $variable->update($request->all());
+
+        return redirect()->route('manager.variables.index')->with('success', 'Variabel berhasil diperbarui.');
+    }
+
+    public function variablesDestroy($id)
+    {
+        $variable = VariabelKpi::findOrFail($id);
+        $variable->delete();
+
+        return back()->with('success', 'Variabel berhasil dihapus.');
     }
 }

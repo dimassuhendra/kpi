@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 
 use App\Http\Controllers\StaffKpiController;
 use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\Manager\ReportController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -38,10 +39,14 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::get('/validation', [ManagerController::class, 'validationIndex'])->name('approval.index');
     Route::get('/validation/{id}', [ManagerController::class, 'validationShow'])->name('approval.show');
     Route::post('/validation/store', [ManagerController::class, 'validationStore'])->name('approval.store');
+    Route::get('/variables', [ManagerController::class, 'variablesIndex'])->name('variables.index');
+    Route::post('/variables', [ManagerController::class, 'variablesStore'])->name('variables.store');
+    Route::put('/variables/{id}', [ManagerController::class, 'variablesUpdate'])->name('variables.update');
+    Route::delete('/variables/{id}', [ManagerController::class, 'variablesDestroy'])->name('variables.destroy');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Placeholder untuk route lain agar menu di layout tidak error
     Route::get('/approval', [ManagerController::class, 'approvalIndex'])->name('approval.index');
     Route::get('/staff', [ManagerController::class, 'staffIndex'])->name('staff.index');
-    Route::get('/variables', [ManagerController::class, 'variablesIndex'])->name('variables.index');
-    Route::get('/reports', [ManagerController::class, 'reportsIndex'])->name('reports.index');
 });

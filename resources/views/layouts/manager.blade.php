@@ -238,6 +238,7 @@
             icon.classList.toggle('fa-xmark');
         });
     </script>
+    @stack('scripts')
 </body>
 
 </html>
