@@ -43,7 +43,6 @@ class KpiSeeder extends Seeder
             'divisi_id' => $tac->id,
             'nama_variabel' => 'Jumlah Case Harian',
             'input_type' => 'string',
-            'bobot' => 10, // Misal per case dapat 10 poin
         ]);
 
         // Kasus: Durasi Response (Number/Menit)
@@ -51,7 +50,6 @@ class KpiSeeder extends Seeder
             'divisi_id' => $tac->id,
             'nama_variabel' => 'Durasi Response (Ambang Batas 15 Menit)',
             'input_type' => 'number',
-            'bobot' => 20,
         ]);
 
         // Kasus: Penemuan Mandiri (Boolean)
@@ -59,7 +57,6 @@ class KpiSeeder extends Seeder
             'divisi_id' => $tac->id,
             'nama_variabel' => 'Case Ditemukan Sendiri',
             'input_type' => 'boolean',
-            'bobot' => 5,
         ]);
 
         // Kasus: Penyelesaian Mandiri (Nilai Tambah/Bonus)
@@ -67,7 +64,6 @@ class KpiSeeder extends Seeder
             'divisi_id' => $tac->id,
             'nama_variabel' => 'Penyelesaian Mandiri (Bonus)',
             'input_type' => 'boolean',
-            'bobot' => 15,
         ]);
     }
 }

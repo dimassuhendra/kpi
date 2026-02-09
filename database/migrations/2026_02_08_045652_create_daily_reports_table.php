@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->date('tanggal');
-            $table->decimal('total_nilai_harian', 8, 2)->default(0);
             $table->enum('status', ['pending', 'approved'])->default('pending');
             $table->text('catatan_manager')->nullable();
             $table->timestamps();

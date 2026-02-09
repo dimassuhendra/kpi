@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('divisi_id')->constrained('divisi')->onDelete('cascade');
             $table->string('nama_variabel');
             $table->enum('input_type', ['boolean', 'number', 'string']);
-            $table->integer('bobot'); // Nilai bobot variabel
             $table->timestamps();
         });
     }

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->boolean('is_mandiri')->default(true);
             $table->string('pic_name')->nullable();
 
-            $table->decimal('nilai_akhir', 8, 2);
             $table->timestamps();
         });
     }
