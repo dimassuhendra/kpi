@@ -13,12 +13,12 @@
         </div>
 
         <div class="flex items-center gap-2 bg-slate-800/40 p-1.5 rounded-3xl border border-white/5">
-            <a href="{{ route('manager.dashboard', ['divisi_id' => 'all']) }}"
+            <a href="{{ route('manager.dashboard', ['divisi_id' => 'tac']) }}"
                 class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all {{ $selectedDivisi == 'all' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200' }}">
-                Global View
+                TAC Division
             </a>
             <div class="h-4 w-[1px] bg-white/10 mx-2"></div>
-            <span class="text-[10px] font-bold uppercase text-primary px-4">TAC Division</span>
+            <span class="text-[10px] font-bold uppercase text-primary px-4">Infrastructure Division</span>
         </div>
     </div>
 

@@ -50,8 +50,4 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
-
-    // Placeholder untuk route lain agar menu di layout tidak error
-    Route::get('/approval', [ManagerController::class, 'approvalIndex'])->name('approval.index');
-    Route::get('/staff', [ManagerController::class, 'staffIndex'])->name('staff.index');
 });
