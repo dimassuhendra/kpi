@@ -30,7 +30,7 @@
         </div>
         <div class="organic-card p-6 border-b-2 border-primary group">
             <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Efficiency Rate</p>
-            <h2 class="text-4xl font-header font-bold text-white mt-1 group-hover:scale-105 transition-transform">{{ number_format($stats['avg_kpi'], 1) }}</h2>
+            <h2 class="text-4xl font-header font-bold text-white mt-1 group-hover:scale-105 transition-transform">{{ number_format($stats['avg_response_time'], 1) }} <small>Minutes/Case</small></h2>
         </div>
         <div class="organic-card p-6 border-b-2 border-emerald-500 group">
             <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Monthly Resolved</p>
@@ -62,46 +62,301 @@
         </div>
 
         @if($viewType == 'all')
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="bg-slate-900/50 p-6 rounded-[30px] border border-white/5 text-center">
-                <i class="fas fa-layer-group text-primary mb-3"></i>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Sum Cases</p>
-                <p class="text-3xl text-white font-header font-bold">{{ $chartData['total_case'] }}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- 1. Donut: Inisiatif vs Penugasan --}}
+            <div class="bg-slate-900/40 p-5 rounded-[30px] border border-white/5 flex flex-col items-center">
+                <h4 class="text-[9px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Source: Inisiatif vs Penugasan</h4>
+                <div class="relative w-full max-w-[150px]">
+                    <canvas id="donutInisiatif"></canvas>
+                </div>
+                <div class="flex gap-4 mt-4 text-[10px] font-bold uppercase">
+                    <span class="text-rose-500">● Inisiatif</span>
+                    <span class="text-slate-600">● Penugasan</span>
+                </div>
             </div>
-            <div class="bg-slate-900/50 p-6 rounded-[30px] border border-white/5 text-center">
-                <i class="fas fa-bolt text-amber-500 mb-3"></i>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Avg Score</p>
-                <p class="text-3xl text-white font-header font-bold">{{ number_format($chartData['avg_response'], 1) }}</p>
+
+            {{-- 2. Donut: Mandiri vs Bantuan --}}
+            <div class="bg-slate-900/40 p-5 rounded-[30px] border border-white/5 flex flex-col items-center">
+                <h4 class="text-[9px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Execution: Mandiri vs Bantuan</h4>
+                <div class="relative w-full max-w-[150px]">
+                    <canvas id="donutMandiri"></canvas>
+                </div>
+                <div class="flex gap-4 mt-4 text-[10px] font-bold uppercase">
+                    <span class="text-emerald-500">● Mandiri</span>
+                    <span class="text-slate-600">● Bantuan</span>
+                </div>
             </div>
-            <div class="bg-slate-900/50 p-6 rounded-[30px] border border-white/5 text-center">
-                <i class="fas fa-user-check text-emerald-500 mb-3"></i>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Mandiri</p>
-                <p class="text-3xl text-white font-header font-bold">{{ $chartData['mandiri'] }}</p>
-            </div>
-            <div class="bg-slate-900/50 p-6 rounded-[30px] border border-white/5 text-center">
-                <i class="fas fa-lightbulb text-rose-500 mb-3"></i>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Inisiatif</p>
-                <p class="text-3xl text-white font-header font-bold">{{ $chartData['proaktif'] }}</p>
+
+            {{-- 3. Bar Chart: Avg Response Time with Threshold --}}
+            <div class="bg-slate-900/40 p-5 rounded-[30px] border border-white/5">
+                <h4 class="text-[9px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Avg Response Time (Limit: 15h)</h4>
+                <canvas id="barResponseThreshold" height="200"></canvas>
             </div>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const commonDonutOptions = {
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            };
+
+            // Chart Inisiatif
+            new Chart(document.getElementById('donutInisiatif'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Temuan Sendiri', 'Penugasan'],
+                    datasets: [{
+                        data: [{{ $chartData['proaktif'] }}, {{ $chartData['penugasan'] }}],
+                        backgroundColor: ['#f43f5e', '#1e293b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: commonDonutOptions
+            });
+
+            // Chart Mandiri
+            new Chart(document.getElementById('donutMandiri'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Penyelesaian Sendiri', 'Bantuan'],
+                    datasets: [{
+                        data: [{{ $chartData['mandiri'] }}, {{ $chartData['bantuan'] }}],
+                        backgroundColor: ['#10b981', '#1e293b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: commonDonutOptions
+            });
+
+            // Chart Bar with Threshold Line
+            new Chart(document.getElementById('barResponseThreshold'), {
+                type: 'bar',
+                data: {
+                    labels: ['Team Average'],
+                    datasets: [{
+                        label: 'Response Time',
+                        data: [{{ $chartData['avg_time'] }}],
+                        backgroundColor: '{{ $chartData['avg_time'] > 15 ? "#f43f5e" : "#3b82f6" }}',
+                        borderRadius: 12,
+                        barThickness: 60,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        // Menambahkan garis batas (Annotation)
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: 15,
+                                    yMax: 15,
+                                    borderColor: 'rgba(244, 63, 94, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        display: true,
+                                        content: 'Warning Limit (15m)',
+                                        position: 'end',
+                                        backgroundColor: '#f43f5e',
+                                        font: {
+                                            size: 8
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 20, // Supaya garis 15 terlihat jelas di tengah/atas
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
         @else
-        <div class="space-y-6">
-            @foreach($chartData as $staff)
-            <div class="relative">
-                <div class="flex justify-between items-end mb-2">
-                    <div>
-                        <span class="text-sm font-bold text-slate-200">{{ $staff->nama_lengkap }}</span>
-                        <span class="text-[10px] text-slate-500 ml-2 uppercase tracking-tighter">{{ $staff->total_case }} Cases Resolved</span>
-                    </div>
-                    <span class="text-xs font-header font-bold text-primary">{{ number_format($staff->avg_response, 1) }} pts</span>
-                </div>
-                <div class="w-full bg-slate-900 h-3 rounded-full border border-white/5 overflow-hidden">
-                    <div class="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000"
-                        style="width: {{ $staff->avg_response }}%"></div>
-                </div>
+        {{-- Tampilan Staff Comparison (4 Charts) --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {{-- 1. Chart Count Case --}}
+            <div class="bg-slate-900/40 p-6 rounded-3xl border border-white/5">
+                <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Total Cases per Staff</h4>
+                <canvas id="chartCountCase"></canvas>
             </div>
-            @endforeach
+
+            {{-- 2. Chart Avg Performance --}}
+            <div class="bg-slate-900/40 p-6 rounded-3xl border border-white/5">
+                <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Avg Time Respons</h4>
+                <canvas id="chartAvgTime"></canvas>
+            </div>
+
+            {{-- 3. Chart Inisiatif (Temuan Sendiri) --}}
+            <div class="bg-slate-900/40 p-6 rounded-3xl border border-white/5">
+                <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Case dengan Temuan Sendiri</h4>
+                <canvas id="chartInisiatif"></canvas>
+            </div>
+
+            {{-- 4. Chart Mandiri (Penyelesaian Sendiri) --}}
+            <div class="bg-slate-900/40 p-6 rounded-3xl border border-white/5">
+                <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">Case dengan Penyelesaian Sendiri</h4>
+                <canvas id="chartMandiri"></canvas>
+            </div>
         </div>
+
+        {{-- Script Chart.js --}}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const labels = @json($chartData->pluck('nama_lengkap'));
+            const chartOptions = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        },
+                        ticks: {
+                            color: '#64748b'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#64748b'
+                        }
+                    }
+                }
+            };
+
+            // Chart Count Case
+            new Chart(document.getElementById('chartCountCase'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cases',
+                        data: @json($chartData->pluck('total_case')),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Chart Avg Response Time
+            new Chart(document.getElementById('chartAvgTime'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Avg Response Time (Minutes)',
+                        data: @json($chartData->pluck('avg_time')),
+                        borderColor: '#fbbf24',
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toFixed(2) + ' Minutes';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Minutes',
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart Inisiatif
+            new Chart(document.getElementById('chartInisiatif'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Inisiatif',
+                        data: @json($chartData->pluck('inisiatif_count')),
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 5
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Chart Mandiri
+            new Chart(document.getElementById('chartMandiri'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Mandiri',
+                        data: @json($chartData->pluck('mandiri_count')),
+                        backgroundColor: '#10b981',
+                        borderRadius: 5
+                    }]
+                },
+                options: chartOptions
+            });
+        </script>
         @endif
     </div>
 
