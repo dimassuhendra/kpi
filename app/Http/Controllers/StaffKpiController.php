@@ -18,17 +18,30 @@ class StaffKpiController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        // Ambil variabel KPI sesuai divisi (untuk TAC biasanya Case, untuk Infra biasanya Kategori)
         $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
 
-        // Selalu mulai dengan form kosong setiap kali halaman dibuka
-        $formattedRows = [[
-            'deskripsi' => '',
-            'respons' => '',
-            'temuan_sendiri' => false,
-            'is_mandiri' => 1,
-            'pic_name' => ''
-        ]];
+        // Logika baris awal (formattedRows)
+        if ($user->divisi_id == 2) {
+            // Baris awal default untuk tim Infrastruktur
+            $formattedRows = [[
+                'nama_kegiatan' => '',
+                'deskripsi' => '',
+                'kategori' => 'Network',
+            ]];
+        } else {
+            // Baris awal default untuk tim TAC
+            $formattedRows = [[
+                'deskripsi' => '',
+                'respons' => '',
+                'temuan_sendiri' => false,
+                'is_mandiri' => 1,
+                'pic_name' => ''
+            ]];
+        }
 
+        // SEMUA DIVISI diarahkan ke file yang sama: staff/input_kpi.blade.php
         return view('staff.input_kpi', compact('variabelKpis', 'formattedRows'));
     }
 
@@ -36,81 +49,96 @@ class StaffKpiController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Validasi minimal harus ada satu input, baik itu case atau activity
-        if (!$request->has('case') && !$request->has('activity')) {
-            return back()->with('error', 'Mohon isi setidaknya satu kegiatan (Case atau Activity).');
+        // 1. Validasi awal
+        if ($user->divisi_id == 1) { // Logika TAC
+            if (!$request->has('case') && !$request->has('activity')) {
+                return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
+            }
+        } else { // Logika Infra
+            if (!$request->has('infra_activity')) {
+                return back()->with('error', 'Mohon isi setidaknya satu kegiatan infrastruktur.');
+            }
         }
 
-        // 2. Buat satu header DailyReport untuk semua kegiatan yang di-submit saat ini
+        // 2. Buat Header DailyReport
         $report = DailyReport::create([
             'user_id' => $user->id,
             'tanggal' => now()->toDateString(),
             'status'  => 'pending',
         ]);
 
-        $totalPoinHarian = 0;
+        // ---------------------------------------------------------
+        // LOGIKA PROSES: DIVISI TAC (DIVISI ID: 1)
+        // ---------------------------------------------------------
+        if ($user->divisi_id == 1) {
+            $variabelKpis = VariabelKpi::where('divisi_id', 1)->get();
+            $vCount = $variabelKpis->where('nama_variabel', 'Jumlah Case Harian')->first();
+            $vRespons = $variabelKpis->where('nama_variabel', 'Durasi Response (Ambang Batas 15 Menit)')->first();
+            $vTemuan = $variabelKpis->where('nama_variabel', 'Case Ditemukan Sendiri')->first();
+            $vMandiri = $variabelKpis->where('nama_variabel', 'Penyelesaian Mandiri (Bonus)')->first();
 
-        // Ambil variabel KPI untuk perhitungan poin (Hanya berlaku untuk tipe 'case')
-        $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
-        $vCount = $variabelKpis->where('nama_variabel', 'Jumlah Case Harian')->first();
-        $vRespons = $variabelKpis->where('nama_variabel', 'Durasi Response (Ambang Batas 15 Menit)')->first();
-        $vTemuan = $variabelKpis->where('nama_variabel', 'Case Ditemukan Sendiri')->first();
-        $vMandiri = $variabelKpis->where('nama_variabel', 'Penyelesaian Mandiri (Bonus)')->first();
+            // Proses Case TAC
+            if ($request->has('case')) {
+                foreach ($request->case as $item) {
+                    $poinCaseIni = 0;
+                    if ($vCount) $poinCaseIni += $vCount->bobot;
 
-        // 3. PROSES INPUT TECHNICAL CASE (Jika Ada)
-        if ($request->has('case')) {
-            foreach ($request->case as $item) {
-                $poinCaseIni = 0;
-
-                // Hitung Poin KPI
-                if ($vCount) $poinCaseIni += $vCount->bobot;
-
-                $isTemuan = isset($item['temuan_sendiri']);
-                if ($isTemuan) {
-                    if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
-                } else {
-                    if ($vRespons) {
-                        $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
+                    $isTemuan = isset($item['temuan_sendiri']);
+                    if ($isTemuan) {
+                        if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
+                    } else {
+                        if ($vRespons) {
+                            $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
+                        }
                     }
+
+                    if (($item['is_mandiri'] ?? '1') == '1') {
+                        if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
+                    }
+
+                    KegiatanDetail::create([
+                        'daily_report_id'    => $report->id,
+                        'tipe_kegiatan'      => 'case',
+                        'variabel_kpi_id'    => $vCount ? $vCount->id : null,
+                        'deskripsi_kegiatan' => $item['deskripsi'],
+                        'value_raw'          => $item['respons'] ?? 0,
+                        'temuan_sendiri'     => $isTemuan ? 1 : 0,
+                        'is_mandiri'         => $item['is_mandiri'] ?? 1,
+                        'pic_name'           => ($item['is_mandiri'] ?? '1') == '0' ? ($item['pic_name'] ?? '') : null,
+                    ]);
                 }
+            }
 
-                if (($item['is_mandiri'] ?? '1') == '1') {
-                    if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
+            // Proses General Activity TAC
+            if ($request->has('activity')) {
+                foreach ($request->activity as $act) {
+                    KegiatanDetail::create([
+                        'daily_report_id'    => $report->id,
+                        'tipe_kegiatan'      => 'activity',
+                        'deskripsi_kegiatan' => $act['deskripsi'],
+                    ]);
                 }
-
-                // Simpan ke kegiatan_detail dengan tipe 'case'
-                KegiatanDetail::create([
-                    'daily_report_id'    => $report->id,
-                    'tipe_kegiatan'      => 'case', // Set manual ke 'case'
-                    'variabel_kpi_id'    => $vCount ? $vCount->id : null, // Mengacu pada KPI dasar
-                    'deskripsi_kegiatan' => $item['deskripsi'],
-                    'value_raw'          => $item['respons'] ?? 0,
-                    'temuan_sendiri'     => $isTemuan ? 1 : 0,
-                    'is_mandiri'         => $item['is_mandiri'] ?? 1,
-                    'pic_name'           => ($item['is_mandiri'] ?? '1') == '0' ? ($item['pic_name'] ?? '') : null,
-                ]);
-
             }
         }
 
-        // 4. PROSES INPUT GENERAL ACTIVITY (Jika Ada)
-        if ($request->has('activity')) {
-            foreach ($request->activity as $act) {
-                // Simpan ke kegiatan_detail dengan tipe 'activity'
+        // ---------------------------------------------------------
+        // LOGIKA PROSES: DIVISI INFRASTRUKTUR (DIVISI ID: 2)
+        // ---------------------------------------------------------
+        else if ($user->divisi_id == 2) {
+            // Ambil variabel poin flat untuk infra jika ada (misal nama variabel: 'Point Per Activity')
+            $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
+            $poinPerKegiatan = $vInfra ? $vInfra->bobot : 5; // Fallback ke 5 poin jika tidak ada di DB
+
+            foreach ($request->infra_activity as $infra) {
                 KegiatanDetail::create([
                     'daily_report_id'    => $report->id,
-                    'tipe_kegiatan'      => 'activity', // Set manual ke 'activity'
-                    'variabel_kpi_id'    => null, // Activity umum tidak masuk hitungan KPI
-                    'deskripsi_kegiatan' => $act['deskripsi'],
-                    'value_raw'          => null, // Tidak ada durasi respons untuk activity
-                    'temuan_sendiri'     => 0,
-                    'is_mandiri'         => 1,
-                    'pic_name'           => null,
+                    'tipe_kegiatan'      => 'activity', // Infra mayoritas berupa activity/project
+                    'kategori'           => $infra['kategori'], // Network, CCTV, GPS, dll
+                    'deskripsi_kegiatan' => '[' . $infra['kategori'] . '] ' . $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
+                    'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
                 ]);
             }
         }
-
-        // 5. Update total nilai pada header report
 
         return redirect()->route('staff.input')->with('success', 'Laporan Berhasil Disimpan!');
     }
