@@ -11,6 +11,7 @@ class KegiatanDetail extends Model
     protected $fillable = [
         'daily_report_id',
         'variabel_kpi_id',
+        'tipe_kegiatan',
         'deskripsi_kegiatan',
         'value_raw',
         'temuan_sendiri',

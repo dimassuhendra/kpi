@@ -36,54 +36,81 @@ class StaffKpiController extends Controller
     {
         $user = Auth::user();
 
-        // Buat report baru setiap kali submit (setiap baris dianggap satu laporan final)
-        // Jika ingin menggabungkan dalam satu laporan harian, kita gunakan updateOrCreate
+        // 1. Validasi minimal harus ada satu input, baik itu case atau activity
+        if (!$request->has('case') && !$request->has('activity')) {
+            return back()->with('error', 'Mohon isi setidaknya satu kegiatan (Case atau Activity).');
+        }
+
+        // 2. Buat satu header DailyReport untuk semua kegiatan yang di-submit saat ini
         $report = DailyReport::create([
             'user_id' => $user->id,
             'tanggal' => now()->toDateString(),
-            'status' => 'pending',
+            'status'  => 'pending',
         ]);
 
         $totalPoinHarian = 0;
-        $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
 
+        // Ambil variabel KPI untuk perhitungan poin (Hanya berlaku untuk tipe 'case')
+        $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
         $vCount = $variabelKpis->where('nama_variabel', 'Jumlah Case Harian')->first();
         $vRespons = $variabelKpis->where('nama_variabel', 'Durasi Response (Ambang Batas 15 Menit)')->first();
         $vTemuan = $variabelKpis->where('nama_variabel', 'Case Ditemukan Sendiri')->first();
         $vMandiri = $variabelKpis->where('nama_variabel', 'Penyelesaian Mandiri (Bonus)')->first();
 
-        foreach ($request->case as $item) {
-            $poinCaseIni = 0;
-            if ($vCount) $poinCaseIni += $vCount->bobot;
+        // 3. PROSES INPUT TECHNICAL CASE (Jika Ada)
+        if ($request->has('case')) {
+            foreach ($request->case as $item) {
+                $poinCaseIni = 0;
 
-            $isTemuan = isset($item['temuan_sendiri']);
-            if ($isTemuan) {
-                if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
-            } else {
-                if ($vRespons) {
-                    $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
+                // Hitung Poin KPI
+                if ($vCount) $poinCaseIni += $vCount->bobot;
+
+                $isTemuan = isset($item['temuan_sendiri']);
+                if ($isTemuan) {
+                    if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
+                } else {
+                    if ($vRespons) {
+                        $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
+                    }
                 }
+
+                if (($item['is_mandiri'] ?? '1') == '1') {
+                    if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
+                }
+
+                // Simpan ke kegiatan_detail dengan tipe 'case'
+                KegiatanDetail::create([
+                    'daily_report_id'    => $report->id,
+                    'tipe_kegiatan'      => 'case', // Set manual ke 'case'
+                    'variabel_kpi_id'    => $vCount ? $vCount->id : null, // Mengacu pada KPI dasar
+                    'deskripsi_kegiatan' => $item['deskripsi'],
+                    'value_raw'          => $item['respons'] ?? 0,
+                    'temuan_sendiri'     => $isTemuan ? 1 : 0,
+                    'is_mandiri'         => $item['is_mandiri'] ?? 1,
+                    'pic_name'           => ($item['is_mandiri'] ?? '1') == '0' ? ($item['pic_name'] ?? '') : null,
+                ]);
+
             }
-
-            if (($item['is_mandiri'] ?? '1') == '1') {
-                if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
-            }
-
-            KegiatanDetail::create([
-                'daily_report_id' => $report->id,
-                'variabel_kpi_id' => $vCount->id ?? null,
-                'deskripsi_kegiatan' => $item['deskripsi'],
-                'value_raw' => $item['respons'] ?? 0,
-                'temuan_sendiri' => $isTemuan ? 1 : 0,
-                'is_mandiri' => $item['is_mandiri'] ?? 1,
-                'pic_name' => ($item['is_mandiri'] ?? '1') == '0' ? ($item['pic_name'] ?? '') : null,
-                'nilai_akhir' => $poinCaseIni
-            ]);
-
-            $totalPoinHarian += $poinCaseIni;
         }
 
-        $report->update(['total_nilai_harian' => $totalPoinHarian]);
+        // 4. PROSES INPUT GENERAL ACTIVITY (Jika Ada)
+        if ($request->has('activity')) {
+            foreach ($request->activity as $act) {
+                // Simpan ke kegiatan_detail dengan tipe 'activity'
+                KegiatanDetail::create([
+                    'daily_report_id'    => $report->id,
+                    'tipe_kegiatan'      => 'activity', // Set manual ke 'activity'
+                    'variabel_kpi_id'    => null, // Activity umum tidak masuk hitungan KPI
+                    'deskripsi_kegiatan' => $act['deskripsi'],
+                    'value_raw'          => null, // Tidak ada durasi respons untuk activity
+                    'temuan_sendiri'     => 0,
+                    'is_mandiri'         => 1,
+                    'pic_name'           => null,
+                ]);
+            }
+        }
+
+        // 5. Update total nilai pada header report
 
         return redirect()->route('staff.input')->with('success', 'Laporan Berhasil Disimpan!');
     }
