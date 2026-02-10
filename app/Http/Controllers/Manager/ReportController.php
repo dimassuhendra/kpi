@@ -13,19 +13,33 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $staffs = User::where('role', 'staff')->get();
+        // Mengambil staff dikelompokkan berdasarkan divisi agar mudah dipilih di dropdown
+        $staffs = User::where('role', 'staff')->with('divisi')->get();
         return view('manager.reports', compact('staffs'));
     }
 
     public function export(Request $request)
     {
+        // Validasi dasar
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
         $filters = [
-            'user_id' => $request->user_id,
+            'user_id'    => $request->user_id,
             'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
+            'end_date'   => $request->end_date,
         ];
 
-        $fileName = 'KPI_Report_' . now()->format('Ymd_His') . '.xlsx';
+        // Ambil nama staff untuk nama file jika filter user dipilih
+        $staffName = 'All_Staff';
+        if ($request->user_id) {
+            $user = User::find($request->user_id);
+            $staffName = str_replace(' ', '_', $user->nama_lengkap);
+        }
+
+        $fileName = 'KPI_Analisa_' . $staffName . '_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(new KpiExport($filters), $fileName);
     }
