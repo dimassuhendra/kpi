@@ -1,67 +1,108 @@
-<form action="{{ route('manager.approval.store') }}" method="POST" class="space-y-8">
-    @csrf
-    <input type="hidden" name="report_id" value="{{ $report->id }}">
-
-    {{-- HEADER DETAIL --}}
+<div class="space-y-8 animate-fadeIn">
+    {{-- Header Detail --}}
     <div class="flex justify-between items-end border-b border-white/5 pb-6">
         <div>
-            <span class="text-[10px] text-primary font-bold uppercase tracking-[0.2em]">Reviewing Mission Log</span>
-            <h3 class="text-2xl font-header font-bold text-white uppercase">{{ $report->user->nama_lengkap }}</h3>
-            <p class="text-sm text-slate-500 italic">Dikirim {{ $report->created_at->diffForHumans() }}</p>
-        </div>
-        <div class="text-right">
-            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Report Date</p>
-            <span class="text-xl font-header font-bold text-white">{{ \Carbon\Carbon::parse($report->tanggal)->format('d M Y') }}</span>
+            <h3 class="text-2xl font-bold text-white">{{ $report->user->nama_lengkap }}</h3>
+            <p class="text-slate-400 text-sm italic">{{ \Carbon\Carbon::parse($report->tanggal)->format('l, d F Y') }}
+            </p>
         </div>
     </div>
 
-    {{-- LIST ITEM KEGIATAN --}}
-    <div class="space-y-4">
-        @foreach($report->details as $item)
-        <div class="bg-slate-900/40 p-5 rounded-[2rem] border border-white/5 hover:border-white/10 transition-all">
-            <div class="flex justify-between items-start mb-3">
-                <div class="px-3 py-1 bg-primary/10 rounded-lg">
-                    <span class="text-[10px] text-primary font-bold uppercase italic">{{ $item->variabelKpi->nama_variabel }}</span>
-                </div>
-
-                {{-- DURASI PEKERJAAN (Pengganti Score) --}}
-                <div class="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl border border-white/5">
-                    <i class="far fa-clock text-primary text-xs"></i>
-                    <span class="text-xs text-white font-mono font-bold">{{ $item->value_raw ?? '0' }} Hours</span>
-                </div>
-            </div>
-
-            <p class="text-slate-300 text-sm leading-relaxed mb-4">"{{ $item->deskripsi_kegiatan }}"</p>
-
-            <div class="flex gap-4">
-                <div class="flex items-center gap-1.5 {{ $item->is_mandiri ? 'text-emerald-500' : 'text-slate-600' }}">
-                    <i class="fas fa-check-circle text-[10px]"></i>
-                    <span class="text-[9px] font-bold uppercase">Mandiri</span>
-                </div>
-                <div class="flex items-center gap-1.5 {{ $item->temuan_sendiri ? 'text-amber-500' : 'text-slate-600' }}">
-                    <i class="fas fa-lightbulb text-[10px]"></i>
-                    <span class="text-[9px] font-bold uppercase">Inisiatif</span>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-
-    {{-- FOOTER FORM --}}
-    <div class="pt-6 border-t border-white/5 space-y-4">
+    {{-- SECTION 1: TECHNICAL CASES --}}
+    @if ($cases->count() > 0)
         <div>
-            <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest ml-1">Catatan Manager (Opsional)</label>
-            <textarea name="catatan" rows="2" placeholder="Berikan instruksi jika ada perbaikan..."
-                class="w-full bg-slate-900/50 border border-white/5 rounded-2xl p-4 text-sm text-white focus:border-primary outline-none mt-2"></textarea>
+            <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center">
+                <i class="fas fa-microchip mr-2"></i> Technical Cases
+            </h4>
+            <div class="space-y-3">
+                @foreach ($cases as $case)
+                    <div
+                        class="bg-secondary/30 border border-white/5 rounded-2xl p-4 flex justify-between items-center group hover:bg-secondary/50 transition">
+                        <div class="flex-grow">
+                            <p class="text-slate-200 font-medium leading-relaxed">{{ $case->deskripsi_kegiatan }}</p>
+                            <div class="flex gap-4 mt-2">
+                                <span class="text-[10px] text-slate-500 uppercase">
+                                    <i class="far fa-clock mr-1"></i> {{ $case->value_raw }} Mins Response
+                                </span>
+                                @if ($case->temuan_sendiri)
+                                    <span class="text-[10px] text-emerald-500 uppercase font-bold">
+                                        <i class="fas fa-eye mr-1"></i> Proaktif
+                                    </span>
+                                @endif
+                                <span
+                                    class="text-[10px] {{ $case->is_mandiri ? 'text-blue-400' : 'text-amber-400' }} uppercase font-bold">
+                                    <i class="fas {{ $case->is_mandiri ? 'fa-user-check' : 'fa-users' }} mr-1"></i>
+                                    {{ $case->is_mandiri ? 'Mandiri' : 'Bantuan: ' . $case->pic_name }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-right ml-4">
+                            <span class="text-xs font-mono text-primary font-bold">+{{ $case->nilai_akhir }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
+    @endif
 
-        <div class="flex gap-4">
-            <button type="submit" name="status" value="rejected" class="flex-1 py-4 rounded-2xl border border-rose-500/30 text-rose-500 font-bold text-xs uppercase hover:bg-rose-500 hover:text-white transition-all">
-                Reject & Revise
-            </button>
-            <button type="submit" name="status" value="approved" class="flex-[2] py-4 rounded-2xl bg-primary text-white font-bold text-xs uppercase hover:shadow-lg hover:shadow-primary/40 transition-all">
-                Approve & Finalize
-            </button>
+    {{-- SECTION 2: GENERAL ACTIVITIES --}}
+    @if ($activities->count() > 0)
+        <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                <i class="fas fa-tasks mr-2"></i> General Activities
+            </h4>
+            <div class="grid grid-cols-1 gap-3">
+                @foreach ($activities as $act)
+                    <div class="bg-slate-800/20 border border-white/5 border-l-2 border-l-slate-600 rounded-xl p-4">
+                        <p class="text-slate-400 text-sm italic">"{{ $act->deskripsi_kegiatan }}"</p>
+                        <span class="text-[9px] text-slate-600 uppercase mt-2 block">Non-KPI Activity</span>
+                    </div>
+                @endforeach
+            </div>
         </div>
+    @endif
+
+    {{-- ACTION BUTTONS --}}
+    <div class="pt-8 flex gap-4">
+        {{-- Tombol Approve menggunakan route manager.approval.store --}}
+        <form action="{{ route('manager.approval.store') }}" method="POST" class="flex-grow">
+            @csrf
+            <input type="hidden" name="report_id" value="{{ $report->id }}">
+            <input type="hidden" name="status" value="approved">
+            
+            <button type="submit"
+                class="w-full bg-primary hover:bg-accent text-secondary font-bold py-4 rounded-2xl transition-all shadow-lg shadow-primary/10 flex items-center justify-center group">
+                <i class="fas fa-check-double mr-2 group-hover:scale-110 transition"></i> Approve Mission
+            </button>
+        </form>
+
+        {{-- Tombol Reject (Jika ingin simpel tanpa SweetAlert dulu, bisa pakai form yang sama) --}}
+        <form action="{{ route('manager.approval.store') }}" method="POST">
+            @csrf
+            <input type="hidden" name="report_id" value="{{ $report->id }}">
+            <input type="hidden" name="status" value="rejected">
+            <button type="submit"
+                class="h-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white px-6 rounded-2xl transition-all border border-rose-500/20">
+                <i class="fas fa-times"></i>
+            </button>
+        </form>
     </div>
-</form>
+</div>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+</style>

@@ -172,10 +172,20 @@ class ManagerController extends Controller
 
     public function validationShow($id)
     {
-        $report = DailyReport::with(['user', 'details.variabelKpi'])->findOrFail($id);
+        try {
+            $report = DailyReport::with(['user', 'details.variabelKpi'])->findOrFail($id);
 
-        // Mengembalikan partial view untuk ditampilkan di sisi kanan (AJAX)
-        return view('manager.partials.validation-detail', compact('report'))->render();
+            $cases = $report->details->where('tipe_kegiatan', 'case');
+            $activities = $report->details->where('tipe_kegiatan', 'activity');
+
+            return view('manager.partials.validation-detail', compact('report', 'cases', 'activities'));
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
 
     public function validationStore(Request $request)
