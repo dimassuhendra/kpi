@@ -226,8 +226,8 @@
                         src="{{ asset('img/logo.png') }}" alt="Logo">
 
                     <span class="ml-3 font-header font-bold text-xl tracking-tighter uppercase"
-                        style="color: var(--text-main)"> {{-- Berubah jadi gelap di tema terang, putih di tema gelap --}}
-                        MyBolo <span style="color: var(--primary)" class="italic">Console</span> {{-- Mengikuti warna primary --}}
+                        style="color: var(--text-main)">
+                        MyBolo <span style="color: var(--primary)" class="italic">Console</span>
                     </span>
                 </a>
 
@@ -311,22 +311,6 @@
 
     <main class="flex-grow">
         <div class="max-w-[1600px] mx-auto py-10 px-6 lg:px-12">
-            {{-- Contoh elemen yang akan berubah warna secara total --}}
-            <div class="organic-card p-10 shadow-2xl mb-10">
-                <h1 class="text-4xl font-header font-bold mb-4">Manager Console</h1>
-                <p class="opacity-70 mb-8 font-body">Semua elemen termasuk tombol, kartu ini, dan teks navigasi akan berubah sesuai palet warna yang Anda pilih.</p>
-
-                <div class="flex gap-4">
-                    <button class="btn-primary px-8 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest shadow-lg">
-                        Submit Data
-                    </button>
-                    <button class="border-2 px-8 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all"
-                        style="border-color: var(--primary); color: var(--primary)">
-                        Secondary Action
-                    </button>
-                </div>
-            </div>
-
             @yield('content')
         </div>
     </main>
