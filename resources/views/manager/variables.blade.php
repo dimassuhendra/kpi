@@ -2,208 +2,106 @@
 
 @section('content')
 <div class="space-y-8">
-    {{-- Header & Division Switcher --}}
-    <div class="flex flex-col md:flex-row justify-between items-end gap-6">
-        <div class="space-y-4 w-full md:w-auto">
-            <div>
-                <h2 class="font-header text-3xl text-white italic">KPI <span class="text-primary">Management</span></h2>
-                <p class="text-slate-500 text-sm">Konfigurasi parameter penilaian per divisi.</p>
-            </div>
-
-            {{-- Switcher Divisi --}}
-            <form action="{{ route('manager.variables.index') }}" method="GET" id="divSwitcher" class="relative max-w-xs">
-                <label class="text-[10px] text-primary uppercase font-bold mb-1 block ml-1 tracking-widest">Pilih Divisi:</label>
-                <div class="relative">
-                    <select name="division_id" onchange="this.form.submit()"
-                        class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-primary appearance-none cursor-pointer transition-all hover:bg-white/10">
-                        @foreach($allDivisions as $div)
-                        <option value="{{ $div->id }}" {{ $selectedDivisionId == $div->id ? 'selected' : '' }} class="bg-darkCard">
-                            {{ $div->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </div>
-                </div>
-            </form>
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-header font-bold text-white uppercase">Activity <span class="text-primary">Categories</span></h1>
+            <p class="text-slate-400 text-xs italic font-bold uppercase tracking-widest">Manajemen kategori aktivitas pekerjaan divisi TAC</p>
         </div>
-
-        <button onclick="openModal('addVarModal')" class="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm hover:scale-105 transition shadow-lg shadow-primary/20">
-            <i class="fas fa-plus mr-2"></i> Tambah Variabel ke {{ $allDivisions->find($selectedDivisionId)->name }}
+        <button onclick="openModal('create')" class="bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-xl text-xs font-bold uppercase transition-all shadow-lg shadow-primary/20">
+            + Tambah Kategori
         </button>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {{-- Matriks Penilaian --}}
-        <div class="lg:col-span-2">
-            <div class="organic-card overflow-hidden">
-                <form action="{{ route('manager.variables.updateWeights') }}" method="POST">
-                    @csrf
-                    <div class="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                        <h3 class="text-white font-header italic">Scoring Matrix: <span class="text-primary">{{ $allDivisions->find($selectedDivisionId)->name }}</span></h3>
-                        <div class="flex gap-2">
-                            <button type="submit" class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500 hover:text-white transition-all">
-                                <i class="fas fa-save mr-1"></i> Simpan Bobot
-                            </button>
+    {{-- TABLE --}}
+    <div class="organic-card overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white/5 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                    <th class="px-6 py-4">Nama Kategori Aktivitas</th>
+                    <th class="px-6 py-4 text-center">Divisi</th>
+                    <th class="px-6 py-4 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                @foreach($variables as $v)
+                <tr class="hover:bg-white/[0.02] transition-all group">
+                    <td class="px-6 py-4 font-bold text-slate-200 uppercase tracking-tight text-sm">{{ $v->nama_variabel }}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-[10px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full font-bold">{{ $v->divisi->nama_divisi ?? 'TAC' }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-3">
+                            <button onclick="openModal('edit', {{ $v->id }}, '{{ $v->nama_variabel }}')" class="text-amber-500 hover:text-amber-400 text-xs font-bold uppercase">Edit</button>
+                            <form action="{{ route('manager.variables.destroy', $v->id) }}" method="POST" onsubmit="return confirm('Hapus kategori ini? Aktivitas yang sudah tercatat mungkin akan terpengaruh.')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-rose-500 hover:text-rose-400"><i class="fas fa-trash"></i></button>
+                            </form>
                         </div>
-                    </div>
-
-                    <table class="w-full text-left">
-                        <thead class="text-slate-500 text-[10px] uppercase tracking-widest bg-darkCard">
-                            <tr>
-                                <th class="p-5 font-medium text-primary">Nama Variabel</th>
-                                <th class="p-5 font-medium w-32">Bobot (%)</th>
-                                <th class="p-5 font-medium text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-                            @forelse($variables as $v)
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="p-5 text-white font-medium">{{ $v->variable_name }}</td>
-                                <td class="p-5">
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" name="weights[{{ $v->id }}]" value="{{ $v->weight }}"
-                                            class="w-20 bg-secondary border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:border-primary outline-none transition-all">
-                                        <span class="text-slate-600 text-xs">%</span>
-                                    </div>
-                                </td>
-                                <td class="p-5 text-right">
-                                    <button type="button" onclick="confirmDelete('{{ route('manager.variables.destroy', $v->id) }}')" class="text-red-500/50 hover:text-red-500 transition-colors p-2">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="p-10 text-center text-slate-500 italic">
-                                    Belum ada variabel untuk divisi ini. Silahkan tambah variabel baru.
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </form>
-            </div>
-        </div>
-
-        {{-- Panel Kontrol Bobot --}}
-        <div class="space-y-6">
-            <div class="organic-card p-6 border-t-4 {{ $totalWeight != 100 ? 'border-amber-500' : 'border-primary' }}">
-                <h4 class="text-white font-bold mb-4">Total Bobot Divisi</h4>
-                <div class="flex items-end gap-2 mb-2">
-                    <span class="text-5xl font-header {{ $totalWeight != 100 ? 'text-amber-500' : 'text-primary' }}">
-                        {{ number_format($totalWeight, 0) }}
-                    </span>
-                    <span class="text-slate-500 mb-2">/ 100%</span>
-                </div>
-
-                {{-- Progress Bar --}}
-                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden mb-4">
-                    <div class="{{ $totalWeight != 100 ? 'bg-amber-500' : 'bg-primary' }} h-full transition-all duration-500"
-                        style="width: {{ min($totalWeight, 100) }}%"></div>
-                </div>
-
-                {{-- Status Alert --}}
-                @if($totalWeight != 100)
-                <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-6">
-                    <p class="text-[10px] text-amber-500 leading-tight italic text-center">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> Total bobot saat ini {{ $totalWeight }}%. Pastikan total bobot adalah 100% agar perhitungan KPI akurat.
-                    </p>
-                </div>
-                @endif
-
-                <form action="{{ route('manager.variables.autoAverage') }}" method="POST">
-                    @csrf
-                    {{-- Hidden input agar controller tahu divisi mana yang dirata-ratakan --}}
-                    <input type="hidden" name="division_id" value="{{ $selectedDivisionId }}">
-                    <button type="submit" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-xs font-bold hover:bg-primary hover:border-primary transition-all shadow-sm">
-                        <i class="fas fa-magic mr-2"></i> Bagi Rata Bobot (AVG)
-                    </button>
-                </form>
-                <p class="text-[10px] text-slate-500 mt-3 italic text-center leading-relaxed">
-                    Fitur ini akan menghitung otomatis bobot rata untuk {{ $variables->count() }} variabel di divisi ini.
-                </p>
-            </div>
-        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 </div>
 
-{{-- MODAL TAMBAH VARIABEL --}}
-<div id="addVarModal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-secondary/90 backdrop-blur-sm" onclick="closeModal('addVarModal')"></div>
-        <div class="relative bg-darkCard w-full max-w-md rounded-[30px] border border-white/10 p-8 shadow-2xl animate-in zoom-in duration-200">
-            <h4 class="text-xl font-header text-white mb-2">Variabel Baru</h4>
-            <p class="text-xs text-slate-400 mb-6">Menambahkan metrik untuk divisi <span class="text-primary font-bold">{{ $allDivisions->find($selectedDivisionId)->name }}</span></p>
+{{-- MODAL POPUP --}}
+<div id="modalOverlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="bg-slate-900 border border-white/10 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl" onclick="event.stopPropagation()">
+        <h3 id="modalTitle" class="text-xl font-header font-bold text-white uppercase mb-6 text-center text-primary">Tambah Kategori</h3>
 
-            <form action="{{ route('manager.variables.store') }}" method="POST">
-                @csrf
-                @if ($errors->any())
-                <div class="bg-red-500/10 text-red-500 p-3 rounded-lg text-xs mb-4">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-                {{-- Input hidden division_id (Sudah benar) --}}
-                <input type="hidden" name="division_id" value="{{ $selectedDivisionId }}">
+        <form id="modalForm" method="POST">
+            @csrf
+            <div id="methodPlaceholder"></div>
+            <input type="hidden" name="divisi_id" value="1">
 
-                <div class="space-y-4">
-                    {{-- Input Nama Variabel (Sudah benar) --}}
-                    <div>
-                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-2 tracking-widest">Nama Variabel / Item</label>
-                        <input type="text" name="variable_name" required placeholder="Contoh: Kecepatan Respon"
-                            class="w-full bg-secondary border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none mt-1 focus:border-primary transition-all">
-                    </div>
-
-                    {{-- TAMBAHKAN INI: Input Tipe Penilaian --}}
-                    <div>
-                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-2 tracking-widest">Tipe Penilaian</label>
-                        <select name="input_type" required
-                            class="w-full bg-secondary border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none mt-1 focus:border-primary transition-all appearance-none cursor-pointer">
-                            <option value="dropdown">Dropdown (Managerial)</option>
-                            <option value="case_list">Case List (Teknis/Otomatis)</option>
-                            <option value="number">Angka Langsung</option>
-                            <option value="boolean">Ya/Tidak</option>
-                        </select>
-                    </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-2 block ml-1">Nama Kategori / Variabel</label>
+                    <input type="text" name="nama_variabel" id="input_nama" required
+                        placeholder="Contoh: Maintenance Server"
+                        class="w-full bg-slate-950 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:border-primary outline-none transition-all">
                 </div>
 
-                <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeModal('addVarModal')" class="flex-1 px-4 py-3 text-slate-400 text-sm font-bold hover:text-white transition-colors">Batal</button>
-                    <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:scale-105 active:scale-95 transition-all">Simpan</button>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-4 rounded-2xl bg-slate-800 text-white text-[10px] font-bold uppercase hover:bg-slate-700 transition-all">Batal</button>
+                    <button type="submit" id="btnSubmit" class="flex-[2] py-4 rounded-2xl bg-primary text-white text-[10px] font-bold uppercase hover:shadow-lg hover:shadow-primary/30 transition-all">Simpan Kategori</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
-
-{{-- Hidden Form for Delete --}}
-<form id="deleteForm" method="POST" class="hidden">
-    @csrf
-    @method('DELETE')
-</form>
 
 <script>
-    function openModal(id) {
-        document.getElementById(id).classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
+    const overlay = document.getElementById('modalOverlay');
+    const form = document.getElementById('modalForm');
 
-    function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
+    function openModal(type, id = null, nama = '') {
+        overlay.style.setProperty('display', 'flex', 'important');
 
-    function confirmDelete(url) {
-        if (confirm('Hapus variabel ini? Tindakan ini akan mempengaruhi perhitungan KPI staff di divisi ini.')) {
-            const form = document.getElementById('deleteForm');
-            form.action = url;
-            form.submit();
+        if (type === 'create') {
+            document.getElementById('modalTitle').innerText = "Tambah Kategori Baru";
+            form.action = "{{ route('manager.variables.store') }}";
+            document.getElementById('methodPlaceholder').innerHTML = "";
+            document.getElementById('input_nama').value = "";
+            document.getElementById('btnSubmit').innerText = "Simpan Kategori";
+            document.getElementById('btnSubmit').style.backgroundColor = '#3b82f6';
+        } else {
+            document.getElementById('modalTitle').innerText = "Edit Kategori";
+            form.action = "/manager/variables/" + id;
+            document.getElementById('methodPlaceholder').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+            document.getElementById('input_nama').value = nama;
+            document.getElementById('btnSubmit').innerText = "Update Kategori";
+            document.getElementById('btnSubmit').style.backgroundColor = '#f59e0b';
         }
     }
+
+    function closeModal() {
+        overlay.style.display = 'none';
+    }
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeModal();
+    });
 </script>
 @endsection

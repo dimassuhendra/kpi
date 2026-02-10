@@ -2,18 +2,18 @@
 
 @section('content')
 <div class="flex min-h-screen items-center justify-center p-4">
-    <div class="flex w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+    <div class="flex flex-col lg:flex-row w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
 
-        <div class="hidden w-1/2 flex-col items-center justify-center bg-white p-12 lg:flex">
-            <div class="w-64 h-64 flex items-center justify-center rounded-2xl mb-8">
+        <div class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-white p-8 lg:p-12">
+            <div class="w-40 h-40 lg:w-64 lg:h-64 flex items-center justify-center rounded-2xl mb-4 lg:mb-8">
                 <img src="{{ asset('img/logo.png') }}" alt="Your Logo" class="max-w-full h-auto" onerror="this.src='https://placehold.co/400x400/09637E/EBF4F6?text=YOUR+LOGO'">
             </div>
-            <h2 class="text-3xl text-primary font-header text-center">Sistem Monitoring KPI</h2>
-            <p class="text-secondary opacity-80 font-body">Divisi TAC & Infrastruktur IT</p>
+            <h2 class="text-2xl lg:text-3xl text-primary font-header text-center">Sistem Monitoring KPI</h2>
+            <p class="text-secondary opacity-80 font-body text-sm lg:text-base">Divisi TAC & Infrastruktur IT</p>
         </div>
 
-        <div class="w-full bg-primary p-12 lg:w-1/2 text-white">
-            <h1 class="mb-2 text-5xl font-header">Welcome!</h1>
+        <div class="w-full lg:w-1/2 bg-primary p-8 lg:p-12 text-white">
+            <h1 class="mb-2 text-4xl lg:text-5xl font-header">Welcome!</h1>
             <p class="mb-8 font-light text-background opacity-70 font-body">Silakan login untuk melanjutkan</p>
 
             <div class="mb-8 flex justify-center">
@@ -26,7 +26,7 @@
 
             <form action="{{ url('/login') }}" method="POST">
                 @csrf
-                <input type="hidden" name="role" id="selected-role" value="staff">
+                <input type="hidden" name="role" id="selected-role" value="{{ old('role', 'staff') }}">
 
                 @if($errors->any())
                 <div class="mb-4 p-3 bg-red-500 text-white rounded-lg text-sm font-body">
@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="flex flex-col gap-4">
-                    <button type="submit" class="w-full rounded-xl bg-secondary px-6 py-4 font-header text-2xl shadow-lg hover:bg-accent hover:text-primary transition-all active:scale-95">
+                    <button type="submit" class="w-full rounded-xl bg-secondary px-6 py-4 font-header text-xl lg:text-2xl shadow-lg hover:bg-accent hover:text-primary transition-all active:scale-95">
                         LOGIN
                     </button>
                     <div class="text-center">
@@ -62,6 +62,12 @@
 </div>
 
 <script>
+    // Script tetap sama seperti sebelumnya
+    window.onload = function() {
+        const currentRole = document.getElementById('selected-role').value;
+        setRole(currentRole);
+    };
+
     function setRole(role) {
         document.getElementById('selected-role').value = role;
         const bg = document.getElementById('toggle-bg');
@@ -69,10 +75,12 @@
         const btnManager = document.getElementById('btn-manager');
 
         if (role === 'manager') {
-            bg.style.transform = 'translateX(96%)';
+            bg.style.left = '50%';
+            bg.style.transform = 'translateX(0)';
             btnManager.classList.remove('opacity-50');
             btnStaff.classList.add('opacity-50');
         } else {
+            bg.style.left = '4px';
             bg.style.transform = 'translateX(0)';
             btnStaff.classList.remove('opacity-50');
             btnManager.classList.add('opacity-50');

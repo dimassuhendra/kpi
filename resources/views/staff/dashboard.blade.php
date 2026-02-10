@@ -1,249 +1,217 @@
 @extends('layouts.staff')
 
 @section('content')
-<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div>
-        <h2 class="font-header text-4xl text-primary leading-tight">Halo, <span class="text-primary">{{ Auth::user()->name }}</span>!</h2>
-        <p class="text-gray-500 font-medium">Siap untuk mencapai target KPI hari ini?</p>
+<div class="container mx-auto">
+    <div class="mb-10">
+        <h1 class="text-4xl font-header font-bold text-white">Main Station</h1>
+        <p class="text-slate-400 font-body">Overview pencapaian unit TAC hari ini.</p>
     </div>
 
-    <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div class="relative flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $todaySubmission ? 'bg-green-400' : 'bg-red-400' }} opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 {{ $todaySubmission ? 'bg-green-500' : 'bg-red-500' }}"></span>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="organic-card p-6 bg-gradient-to-br from-primary/10 to-transparent">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Daily Case</p>
+            <h2 class="text-5xl font-header font-bold text-primary">{{ $dailyCount }}</h2>
+            <p class="text-slate-400 text-sm mt-2 italic">Aktivitas hari ini</p>
         </div>
-        <span class="text-sm font-bold text-primary italic">Status hari ini: {{ $todaySubmission ? 'Laporan Terkirim' : 'Menunggu Laporan' }}</span>
+        <div class="organic-card p-6 border-b-4 border-blue-500">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Weekly Volume</p>
+            <h2 class="text-5xl font-header font-bold text-blue-400">{{ $weeklyCount }}</h2>
+            <p class="text-slate-400 text-sm mt-2 italic">Total minggu ini</p>
+        </div>
+        <div class="organic-card p-6 border-b-4 border-purple-500">
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Monthly Milestone</p>
+            <h2 class="text-5xl font-header font-bold text-purple-400">{{ $monthlyCount }}</h2>
+            <p class="text-slate-400 text-sm mt-2 italic">Akumulasi bulan ini</p>
+        </div>
     </div>
-</div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+    <div class="organic-card p-8 mb-8">
+        <h3 class="text-white font-header mb-6 flex items-center">
+            <i class="fas fa-wave-square mr-3 text-primary"></i> Productivity Rhythm (Last 7 Days)
+        </h3>
+        <div class="h-[300px]">
+            <canvas id="trendChart"
+                data-labels='{!! json_encode($trendData->pluck("tanggal")->map(fn($d) => date("d M", strtotime($d)))) !!}'
+                data-values='{!! json_encode($trendData->pluck("total")) !!}'>
+            </canvas>
+        </div>
+    </div>
 
-    <div class="relative group">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-[2rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-        <div class="relative bg-white p-8 rounded-[2rem] shadow-sm hover:-translate-y-2 transition-transform duration-300">
-            <div class="flex flex-col gap-4">
-                <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                    <i class="fas fa-crown text-2xl"></i>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="organic-card p-6">
+            <h3 class="text-white font-header text-sm mb-4 text-center">Work Autonomy</h3>
+            <canvas id="autonomyChart"
+                data-mandiri="{{ $autonomyData->where('is_mandiri', 1)->first()->total ?? 0 }}"
+                data-bantuan="{{ $autonomyData->where('is_mandiri', 0)->first()->total ?? 0 }}">
+            </canvas>
+        </div>
+        <div class="organic-card p-6">
+            <h3 class="text-white font-header text-sm mb-4 text-center">Proactive Discovery</h3>
+            <canvas id="sourceChart"
+                data-temuan="{{ $sourceData->where('temuan_sendiri', 1)->first()->total ?? 0 }}"
+                data-laporan="{{ $sourceData->where('temuan_sendiri', 0)->first()->total ?? 0 }}">
+            </canvas>
+        </div>
+
+        <div class="organic-card p-6 bg-gradient-to-br from-primary/5 to-transparent border-l-4 border-primary h-full">
+            <h3 class="text-white font-header text-sm mb-6 flex items-center">
+                <i class="fas fa-chart-pie mr-2 text-primary"></i> Ringkasan Performa
+            </h3>
+
+            <div class="space-y-5">
+                <div class="flex justify-between items-center">
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase tracking-wider">Rerata Kasus</span>
+                        <span class="text-slate-200 text-xs">Temuan case harian</span>
+                    </div>
+                    <span class="text-white font-bold text-lg">{{ number_format($trendData->avg('total'), 1) }}</span>
                 </div>
-                <div>
-                    <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Average Score</p>
-                    <h3 class="text-4xl font-header text-primary mt-1">{{ number_format($averageScore, 1) }}</h3>
+
+                <div class="flex justify-between items-center">
+                    @php
+                    $totalAut = $autonomyData->sum('total');
+                    $mandiri = $autonomyData->where('is_mandiri', 1)->first()->total ?? 0;
+                    $autPercent = $totalAut > 0 ? round(($mandiri / $totalAut) * 100) : 0;
+                    @endphp
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase tracking-wider">Kerja Mandiri</span>
+                        <span class="text-slate-200 text-xs">Tanpa bantuan tim infra</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-primary font-bold text-lg">{{ $mandiri }} <small class="text-[10px] text-slate-500 font-normal">Kasus</small></span>
+                        <span class="text-[10px] text-primary/80 bg-primary/10 px-1 rounded">{{ $autPercent }}%</span>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-primary h-full rounded-full" style="width: {{ $averageScore }}%"></div>
+
+                <div class="flex justify-between items-center">
+                    @php
+                    $totalSrc = $sourceData->sum('total');
+                    $temuan = $sourceData->where('temuan_sendiri', 1)->first()->total ?? 0;
+                    $proPercent = $totalSrc > 0 ? round(($temuan / $totalSrc) * 100) : 0;
+                    @endphp
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase tracking-wider">Inisiatif Proaktif</span>
+                        <span class="text-slate-200 text-xs">Masalah yang ditemukan</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-blue-400 font-bold text-lg">{{ $temuan }} <small class="text-[10px] text-slate-500 font-normal">Kasus</small></span>
+                        <span class="text-[10px] text-blue-400/80 bg-blue-400/10 px-1 rounded">{{ $proPercent }}%</span>
+                    </div>
+                </div>
+
+                <hr class="border-slate-700/50 my-2">
+
+                <div class="pt-2">
+                    <p class="text-slate-400 text-[11px] italic leading-relaxed bg-slate-800/50 p-2 rounded border border-slate-700">
+                        <i class="fas fa-info-circle mr-1 text-primary"></i>
+                        Data diambil dari 7 hari terakhir.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="relative group">
-        <div class="absolute inset-0 bg-gradient-to-r from-accent to-secondary rounded-[2rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-        <div class="relative bg-white p-8 rounded-[2rem] shadow-sm hover:-translate-y-2 transition-transform duration-300">
-            <div class="flex flex-col gap-4">
-                <div class="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center text-accent">
-                    <i class="fas fa-rocket text-2xl"></i>
-                </div>
-                <div>
-                    <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Cases</p>
-                    <h3 class="text-4xl font-header text-accent mt-1">
-                        {{ \App\Models\KpiCaseLog::whereHas('submission', fn($q) => $q->where('user_id', Auth::id())->where('status', 'approved'))->count() }}
-                    </h3>
-                </div>
-                <p class="text-[10px] text-gray-400 font-bold italic">*30 Hari Terakhir</p>
-            </div>
-        </div>
-    </div>
+    {{-- blade-formatter-disable --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
 
-    <div class="relative group">
-        @if($todaySubmission)
-        <div class="absolute inset-0 bg-green-400 rounded-[2rem] blur-xl opacity-20"></div>
-        <div class="relative bg-green-50 p-8 rounded-[2rem] border border-green-100 hover:-translate-y-2 transition-all">
-            <div class="flex flex-col gap-4">
-                <div class="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-200">
-                    <i class="fas fa-check-double text-2xl"></i>
-                </div>
-                <div>
-                    <p class="text-green-700 text-xs font-bold uppercase tracking-widest">Submission</p>
-                    <h3 class="text-2xl font-header text-green-800 mt-1">Done Today!</h3>
-                </div>
-            </div>
-        </div>
-        @else
-        <div class="absolute inset-0 bg-red-400 rounded-[2rem] blur-xl opacity-20"></div>
-        <div class="relative bg-red-50 p-8 rounded-[2rem] border border-red-100 hover:-translate-y-2 transition-all">
-            <div class="flex flex-col gap-4">
-                <div class="w-14 h-14 bg-red-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-200">
-                    <i class="fas fa-exclamation-triangle text-2xl"></i>
-                </div>
-                <div>
-                    <p class="text-red-700 text-xs font-bold uppercase tracking-widest">Submission</p>
-                    <h3 class="text-2xl font-header text-red-800 mt-1">Not Filled!</h3>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
+            // 1. Fungsi Helper Tooltip (Dibuat tradisional agar aman dari formatter)
+            function getTooltipLabel(context) {
+                var value = parseFloat(context.raw) || 0;
+                var dataset = context.dataset.data;
+                var total = 0;
+                for (var i = 0; i < dataset.length; i++) {
+                    total += parseFloat(dataset[i]);
+                }
+                var percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return " " + context.label + ": " + value + " Case (" + percentage + "%)";
+            }
 
-    <div class="relative group h-full">
-        <a href="{{ route('staff.kpi.create') }}" class="block h-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 rounded-[2rem] bg-primary overflow-hidden group">
-            <div class="relative h-full p-8 flex flex-col justify-center items-center text-center gap-2">
-                <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-125 transition-transform">
-                    <i class="fas fa-circle-plus text-6xl text-white"></i>
-                </div>
-
-                <h3 class="text-white font-header text-xl relative z-10">Input KPI</h3>
-                <p class="text-white/60 text-xs relative z-10">Klik untuk buat laporan harian</p>
-                <div class="mt-4 bg-white/20 p-2 rounded-full px-6 text-white text-xs font-bold backdrop-blur-sm group-hover:bg-white group-hover:text-primary transition-all">
-                    Gas Sekarang <i class="fas fa-arrow-right ml-2"></i>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-2 bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 p-8 border border-gray-50">
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h3 class="font-header text-2xl text-primary leading-none mb-2">Statistik Mingguan</h3>
-                <p class="text-gray-400 text-sm font-medium">Grafik fluktuasi skor KPI Anda</p>
-            </div>
-            <div class="p-4 bg-background rounded-2xl text-primary">
-                <i class="fas fa-chart-line text-xl"></i>
-            </div>
-        </div>
-        <div class="h-80">
-            @if($chartData->isEmpty())
-            <div class="flex flex-col items-center justify-center h-full border-4 border-dashed border-gray-50 rounded-[2rem]">
-                <img src="https://illustrations.popsy.co/teal/falling.svg" class="h-32 mb-4 opacity-50" alt="">
-                <p class="text-gray-400 font-bold tracking-widest uppercase text-xs">No Data Available</p>
-            </div>
-            @else
-            <canvas id="lineChart"></canvas>
-            @endif
-        </div>
-    </div>
-
-    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 p-8 border border-gray-50">
-        <h3 class="font-header text-2xl text-primary leading-none mb-8">Skill Radar</h3>
-        <div class="h-80 relative flex items-center justify-center">
-            @if($variableDistributions->isEmpty())
-            <div class="flex flex-col items-center justify-center h-full border-4 border-dashed border-gray-50 rounded-[2rem]">
-                <img src="https://illustrations.popsy.co/teal/falling.svg" class="h-32 mb-4 opacity-50" alt="">
-                <p class="text-gray-400 font-bold tracking-widest uppercase text-xs">No Data Available</p>
-            </div> @else
-            <canvas id="donutChart"></canvas>
-            @endif
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Konfigurasi Global Chart.js
-    Chart.defaults.font.family = 'Sniglet';
-    Chart.defaults.color = '#09637E';
-
-    // 1. Line Chart (Statistik Mingguan)
-    const lineCtx = document.getElementById('lineChart')?.getContext('2d');
-    if (lineCtx) {
-        new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                // Menampilkan tanggal assessment
-                labels: {
-                    !!json_encode($chartData - > map(fn($d) => date('d/m', strtotime($d - > assessment_date)))) !!
-                },
-                datasets: [{
-                    label: 'Skor KPI',
-                    // Menampilkan total_final_score hasil perhitungan terbaru
+            // 2. Trend Line Chart
+            var trendCtx = document.getElementById('trendChart');
+            if (trendCtx) {
+                new Chart(trendCtx, {
+                    type: 'line',
                     data: {
-                        !!json_encode($chartData - > pluck('total_final_score')) !!
+                        labels: JSON.parse(trendCtx.dataset.labels || "[]"),
+                        datasets: [{
+                            label: 'Total Cases',
+                            data: JSON.parse(trendCtx.dataset.values || "[]"),
+                            borderColor: '#10b981',
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                        }]
                     },
-                    borderColor: '#088395',
-                    backgroundColor: (context) => {
-                        const chart = context.chart;
-                        const {
-                            ctx,
-                            chartArea
-                        } = chart;
-                        if (!chartArea) return null;
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(8, 131, 149, 0)');
-                        gradient.addColorStop(1, 'rgba(8, 131, 149, 0.2)');
-                        return gradient;
-                    },
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 4,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#088395',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Options bersama untuk Doughnut
+            var doughnutOptions = {
+                cutout: '75%',
                 plugins: {
                     legend: {
                         display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: {
-                            color: '#f3f4f6'
-                        }
                     },
-                    x: {
-                        grid: {
-                            display: false
+                    tooltip: {
+                        callbacks: {
+                            label: getTooltipLabel
                         }
                     }
                 }
-            }
-        });
-    }
+            };
 
-    // 2. Donut Chart (Skill Radar / Distribusi Per Variabel)
-    const donutCtx = document.getElementById('donutChart')?.getContext('2d');
-    if (donutCtx) {
-        new Chart(donutCtx, {
-            type: 'doughnut',
-            data: {
-                // Nama variabel (hanya yang aktif)
-                labels: {
-                    !!json_encode($variableDistributions - > pluck('variable_name')) !!
-                },
-                datasets: [{
-                    // Data rata-rata skor per variabel (avg_val dari calculated_score)
+            // 3. Autonomy Doughnut
+            var autCtx = document.getElementById('autonomyChart');
+            if (autCtx) {
+                new Chart(autCtx, {
+                    type: 'doughnut',
                     data: {
-                        !!json_encode($variableDistributions - > pluck('avg_val')) !!
+                        labels: ['Diselesaikan sendiri', 'Diselesaikan tim Infra'],
+                        datasets: [{
+                            data: [
+                                parseFloat(autCtx.dataset.mandiri) || 0,
+                                parseFloat(autCtx.dataset.bantuan) || 0
+                            ],
+                            backgroundColor: ['#10b981', 'oklch(0.704 0.191 22.216)'],
+                            borderWidth: 0
+                        }]
                     },
-                    backgroundColor: ['#09637E', '#088395', '#05BFDB', '#7AB2B2', '#FFD93D'],
-                    borderWidth: 5,
-                    borderColor: '#ffffff',
-                    hoverOffset: 15
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                },
-                cutout: '75%'
+                    options: doughnutOptions
+                });
+            }
+
+            // 4. Source Doughnut
+            var srcCtx = document.getElementById('sourceChart');
+            if (srcCtx) {
+                new Chart(srcCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Temuan sendiri', 'Laporan pelanggan'],
+                        datasets: [{
+                            data: [
+                                parseFloat(srcCtx.dataset.temuan) || 0,
+                                parseFloat(srcCtx.dataset.laporan) || 0
+                            ],
+                            backgroundColor: ['#3b82f6', 'oklch(0.704 0.191 22.216)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: doughnutOptions
+                });
             }
         });
-    }
-</script>
-@endsection
+    </script>
+    {{-- blade-formatter-enable --}}
+
+    @endsection

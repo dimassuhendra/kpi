@@ -1,193 +1,76 @@
 @extends('layouts.manager')
 
 @section('content')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- 1. SCOPE TUNGGAL: Inisialisasi activeTab sesuai $selectedDivisi dari Server --}}
+    <div x-data="{
+        activeTab: '{{ $selectedDivisi == '1' ? 'tac' : ($selectedDivisi == '2' ? 'infra' : 'all') }}'
+    }" class="space-y-10">
 
-<div class="space-y-8">
-    {{-- Bagian Header & Greeting --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h2 class="font-header text-3xl md:text-4xl text-white italic">Manager <span class="text-primary">Dashboard</span></h2>
-            <p class="font-body text-slate-400 mt-1">Pantau kinerja divisi {{ Auth::user()->division->name }} secara real-time.</p>
-        </div>
-        <div class="organic-card px-6 py-3 bg-primary/5 flex items-center gap-3">
-            <i class="fas fa-calendar-day text-primary"></i>
-            <span class="text-white font-header">{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</span>
-        </div>
-    </div>
-
-    {{-- Row 1: Statistik & Counter --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="organic-card p-6 border-l-4 border-primary">
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Rata-rata Skor Tim</p>
-            <div class="flex items-baseline gap-2 mt-2">
-                {{-- Menampilkan rata-rata skor berdasarkan kalkulasi baru --}}
-                <span class="text-4xl font-header text-white">{{ number_format($avgScore, 1) }}</span>
-                <span class="text-xs text-slate-500">Pts</span>
+        {{-- HEADER & FILTER SECTION --}}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h1 class="text-3xl font-header font-bold text-white tracking-tight uppercase">
+                    Mission <span class="text-primary italic">Control</span>
+                </h1>
+                <p class="text-slate-400 text-sm italic">
+                    Monitoring performa divisi: <span class="text-primary font-bold uppercase" x-text="activeTab"></span>
+                </p>
             </div>
-            <p class="text-[10px] text-emerald-500 mt-2 font-bold"><i class="fas fa-users"></i> Performa Divisi</p>
-        </div>
 
-        <div class="organic-card p-6 border-l-4 border-amber-500 group cursor-pointer hover:bg-amber-500/5 transition-colors">
-            <a href="{{ route('manager.approval.index') }}">
-                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Pending Approval</p>
-                <div class="flex items-baseline gap-2 mt-2">
-                    <span class="text-4xl font-header text-white">{{ $pendingCount }}</span>
-                    <span class="text-xs text-slate-500">Laporan</span>
-                </div>
-                <p class="text-[10px] text-amber-500 mt-2 font-bold group-hover:underline">Review Sekarang <i class="fas fa-chevron-right ml-1"></i></p>
-            </a>
-        </div>
+            {{-- BUTTON SWITCHER (Dihapus x-data di sini agar nyambung ke atas) --}}
+            <div class="flex items-center gap-1 bg-slate-800/40 p-1 rounded-3xl border border-white/5">
 
-        <div class="organic-card p-6 border-l-4 border-indigo-400">
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Top Performer</p>
-            <p class="text-white font-header mt-2 truncate">{{ $topPerformer->name ?? 'Belum ada data' }}</p>
-            <div class="flex items-center gap-1 text-[10px] text-indigo-400 mt-1">
-                <i class="fas fa-award"></i> Leaderboard #1
+                {{-- Button All Division --}}
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => 'all']) }}'"
+                    :class="activeTab === 'all' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'"
+                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    All Division
+                </button>
+
+                {{-- Button TAC --}}
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '1']) }}'"
+                    :class="activeTab === 'tac' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'"
+                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    TAC
+                </button>
+
+                {{-- Button Infrastructure --}}
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '2']) }}'"
+                    :class="activeTab === 'infra' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'"
+                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                    Infrastructure
+                </button>
             </div>
         </div>
 
-        <div class="organic-card p-6 border-l-4 border-red-500">
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">Need Coaching</p>
-            <p class="text-white font-header mt-2 truncate">{{ $bottomPerformer->name ?? 'Belum ada data' }}</p>
-            <div class="flex items-center gap-1 text-[10px] text-red-500 mt-1">
-                <i class="fas fa-exclamation-triangle"></i> Skor Terendah
-            </div>
-        </div>
-    </div>
-
-    {{-- Row 2: Grafik Trend Tiket & List Performer --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 organic-card p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="font-header text-xl text-white"><i class="fas fa-chart-area mr-2 text-primary"></i>Volume Tiket Divisi</h3>
-                <span class="text-[10px] text-slate-500 font-bold uppercase italic">7 Hari Terakhir</span>
-            </div>
-            <div class="h-[300px] w-full">
-                <canvas id="managerTrendChart"></canvas>
-            </div>
-        </div>
-
-        <div class="space-y-6">
-            <div class="organic-card p-6 bg-gradient-to-b from-darkCard to-secondary">
-                <h3 class="font-header text-lg text-white mb-6 italic border-b border-white/5 pb-2">Peringkat Staff</h3>
-                <div class="space-y-5">
-                    {{-- Top Item --}}
-                    @if($topPerformer)
-                    <div class="flex items-center justify-between group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 border border-indigo-500/20 group-hover:rotate-6 transition-transform">
-                                <i class="fas fa-crown"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-white font-bold">{{ $topPerformer->name }}</p>
-                                <p class="text-[10px] text-slate-500">Skor: {{ number_format($topPerformer->submissions_avg_total_final_score, 1) }}</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-md font-bold uppercase">Top</span>
-                    </div>
-                    @endif
-
-                    {{-- Bottom Item --}}
-                    @if($bottomPerformer && $bottomPerformer->id != ($topPerformer->id ?? 0))
-                    <div class="flex items-center justify-between group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 border border-red-500/20 group-hover:-rotate-6 transition-transform">
-                                <i class="fas fa-arrow-down"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-white font-bold">{{ $bottomPerformer->name }}</p>
-                                <p class="text-[10px] text-slate-500">Skor: {{ number_format($bottomPerformer->submissions_avg_total_final_score, 1) }}</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] bg-red-500/10 text-red-400 px-2 py-1 rounded-md font-bold uppercase">Low</span>
-                    </div>
-                    @endif
-                </div>
-
-                <div class="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saran Manajemen</p>
-                    <p class="text-xs text-white/70 mt-2 leading-relaxed italic">
-                        "Berikan perhatian khusus pada staf dengan skor 'Low' untuk menjaga SLA divisi."
-                    </p>
-                </div>
+        {{-- 2. CONTENT WRAPPER --}}
+        <div class="relative">
+            {{-- Section: ALL --}}
+            <div x-show="activeTab === 'all'" x-cloak>
+                @if ($selectedDivisi == 'all')
+                    @include('manager.partials.content-all')
+                @endif
             </div>
 
-            <div class="organic-card p-6 bg-primary/10 border-primary/20 relative overflow-hidden">
-                <i class="fas fa-info-circle absolute -right-4 -bottom-4 text-7xl text-primary/10"></i>
-                <h4 class="text-primary font-bold text-sm mb-2">Info Kalkulasi</h4>
-                <p class="text-slate-400 text-xs leading-relaxed">Skor sekarang didasarkan pada kualitas respon per tiket (Aman <= 15 mnt).</p>
+            {{-- Section: TAC --}}
+            <div x-show="activeTab === 'tac'" x-cloak>
+                @if ($selectedDivisi == '1')
+                    @include('manager.partials.content-tac')
+                @endif
+            </div>
+
+            {{-- Section: INFRA --}}
+            <div x-show="activeTab === 'infra'" x-cloak>
+                @if ($selectedDivisi == '2')
+                    @include('manager.partials.content-infra')
+                @endif
             </div>
         </div>
     </div>
-</div>
 
-{{-- Script Grafik --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('managerTrendChart').getContext('2d');
-
-        // Gradient untuk grafik
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {
-                    !!json_encode($trendData - > pluck('date')) !!
-                },
-                datasets: [{
-                    label: 'Volume Tiket',
-                    data: {
-                        !!json_encode($trendData - > pluck('total')) !!
-                    },
-                    borderColor: '#6366f1',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#6366f1',
-                    pointBorderColor: '#fff',
-                    pointHoverRadius: 6,
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: gradient
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)'
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 10
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 10
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-</script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 @endsection
