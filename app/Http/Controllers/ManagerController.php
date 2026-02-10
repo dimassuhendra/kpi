@@ -16,7 +16,6 @@ class ManagerController extends Controller
     public function dashboard(Request $request)
     {
         $selectedDivisi = $request->get('divisi_id', 'all');
-        $viewType = $request->get('view_type', 'all');
 
         // Filter TAC (ID: 1)
         if ($selectedDivisi !== 'all' && $selectedDivisi != 1) {
@@ -26,85 +25,72 @@ class ManagerController extends Controller
         $currentMonth = now()->month;
         $currentYear = now()->year;
 
-        // Base Queries
-        $reportQuery = DailyReport::whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-        $staffQuery = User::where('role', 'staff')->where('divisi_id', 1);
-
-        // 1. STATS UTAMA
+        // --- 1. STATS UTAMA ---
         $stats = [
             'pending' => DailyReport::where('status', 'pending')->count(),
-
             'avg_response_time' => KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
                 $q->where('status', 'approved')
                     ->whereMonth('tanggal', $currentMonth)
                     ->whereYear('tanggal', $currentYear);
             })->avg('value_raw') ?? 0,
-
             'resolved_month' => KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
                 $q->where('status', 'approved')
                     ->whereMonth('tanggal', $currentMonth)
                     ->whereYear('tanggal', $currentYear);
             })->count(),
-
             'active_today' => DailyReport::whereDate('tanggal', today())->distinct('user_id')->count('user_id'),
         ];
 
-        // 2. HEATMAP
+        // --- 2. HEATMAP ---
         $heatmapData = DailyReport::select(DB::raw('DATE(tanggal) as date'), DB::raw('count(*) as count'))
             ->where('tanggal', '>=', now()->startOfYear())
             ->groupBy('date')
             ->pluck('count', 'date');
 
-        // 3. DIAGRAM ANALYTICS
-        if ($viewType == 'compare') {
-            $chartData = User::where('role', 'staff')
-                ->where('divisi_id', 1)
-                ->withCount([
-                    'details as total_case' => function ($q) use ($currentMonth, $currentYear) {
-                        $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                    },
-                    'details as mandiri_count' => function ($q) use ($currentMonth, $currentYear) {
-                        $q->where('is_mandiri', 1)->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                    },
-                    'details as inisiatif_count' => function ($q) use ($currentMonth, $currentYear) {
-                        $q->where('temuan_sendiri', 1)->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                    }
-                ])
-                ->withAvg(['details as avg_time' => function ($q) use ($currentMonth, $currentYear) {
+        // --- 3. DIAGRAM ANALYTICS (DIBUAT TERPISAH AGAR TAMPIL SEMUA) ---
+
+        // A. Data Per Staff (Untuk Bar Charts)
+        $staffChartData = User::where('role', 'staff')
+            ->where('divisi_id', 1)
+            ->withCount([
+                'details as total_case' => function ($q) use ($currentMonth, $currentYear) {
                     $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                }], 'value_raw')
-                ->get();
-        } else {
-            $totalDetailBulanIni = KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-            })->count();
+                },
+                'details as mandiri_count' => function ($q) use ($currentMonth, $currentYear) {
+                    $q->where('is_mandiri', 1)->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
+                },
+                'details as inisiatif_count' => function ($q) use ($currentMonth, $currentYear) {
+                    $q->where('temuan_sendiri', 1)->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
+                }
+            ])
+            ->withAvg(['details as avg_time' => function ($q) use ($currentMonth, $currentYear) {
+                $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
+            }], 'value_raw')
+            ->get();
 
-            $mandiriCount = KegiatanDetail::where('is_mandiri', 1)->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-            })->count();
+        // B. Data Summary Divisi (Untuk Donut Charts)
+        $mandiriCount = KegiatanDetail::where('is_mandiri', 1)->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
+            $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
+        })->count();
 
-            $inisiatifCount = KegiatanDetail::where('temuan_sendiri', 1)->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-            })->count();
+        $inisiatifCount = KegiatanDetail::where('temuan_sendiri', 1)->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
+            $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
+        })->count();
 
-            $chartData = [
-                'total_case' => $totalDetailBulanIni,
-                'avg_time' => $stats['avg_response_time'],
-                'mandiri' => $mandiriCount,
-                'bantuan' => $totalDetailBulanIni - $mandiriCount,
-                'proaktif' => $inisiatifCount,
-                'penugasan' => $totalDetailBulanIni - $inisiatifCount,
-            ];
-        }
+        $summaryData = [
+            'total_case' => $stats['resolved_month'],
+            'avg_time'   => $stats['avg_response_time'],
+            'mandiri'    => $mandiriCount,
+            'bantuan'    => $stats['resolved_month'] - $mandiriCount,
+            'proaktif'   => $inisiatifCount,
+            'penugasan'  => $stats['resolved_month'] - $inisiatifCount,
+        ];
 
-        // 4. LEADERBOARD (Diubah dari Avg Nilai ke Total Kuantitas Pekerjaan)
-        $leaderboard = (clone $staffQuery)
+        // --- 4. LEADERBOARD ---
+        $leaderboard = User::where('role', 'staff')
+            ->where('divisi_id', 1)
             ->withCount(['details as solved_cases' => function ($q) use ($currentMonth) {
-                $q->whereHas(
-                    'dailyReport',
-                    fn($qr) =>
-                    $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)
-                );
+                $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth));
             }])
             ->orderByDesc('solved_cases')
             ->take(5)
@@ -112,7 +98,16 @@ class ManagerController extends Controller
 
         $divisis = Divisi::all();
 
-        return view('manager.dashboard', compact('stats', 'leaderboard', 'divisis', 'selectedDivisi', 'heatmapData', 'viewType', 'chartData'));
+        // Kirim staffChartData DAN summaryData sekaligus
+        return view('manager.dashboard', compact(
+            'stats',
+            'leaderboard',
+            'divisis',
+            'selectedDivisi',
+            'heatmapData',
+            'staffChartData',
+            'summaryData'
+        ));
     }
 
     // ===============================================================
