@@ -240,9 +240,8 @@
                     </a>
 
                     <a href="{{ route('manager.approval.index') }}"
-                        class="nav-link {{ request()->is('manager/approval*') ? 'active' : '' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all relative">
+                        class="nav-link {{ request()->is('manager/validation*') ? 'active' : '' }} flex items-center px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all relative">
                         <i class="fas fa-shield-check mr-2 text-xs"></i> Validation
-                        <span class="ml-2 bg-rose-500 text-[9px] px-1.5 py-0.5 rounded-md text-white animate-pulse">4</span>
                     </a>
 
                     <a href="{{ route('manager.users.index') }}"
