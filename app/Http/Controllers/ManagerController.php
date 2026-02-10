@@ -15,145 +15,168 @@ class ManagerController extends Controller
 {
     public function dashboard(Request $request)
     {
+        // 1. Inisialisasi Parameter Dasar
         $selectedDivisi = $request->get('divisi_id', 'all');
-
-        // Filter TAC (ID: 1) - Sesuaikan jika ada divisi lain nantinya
-        if ($selectedDivisi !== 'all' && $selectedDivisi != 1) {
-            return "Modul untuk divisi selain TAC sedang dalam pengembangan.";
-        }
-
         $currentMonth = now()->month;
         $currentYear = now()->year;
+        $divisis = Divisi::all();
 
-        // --- 1. STATS UTAMA (KPI Dasar) ---
-        $stats = [
-            'pending' => DailyReport::where('status', 'pending')->count(),
-            'avg_response_time' => KegiatanDetail::where('tipe_kegiatan', 'case')
-                ->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('status', 'approved')
-                        ->whereMonth('tanggal', $currentMonth)
-                        ->whereYear('tanggal', $currentYear);
-                })->avg('value_raw') ?? 0,
-            'resolved_month' => KegiatanDetail::where('tipe_kegiatan', 'case')
-                ->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('status', 'approved')
-                        ->whereMonth('tanggal', $currentMonth)
-                        ->whereYear('tanggal', $currentYear);
-                })->count(),
-            'active_today' => DailyReport::whereDate('tanggal', today())->distinct('user_id')->count('user_id'),
+        // 2. Inisialisasi Variabel Default (Pencegah Error di Blade)
+        $infraWorkload = collect();
+        $staffInfraData = collect();
+        $workloadMix = collect();
+        $trendLabels = [];
+        $trendCases = [];
+        $trendActivities = [];
+        $staffChartData = collect();
+        $leaderboard = collect();
+        $summaryData = [
+            'total_case' => 0,
+            'avg_time' => 0,
+            'mandiri' => 0,
+            'bantuan' => 0,
+            'proaktif' => 0,
+            'penugasan' => 0
         ];
 
-        // --- 2. HEATMAP (Aktivitas Login/Submit Report) ---
+        // 3. STATS UTAMA & HEATMAP (Muncul di semua tab)
+        $stats = [
+            'pending' => DailyReport::where('status', 'pending')->count(),
+            'active_today' => DailyReport::whereDate('tanggal', today())
+                ->distinct('user_id')
+                ->count('user_id'),
+        ];
+
         $heatmapData = DailyReport::select(DB::raw('DATE(tanggal) as date'), DB::raw('count(*) as count'))
             ->where('tanggal', '>=', now()->startOfYear())
             ->groupBy('date')
             ->pluck('count', 'date');
 
-        // --- 3. DATA PRODUCTIVITY MIX (Donut Chart: Case vs Activity) ---
-        $workloadMix = KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-            $q->whereMonth('tanggal', $currentMonth)
-                ->whereYear('tanggal', $currentYear)
-                ->where('status', 'approved');
-        })
-            ->select('tipe_kegiatan', DB::raw('count(*) as total'))
-            ->groupBy('tipe_kegiatan')
-            ->pluck('total', 'tipe_kegiatan');
+        // ==========================================
+        // LOGIKA PER DIVISI
+        // ==========================================
 
-        // --- 4. DATA TREND HARIAN (Line Chart: Case vs Activity) ---
-        $daysInMonth = now()->daysInMonth;
-        $trendLabels = [];
-        $trendCases = [];
-        $trendActivities = [];
+        if ($selectedDivisi == '2') {
+            // --- LOGIKA INFRASTRUKTUR ---
+            $infraWorkload = KegiatanDetail::whereNotNull('kategori')
+                ->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
+                    $q->whereMonth('tanggal', $currentMonth)
+                        ->whereYear('tanggal', $currentYear)
+                        ->where('status', 'approved');
+                })
+                ->select('kategori', DB::raw('count(*) as total'))
+                ->groupBy('kategori')
+                ->pluck('total', 'kategori');
 
-        for ($i = 1; $i <= $daysInMonth; $i++) {
-            $date = now()->setDate($currentYear, $currentMonth, $i)->format('Y-m-d');
-            $trendLabels[] = $i;
+            // Di Controller (Bagian selectedDivisi == '2')
+            $staffInfraData = User::where('divisi_id', 2)
+                ->where('role', 'staff')
+                ->with(['details' => function ($q) use ($currentMonth, $currentYear) {
+                    $q->whereHas('dailyReport', function ($qr) use ($currentMonth, $currentYear) {
+                        $qr->whereMonth('tanggal', $currentMonth)
+                            ->whereYear('tanggal', $currentYear);
+                        // Filter status approved sudah dihapus sesuai instruksi Anda
+                    });
+                }])
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'nama'    => $user->nama_lengkap ?? $user->username,
+                        'network' => (int) $user->details->where('kategori', 'Network')->count(),
+                        'cctv'    => (int) $user->details->where('kategori', 'CCTV')->count(),
+                        'gps'     => (int) $user->details->where('kategori', 'GPS')->count(),
+                        'lainnya' => (int) $user->details->where('kategori', 'Lainnya')->count(),
+                    ];
+                });
 
-            $trendCases[] = KegiatanDetail::where('tipe_kegiatan', 'case')
-                ->whereHas('dailyReport', function ($q) use ($date) {
-                    $q->where('tanggal', $date)->where('status', 'approved');
-                })->count();
+            // Pastikan infraWorkload tidak kosong
+            if ($infraWorkload->isEmpty()) {
+                $infraWorkload = collect(['No Data' => 0]);
+            }
 
-            $trendActivities[] = KegiatanDetail::where('tipe_kegiatan', 'activity')
-                ->whereHas('dailyReport', function ($q) use ($date) {
-                    $q->where('tanggal', $date)->where('status', 'approved');
-                })->count();
+            $leaderboard = User::where('role', 'staff')->where('divisi_id', 2)
+                ->withCount(['details as total_activity' => function ($q) use ($currentMonth) {
+                    $q->whereHas(
+                        'dailyReport',
+                        fn($qr) =>
+                        $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)
+                    );
+                }])->orderByDesc('total_activity')->take(5)->get();
+        } elseif ($selectedDivisi == '1') {
+            // --- LOGIKA TAC ---
+            $stats['avg_response_time'] = KegiatanDetail::where('tipe_kegiatan', 'case')
+                ->whereHas('dailyReport', fn($q) => $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear))
+                ->avg('value_raw') ?? 0;
+
+            $stats['resolved_month'] = KegiatanDetail::where('tipe_kegiatan', 'case')
+                ->whereHas('dailyReport', fn($q) => $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear))
+                ->count();
+
+            $workloadMix = KegiatanDetail::whereHas(
+                'dailyReport',
+                fn($q) =>
+                $q->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear)->where('status', 'approved')
+            )->select('tipe_kegiatan', DB::raw('count(*) as total'))->groupBy('tipe_kegiatan')->pluck('total', 'tipe_kegiatan');
+
+            // Trend Harian
+            $daysInMonth = now()->daysInMonth;
+            for ($i = 1; $i <= $daysInMonth; $i++) {
+                $date = now()->setDate($currentYear, $currentMonth, $i)->format('Y-m-d');
+                $trendLabels[] = $i;
+                $trendCases[] = KegiatanDetail::where('tipe_kegiatan', 'case')->whereHas('dailyReport', fn($q) => $q->where('tanggal', $date)->where('status', 'approved'))->count();
+                $trendActivities[] = KegiatanDetail::where('tipe_kegiatan', 'activity')->whereHas('dailyReport', fn($q) => $q->where('tanggal', $date)->where('status', 'approved'))->count();
+            }
+
+            $staffChartData = User::where('role', 'staff')->where('divisi_id', 1)
+                ->withCount([
+                    'details as total_case' => function ($q) use ($currentMonth, $currentYear) {
+                        $q->where('tipe_kegiatan', 'case')->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
+                    },
+                    'details as total_activity' => function ($q) use ($currentMonth, $currentYear) {
+                        $q->where('tipe_kegiatan', 'activity')->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
+                    }
+                ])->get();
+
+            $mandiri = KegiatanDetail::where('is_mandiri', 1)->whereHas('dailyReport', fn($q) => $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth))->count();
+            $proaktif = KegiatanDetail::where('temuan_sendiri', 1)->whereHas('dailyReport', fn($q) => $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth))->count();
+
+            $summaryData = [
+                'total_case' => $stats['resolved_month'],
+                'avg_time' => $stats['avg_response_time'],
+                'mandiri' => $mandiri,
+                'bantuan' => $stats['resolved_month'] - $mandiri,
+                'proaktif' => $proaktif,
+                'penugasan' => $stats['resolved_month'] - $proaktif,
+            ];
+
+            $leaderboard = User::where('role', 'staff')->where('divisi_id', 1)
+                ->withCount(['details as solved_cases' => function ($q) use ($currentMonth) {
+                    $q->where('tipe_kegiatan', 'case')->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth));
+                }])->orderByDesc('solved_cases')->take(5)->get();
+        } else {
+            // --- LOGIKA TAB ALL (SUMMARY SELURUH DIVISI) ---
+            // Contoh: Ambil 5 report terbaru dari semua divisi
+            $leaderboard = User::where('role', 'staff')
+                ->withCount(['details as total_all' => function ($q) use ($currentMonth) {
+                    $q->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth));
+                }])->orderByDesc('total_all')->take(5)->get();
         }
 
-        // --- 5. ANALYTICS PER STAFF (Bar Charts & Stacked Bar) ---
-        $staffChartData = User::where('role', 'staff')
-            ->where('divisi_id', 1)
-            ->withCount([
-                // Total Case per orang
-                'details as total_case' => function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('tipe_kegiatan', 'case')
-                        ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                },
-                // Total Activity per orang
-                'details as total_activity' => function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('tipe_kegiatan', 'activity')
-                        ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                },
-                'details as mandiri_count' => function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('is_mandiri', 1)->where('tipe_kegiatan', 'case')
-                        ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                },
-                'details as inisiatif_count' => function ($q) use ($currentMonth, $currentYear) {
-                    $q->where('temuan_sendiri', 1)->where('tipe_kegiatan', 'case')
-                        ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-                }
-            ])
-            ->withAvg(['details as avg_time' => function ($q) use ($currentMonth, $currentYear) {
-                $q->where('tipe_kegiatan', 'case')
-                    ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear));
-            }], 'value_raw')
-            ->get();
-
-        // --- 6. SUMMARY DIVISI (Untuk Donut KPI) ---
-        $mandiriCount = KegiatanDetail::where('is_mandiri', 1)->where('tipe_kegiatan', 'case')
-            ->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-            })->count();
-
-        $inisiatifCount = KegiatanDetail::where('temuan_sendiri', 1)->where('tipe_kegiatan', 'case')
-            ->whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
-                $q->where('status', 'approved')->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
-            })->count();
-
-        $summaryData = [
-            'total_case' => $stats['resolved_month'],
-            'avg_time'   => $stats['avg_response_time'],
-            'mandiri'    => $mandiriCount,
-            'bantuan'    => $stats['resolved_month'] - $mandiriCount,
-            'proaktif'   => $inisiatifCount,
-            'penugasan'  => $stats['resolved_month'] - $inisiatifCount,
-        ];
-
-        // --- 7. LEADERBOARD ---
-        $leaderboard = User::where('role', 'staff')
-            ->where('divisi_id', 1)
-            ->withCount(['details as solved_cases' => function ($q) use ($currentMonth) {
-                $q->where('tipe_kegiatan', 'case')
-                    ->whereHas('dailyReport', fn($qr) => $qr->where('status', 'approved')->whereMonth('tanggal', $currentMonth));
-            }])
-            ->orderByDesc('solved_cases')
-            ->take(5)
-            ->get();
-
-        $divisis = Divisi::all();
-
+        // 4. Return Satu View dengan Semua Variabel
         return view('manager.dashboard', compact(
             'stats',
-            'leaderboard',
             'divisis',
             'selectedDivisi',
             'heatmapData',
-            'staffChartData',
-            'summaryData',
+            'infraWorkload',
+            'staffInfraData',
+            'leaderboard',
             'workloadMix',
             'trendLabels',
             'trendCases',
-            'trendActivities'
+            'trendActivities',
+            'staffChartData',
+            'summaryData'
         ));
     }
 

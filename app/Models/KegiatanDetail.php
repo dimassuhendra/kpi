@@ -12,6 +12,7 @@ class KegiatanDetail extends Model
         'daily_report_id',
         'variabel_kpi_id',
         'tipe_kegiatan',
+        'kategori',
         'deskripsi_kegiatan',
         'value_raw',
         'temuan_sendiri',

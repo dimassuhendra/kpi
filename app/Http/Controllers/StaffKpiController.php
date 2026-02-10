@@ -124,17 +124,21 @@ class StaffKpiController extends Controller
         // ---------------------------------------------------------
         // LOGIKA PROSES: DIVISI INFRASTRUKTUR (DIVISI ID: 2)
         // ---------------------------------------------------------
+        // DI DALAM FUNCTION store()
         else if ($user->divisi_id == 2) {
-            // Ambil variabel poin flat untuk infra jika ada (misal nama variabel: 'Point Per Activity')
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
-            $poinPerKegiatan = $vInfra ? $vInfra->bobot : 5; // Fallback ke 5 poin jika tidak ada di DB
 
             foreach ($request->infra_activity as $infra) {
                 KegiatanDetail::create([
                     'daily_report_id'    => $report->id,
-                    'tipe_kegiatan'      => 'activity', // Infra mayoritas berupa activity/project
-                    'kategori'           => $infra['kategori'], // Network, CCTV, GPS, dll
-                    'deskripsi_kegiatan' => '[' . $infra['kategori'] . '] ' . $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
+                    'tipe_kegiatan'      => 'activity',
+
+                    // 1. INI YANG PALING PENTING: Simpan kategorinya ke kolom kategori
+                    'kategori'           => $infra['kategori'],
+
+                    // 2. Deskripsi biar rapi, tidak perlu pakai kurung siku lagi kalau sudah ada kolomnya
+                    'deskripsi_kegiatan' => $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
+
                     'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
                 ]);
             }
