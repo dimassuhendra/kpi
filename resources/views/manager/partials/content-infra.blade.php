@@ -1,8 +1,8 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    {{-- Card 1: Donut Chart Distribusi Kategori (Infra) --}}
-    <div class="lg:col-span-1 p-6 bg-slate-900 border border-white/5 rounded-xl flex flex-col">
-        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
-            <i class="fas fa-chart-pie mr-2 text-blue-500"></i> Workload Distribution
+    {{-- Card 1: Donut Chart --}}
+    <div class="lg:col-span-1 p-6 border border-white/5 rounded-xl flex flex-col" style="background: var(--dark-card)">
+        <h3 class="text-sm font-bold uppercase tracking-widest mb-6" style="color: var(--text-muted)">
+            <i class="fas fa-chart-pie mr-2" style="color: var(--primary)"></i> Workload Distribution
         </h3>
         <div class="flex-grow flex items-center justify-center relative" style="min-height: 250px;">
             <canvas id="infraWorkloadChart"></canvas>
@@ -11,35 +11,31 @@
         <div class="mt-6 grid grid-cols-2 gap-2 border-t border-white/5 pt-4">
             @forelse ($infraWorkload as $kat => $total)
                 <div class="flex items-center gap-2">
-                    <span
-                        class="w-2 h-2 rounded-full 
-                        @if ($kat == 'Network') bg-blue-500 
-                        @elseif($kat == 'CCTV') bg-emerald-500 
-                        @elseif($kat == 'GPS') bg-amber-500 
-                        @elseif($kat == 'Lainnya') bg-red-500 
-                        @else bg-slate-500 @endif">
+                    <span class="w-2 h-2 rounded-full"
+                        style="background-color: @if ($kat == 'Network') var(--primary) @elseif($kat == 'CCTV') var(--accent) @else var(--text-muted) @endif">
                     </span>
-                    <span class="text-[10px] text-slate-400 uppercase font-medium">
+                    <span class="text-[10px] uppercase font-medium" style="color: var(--text-muted)">
                         {{ $kat }}: {{ $total }}
                     </span>
                 </div>
             @empty
-                <div class="col-span-2 text-center text-slate-500 text-[10px]">No category data</div>
+                <div class="col-span-2 text-center text-[10px]" style="color: var(--text-muted)">No category data</div>
             @endforelse
         </div>
     </div>
 
     {{-- Card 2: Bar Chart Productivity Staff --}}
-    <div class="lg:col-span-2 p-6 bg-slate-900 border border-white/5 rounded-xl flex flex-col">
+    <div class="lg:col-span-2 p-6 border border-white/5 rounded-xl flex flex-col" style="background: var(--dark-card)">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                <i class="fas fa-users-cog mr-2 text-blue-500"></i> Staff Technical Focus
+            <h3 class="text-sm font-bold uppercase tracking-widest" style="color: var(--text-muted)">
+                <i class="fas fa-users-cog mr-2" style="color: var(--primary)"></i> Staff Technical Focus
             </h3>
-            <div class="flex bg-slate-800 p-1 rounded-lg">
+            <div class="flex p-1 rounded-lg" style="background: rgba(0,0,0,0.2)">
                 <button onclick="updateChartMode('total')" id="btn-mode-total"
-                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-blue-600 text-white">TOTAL</button>
+                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all btn-primary">TOTAL</button>
                 <button onclick="updateChartMode('staff')" id="btn-mode-staff"
-                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all text-slate-400">PER STAFF</button>
+                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all"
+                    style="color: var(--text-muted)">PER STAFF</button>
             </div>
         </div>
         <div class="flex-grow" style="min-height: 300px;">
@@ -48,46 +44,54 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     let infraChartInstance = null;
 
-    // Ambil data langsung dari variabel yang dikirim controller
+    // Helper untuk mengambil warna asli dari CSS Variable
+    const getThemeColor = (varName) => getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+
     const infraDataRaw = @json($infraWorkload);
     const staffDataRaw = @json($staffInfraData);
     const categories = @json($availableCategories);
 
-    const colorMap = {
-        'Network': '#3b82f6',
-        'CCTV': '#10b981',
-        'GPS': '#f59e0b',
+    // Color map sekarang merujuk ke variabel CSS
+    const getColorMap = () => ({
+        'Network': getThemeColor('--primary'),
+        'CCTV': getThemeColor('--accent'),
+        'GPS': '#f59e0b', // Tetap jika tidak ada variabelnya
         'Lainnya': '#ef4444'
-    };
+    });
 
     function updateChartMode(mode) {
         if (!infraChartInstance) return;
         const btnTotal = document.getElementById('btn-mode-total');
         const btnStaff = document.getElementById('btn-mode-staff');
+        const colors = getColorMap();
 
         if (mode === 'total') {
             infraChartInstance.data.labels = ['Total Kolektif'];
             infraChartInstance.data.datasets.forEach(ds => {
                 ds.data = [staffDataRaw.reduce((acc, curr) => acc + (Number(curr[ds.label]) || 0), 0)];
             });
-            btnTotal.classList.add('bg-blue-600', 'text-white');
-            btnStaff.classList.remove('bg-blue-600', 'text-white');
+            btnTotal.style.backgroundColor = 'var(--primary)';
+            btnTotal.style.color = 'white';
+            btnStaff.style.backgroundColor = 'transparent';
         } else {
             infraChartInstance.data.labels = staffDataRaw.map(s => s.nama);
             infraChartInstance.data.datasets.forEach(ds => {
                 ds.data = staffDataRaw.map(s => Number(s[ds.label]) || 0);
             });
-            btnStaff.classList.add('bg-blue-600', 'text-white');
-            btnTotal.classList.remove('bg-blue-600', 'text-white');
+            btnStaff.style.backgroundColor = 'var(--primary)';
+            btnStaff.style.color = 'white';
+            btnTotal.style.backgroundColor = 'transparent';
         }
         infraChartInstance.update();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const colors = getColorMap();
+        const textMuted = getThemeColor('--text-muted');
+
         // Donut Chart
         const ctxDonut = document.getElementById('infraWorkloadChart');
         if (ctxDonut) {
@@ -97,7 +101,7 @@
                     labels: Object.keys(infraDataRaw),
                     datasets: [{
                         data: Object.values(infraDataRaw),
-                        backgroundColor: Object.keys(infraDataRaw).map(k => colorMap[k] ||
+                        backgroundColor: Object.keys(infraDataRaw).map(k => colors[k] ||
                             '#64748b'),
                         borderWidth: 0
                     }]
@@ -125,7 +129,7 @@
                         label: cat,
                         data: [staffDataRaw.reduce((acc, curr) => acc + (Number(curr[
                             cat]) || 0), 0)],
-                        backgroundColor: colorMap[cat] || '#64748b',
+                        backgroundColor: colors[cat] || '#64748b',
                         borderRadius: 4
                     }))
                 },
@@ -136,12 +140,12 @@
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                color: '#94a3b8'
+                                color: textMuted
                             }
                         },
                         x: {
                             ticks: {
-                                color: '#94a3b8'
+                                color: textMuted
                             }
                         }
                     },
@@ -149,13 +153,22 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: '#94a3b8',
+                                color: textMuted,
                                 boxWidth: 12
                             }
                         }
                     }
                 }
             });
+        }
+    });
+
+    // Listener agar chart update saat manager ganti tema klik tombol
+    window.addEventListener('click', function(e) {
+        if (e.target.onclick && e.target.onclick.toString().includes('setTheme')) {
+            setTimeout(() => {
+                location.reload(); // Cara paling aman agar Chart.js merender ulang warna variabel baru
+            }, 100);
         }
     });
 </script>
