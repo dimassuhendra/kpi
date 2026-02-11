@@ -8,14 +8,14 @@
             <p class="text-slate-400 font-body text-xs md:text-sm">Rekam jejak dan detail pengerjaan case kamu.</p>
         </div>
 
-        <div class="flex w-full md:w-auto gap-2">
+        {{-- <div class="flex w-full md:w-auto gap-2">
             <button onclick="window.print()" class="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg border border-slate-700 text-sm transition text-center">
                 <i class="fas fa-file-pdf mr-2"></i> PDF
             </button>
-            <a href="{{ route('staff.kpi.export.excel') }}" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm transition font-bold text-center">
+            <a href="#" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm transition font-bold text-center">
                 <i class="fas fa-file-excel mr-2"></i> Excel
             </a>
-        </div>
+        </div> --}}
     </div>
 
     <div class="organic-card p-4 mb-6">
