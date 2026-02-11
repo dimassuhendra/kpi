@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('kegiatan_detail', function (Blueprint $table) {
             $table->id();
             $table->foreignId('daily_report_id')->constrained('daily_reports')->onDelete('cascade');
-            $table->foreignId('variabel_kpi_id')->constrained('variabel_kpi')->onDelete('cascade');
+            $table->foreignId('variabel_kpi_id')->constrained('variabel_kpis')->onDelete('cascade');
             $table->text('deskripsi_kegiatan');
             $table->string('value_raw');
 
