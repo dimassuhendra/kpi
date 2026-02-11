@@ -8,8 +8,8 @@
             <div class="w-40 h-40 lg:w-64 lg:h-64 flex items-center justify-center rounded-2xl mb-4 lg:mb-8">
                 <img src="{{ asset('img/logo.png') }}" alt="Your Logo" class="max-w-full h-auto" onerror="this.src='https://placehold.co/400x400/09637E/EBF4F6?text=YOUR+LOGO'">
             </div>
-            <h2 class="text-2xl lg:text-3xl text-primary font-header text-center">Sistem Monitoring KPI Testing</h2>
-            <p class="text-secondary opacity-80 font-body text-sm lg:text-base">Divisi TAC & Infrastruktur IT</p>
+            <h2 class="text-2xl lg:text-3xl text-primary font-header text-center">Sistem Monitoring KPI</h2>
+            <p class="text-secondary opacity-80 font-body text-sm lg:text-base">TAC & Infrastruktur IT</p>
         </div>
 
         <div class="w-full lg:w-1/2 bg-primary p-8 lg:p-12 text-white">
