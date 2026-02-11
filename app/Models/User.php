@@ -27,6 +27,11 @@ class User extends Authenticatable
         return $this->hasMany(DailyReport::class, 'user_id');
     }
 
+    public function latestReport()
+    {
+        return $this->hasOne(DailyReport::class)->latestOfMany();
+    }
+
     // Relasi ke KegiatanDetail MELALUI DailyReport untuk countcase
     public function details(): HasManyThrough
     {
