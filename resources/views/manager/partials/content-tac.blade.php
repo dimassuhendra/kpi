@@ -1,6 +1,6 @@
 <div class="max-w-7xl mx-auto space-y-10 pb-10">
 
-    {{-- A. STATS CARDS --}}
+    {{-- A. STATS CARDS (Tetap dipertahankan sebagai header ringkasan) --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @php
             $cards = [
@@ -46,7 +46,7 @@
                 </div>
                 <div class="flex items-center gap-3 mb-4">
                     <div
-                        class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-5-5 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs">
+                        class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-50 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs">
                         <i class="fas {{ $card['icon'] }}"></i>
                     </div>
                     <p class="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">{{ $card['label'] }}</p>
@@ -66,181 +66,133 @@
 
     {{-- B. PERFORMANCE METRICS --}}
     <div class="space-y-8">
-        {{-- ROW 1: TREND & RATIO --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {{-- Chart Daily Trend --}}
-            <div class="lg:col-span-2 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-                <div class="mb-8 px-2 flex justify-between items-start">
-                    <div>
-                        <h3 class="font-black text-slate-800 uppercase text-xs tracking-widest">Daily Activity Trend
-                        </h3>
-                        <p class="text-[10px] text-slate-400 font-medium uppercase mt-1 tracking-wider">Beban kerja
-                            harian tim/staff.</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <select onchange="updateDynamicChart('chartDailyTrend', this.value)"
-                            class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer">
-                            <option value="all">ALL TEAM</option>
-                            @foreach ($staffChartData as $index => $staff)
-                                <option value="{{ $index }}">{{ strtoupper($staff['nama']) }}</option>
-                            @endforeach
-                        </select>
-                        <button onclick="exportChart('chartDailyTrend', 'Trend-Harian')"
-                            class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-200 transition-colors">
-                            <i class="fas fa-download text-xs"></i>
-                        </button>
+
+        {{-- BARIS 1: 4 KOLOM (DONUTS & THRESHOLD) --}}
+        {{-- BARIS 1: 4 KOLOM (DONUTS & THRESHOLD) --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {{-- Donut 1: Temuan vs Laporan --}}
+            <div
+                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
+                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Temuan vs Laporan</h4>
+                    <select onchange="updateDynamicChart('donutInisiatif', this.value)"
+                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
+                        <option value="all">ALL</option>
+                        @foreach ($staffChartData as $index => $staff)
+                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="relative w-full h-40 mt-8">
+                    <canvas id="donutInisiatif"></canvas>
+                    <div id="donutInisiatifLegend"
+                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     </div>
                 </div>
-                <div style="height:320px;"><canvas id="chartDailyTrend"></canvas></div>
-            </div>
-
-            <div class="flex flex-col gap-6">
-                {{-- Donut 1: Temuan vs Laporan --}}
-                <div
-                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center relative">
-                    <div class="w-full flex justify-between items-start absolute top-6 px-6">
-                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">Temuan vs Laporan
-                        </h4>
-                        <div class="flex gap-1">
-                            <select onchange="updateDynamicChart('donutInisiatif', this.value)"
-                                class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                                <option value="all">ALL</option>
-                                @foreach ($staffChartData as $index => $staff)
-                                    <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                                @endforeach
-                            </select>
-                            <button onclick="exportChart('donutInisiatif', 'Temuan-vs-Laporan')"
-                                class="text-slate-300 hover:text-slate-500"><i
-                                    class="fas fa-camera text-[10px]"></i></button>
-                        </div>
-                    </div>
-                    <div class="relative w-full h-40 mt-8">
-                        <canvas id="donutInisiatif"></canvas>
-                        <div id="donutInisiatifLegend"
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4">
-                        </div>
-                    </div>
-                    <div class="flex justify-center gap-4 mt-4">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase">Temuan TAC</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase">Laporan Masuk</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Donut 2: Mandiri vs Bantuan --}}
-                <div
-                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center relative">
-                    <div class="w-full flex justify-between items-start absolute top-6 px-6">
-                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">Mandiri vs Bantuan
-                        </h4>
-                        <div class="flex gap-1">
-                            <select onchange="updateDynamicChart('donutMandiri', this.value)"
-                                class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                                <option value="all">ALL</option>
-                                @foreach ($staffChartData as $index => $staff)
-                                    <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                                @endforeach
-                            </select>
-                            <button onclick="exportChart('donutMandiri', 'Mandiri-vs-Bantuan')"
-                                class="text-slate-300 hover:text-slate-500"><i
-                                    class="fas fa-camera text-[10px]"></i></button>
-                        </div>
-                    </div>
-                    <div class="relative w-full h-40 mt-8">
-                        <canvas id="donutMandiri"></canvas>
-                        <div id="donutMandiriLegend"
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4">
-                        </div>
-                    </div>
-                    <div class="flex justify-center gap-4 mt-4">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase">Mandiri</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-slate-200"></span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase">Bantuan</span>
-                        </div>
-                    </div>
+                <div class="flex justify-center gap-3 mt-4">
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span
+                            class="text-[7px] font-bold text-slate-400">TEMUAN</span></div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span
+                            class="text-[7px] font-bold text-slate-400">LAPORAN</span></div>
                 </div>
             </div>
-        </div>
 
-        {{-- ROW 2: STAFF & MIX --}}
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-3 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-                <div class="mb-8 px-2 flex justify-between items-start">
-                    <div>
-                        <h3 class="font-black text-slate-800 uppercase text-xs tracking-widest">Staff Productivity Ratio
-                        </h3>
-                        <p class="text-[10px] text-slate-400 font-medium uppercase mt-1 tracking-wider">Distribusi
-                            pekerjaan per staff.</p>
-                    </div>
-                    <button onclick="exportChart('chartStaffProductivity', 'Produktivitas-Staff')"
-                        class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-200">
-                        <i class="fas fa-download text-xs"></i>
-                    </button>
+            {{-- Donut 2: Mandiri vs Bantuan --}}
+            <div
+                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
+                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Mandiri vs Bantuan</h4>
+                    <select onchange="updateDynamicChart('donutMandiri', this.value)"
+                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
+                        <option value="all">ALL</option>
+                        @foreach ($staffChartData as $index => $staff)
+                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div style="height:350px;"><canvas id="chartStaffProductivity"></canvas></div>
+                <div class="relative w-full h-40 mt-8">
+                    <canvas id="donutMandiri"></canvas>
+                    <div id="donutMandiriLegend"
+                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"></div>
+                </div>
+                <div class="flex justify-center gap-3 mt-4">
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span
+                            class="text-[7px] font-bold text-slate-400">MANDIRI</span></div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-200"></span><span
+                            class="text-[7px] font-bold text-slate-400">BANTUAN</span></div>
+                </div>
             </div>
 
-            <div class="flex flex-col gap-6">
-                {{-- Workload Mix --}}
-                <div
-                    class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center relative">
-                    <div class="absolute top-6 right-6 flex gap-2">
-                        <select onchange="updateDynamicChart('chartWorkloadMix', this.value)"
-                            class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                            <option value="all">ALL</option>
-                            @foreach ($staffChartData as $index => $staff)
-                                <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                            @endforeach
-                        </select>
-                        <button onclick="exportChart('chartWorkloadMix', 'Workload-Mix')"
-                            class="text-slate-300 hover:text-slate-500"><i
-                                class="fas fa-camera text-[10px]"></i></button>
-                    </div>
-                    <div class="text-center mb-4 mt-4">
-                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest">Workload Mix</h4>
-                    </div>
-                    <div class="relative w-full h-40">
-                        <canvas id="chartWorkloadMix"></canvas>
-                        <div id="workloadLegend"
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        </div>
-                    </div>
+            {{-- Donut 3: Workload Mix --}}
+            <div
+                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
+                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Workload Mix</h4>
+                    <select onchange="updateDynamicChart('chartWorkloadMix', this.value)"
+                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
+                        <option value="all">ALL</option>
+                        @foreach ($staffChartData as $index => $staff)
+                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="relative w-full h-40 mt-8">
+                    <canvas id="chartWorkloadMix"></canvas>
+                    <div id="workloadLegend"
+                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"></div>
+                </div>
+                <div class="flex justify-center gap-3 mt-4">
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-500"></span><span
+                            class="text-[7px] font-bold text-slate-400">TECH</span></div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span
+                            class="text-[7px] font-bold text-slate-400">GEN</span></div>
+                </div>
+            </div>
 
-                {{-- Avg Response Limit --}}
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1 relative">
-                    <div class="absolute top-4 right-4 flex gap-2">
-                        <select onchange="updateDynamicChart('barResponseThreshold', this.value)"
-                            class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                            <option value="all">ALL</option>
-                            @foreach ($staffChartData as $index => $staff)
-                                <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                            @endforeach
-                        </select>
-                        <button onclick="exportChart('barResponseThreshold', 'Response-Time')"
-                            class="text-slate-300 hover:text-slate-500"><i
-                                class="fas fa-camera text-[10px]"></i></button>
-                    </div>
-                    <h4 class="text-[9px] font-black uppercase text-slate-400 mb-2 tracking-widest text-center">Avg
-                        Response Limit</h4>
-                    <p
-                        class="text-[8px] text-slate-400 font-bold tracking-tighter text-center mb-4 uppercase text-rose-400 italic">
-                        Target: < 15 Menit</p>
-                            <div style="height:120px;"><canvas id="barResponseThreshold"></canvas></div>
+            {{-- Bar 4: Avg Response Limit --}}
+            <div
+                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
+                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Response Limit</h4>
+                    <select onchange="updateDynamicChart('barResponseThreshold', this.value)"
+                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
+                        <option value="all">ALL</option>
+                        @foreach ($staffChartData as $index => $staff)
+                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-full px-4 mt-12">
+                    <p class="text-[8px] text-rose-400 font-bold text-center mb-2 uppercase italic">Target: < 15
+                            Menit</p>
+                            <div style="height:100px;"><canvas id="barResponseThreshold"></canvas></div>
                 </div>
             </div>
         </div>
 
-        {{-- ROW 3: MINI CARDS --}}
+        {{-- BARIS 2: 1 KOLOM (DAILY TREND FULL WIDTH) --}}
+        <div class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+            <div class="mb-8 flex justify-between items-start">
+                <div>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <i class="fas fa-chart-line mr-2 text-emerald-600"></i> Daily Activity Trend
+                    </h3>
+                    <p class="text-[9px] text-slate-400 mt-1 italic">Grafik beban kerja harian seluruh tim.</p>
+                </div>
+                <div class="flex gap-2">
+                    <select onchange="updateDynamicChart('chartDailyTrend', this.value)"
+                        class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer px-3">
+                        <option value="all">ALL TEAM</option>
+                        @foreach ($staffChartData as $index => $staff)
+                            <option value="{{ $index }}">{{ strtoupper($staff['nama']) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div style="height:350px;"><canvas id="chartDailyTrend"></canvas></div>
+        </div>
+
+        {{-- BARIS 3: 4 KOLOM (MINI CARDS) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             @php
                 $miniCharts = [
@@ -251,11 +203,7 @@
                 ];
             @endphp
             @foreach ($miniCharts as $mc)
-                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative group">
-                    <button onclick="exportChart('{{ $mc['id'] }}', '{{ $mc['title'] }}')"
-                        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-300">
-                        <i class="fas fa-camera text-xs"></i>
-                    </button>
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm group">
                     <div class="text-center mb-4">
                         <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest">{{ $mc['title'] }}
                         </p>
@@ -266,6 +214,7 @@
                 </div>
             @endforeach
         </div>
+
     </div>
 </div>
 
