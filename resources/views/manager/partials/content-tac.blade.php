@@ -1,393 +1,473 @@
-{{-- A. STATS CARDS --}}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="info-card p-6 border-b-4 border-rose-500 group transition-all">
-        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Reports Pending</p>
-        <h2 class="text-4xl font-header font-black text-slate-800 mt-2 group-hover:scale-105 transition-transform">
-            {{ $stats['pending'] }}</h2>
-    </div>
-    <div class="info-card p-6 border-b-4 border-techGreen-600 group transition-all">
-        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Efficiency Rate</p>
-        <h2 class="text-4xl font-header font-black text-slate-800 mt-2 group-hover:scale-105 transition-transform">
-            {{ number_format($stats['avg_response_time'], 1) }} <small
-                class="text-xs text-slate-400 font-bold">Min/Case</small></h2>
-    </div>
-    <div class="info-card p-6 border-b-4 border-emerald-500 group transition-all">
-        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Monthly Resolved</p>
-        <h2 class="text-4xl font-header font-black text-slate-800 mt-2 group-hover:scale-105 transition-transform">
-            {{ $stats['resolved_month'] }}</h2>
-    </div>
-    <div class="info-card p-6 border-b-4 border-amber-500 group transition-all">
-        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Staff Active Today</p>
-        <h2 class="text-4xl font-header font-black text-slate-800 mt-2 group-hover:scale-105 transition-transform">
-            {{ $stats['active_today'] }}</h2>
-    </div>
-</div>
+    <div class="max-w-7xl mx-auto space-y-10 pb-10">
 
-{{-- B. PERFORMANCE METRICS --}}
-<div class="mt-10">
-    {{-- Header Section --}}
-    <div class="mb-8 ml-2">
-        <h3 class="font-header font-black text-xl text-slate-800 uppercase tracking-tight">Performance Metrics</h3>
-        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Analisis performa kolektif dan
-            individu staff</p>
-    </div>
+        {{-- A. STATS CARDS --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            @php
+                $cards = [
+                    [
+                        'label' => 'Pending Approval',
+                        'value' => $stats['pending'],
+                        'unit' => 'Reports',
+                        'color' => 'rose',
+                        'icon' => 'fa-clock',
+                        'progress' => 35,
+                    ],
+                    [
+                        'label' => 'Efficiency Rate',
+                        'value' => number_format($stats['avg_response_time'], 1),
+                        'unit' => 'Min/Case',
+                        'color' => 'emerald',
+                        'icon' => 'fa-bolt',
+                        'progress' => 75,
+                    ],
+                    [
+                        'label' => 'Monthly Resolved',
+                        'value' => $stats['resolved_month'],
+                        'unit' => 'Tickets',
+                        'color' => 'sky',
+                        'icon' => 'fa-check-double',
+                        'progress' => 90,
+                    ],
+                    [
+                        'label' => 'Staff Active Today',
+                        'value' => $stats['active_today'],
+                        'unit' => 'Members',
+                        'color' => 'amber',
+                        'icon' => 'fa-users',
+                        'progress' => 60,
+                    ],
+                ];
+            @endphp
 
-    {{-- --- ROW 1: DIVISION SUMMARY --- --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="info-card p-6 flex flex-col items-center">
-            <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-6 tracking-widest">Source: Temuan vs Laporan
-            </h4>
-            <div style="position: relative; height:160px; width:100%"><canvas id="donutInisiatif"></canvas></div>
-            <div class="flex gap-4 mt-6 text-[10px] font-black uppercase tracking-tighter">
-                <span class="flex items-center gap-1 text-amber-500"><i class="fas fa-circle text-[8px]"></i>
-                    Temuan</span>
-                <span class="flex items-center gap-1 text-emerald-600"><i class="fas fa-circle text-[8px]"></i>
-                    Laporan</span>
+            @foreach ($cards as $card)
+                <div
+                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-24 h-24 bg-{{ $card['color'] }}-500/5 rounded-bl-full translate-x-10 -translate-y-10">
+                    </div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div
+                            class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-50 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs">
+                            <i class="fas {{ $card['icon'] }}"></i>
+                        </div>
+                        <p class="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">{{ $card['label'] }}
+                        </p>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <h2 class="text-4xl font-black text-slate-800 leading-none tracking-tighter">{{ $card['value'] }}
+                        </h2>
+                        <span
+                            class="text-[10px] font-bold text-{{ $card['color'] }}-500 mb-1 uppercase">{{ $card['unit'] }}</span>
+                    </div>
+                    <div class="w-full h-1 bg-slate-50 mt-6 rounded-full overflow-hidden">
+                        <div class="h-full bg-{{ $card['color'] }}-500" style="width: {{ $card['progress'] }}%"></div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- B. PERFORMANCE METRICS --}}
+        <div class="space-y-8">
+
+            {{-- ROW 1: TREND & RATIO --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                    <div class="mb-8 px-2">
+                        <h3 class="font-black text-slate-800 uppercase text-xs tracking-widest">Daily Activity Trend
+                        </h3>
+                        <p class="text-[10px] text-slate-400 font-medium uppercase mt-1 tracking-wider">Visualisasi
+                            beban
+                            kerja harian tim selama 7 hari terakhir.</p>
+                    </div>
+                    <div style="height:320px;"><canvas id="chartDailyTrend"></canvas></div>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    {{-- Donut 1 --}}
+                    <div
+                        class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center">
+                        <div class="text-center mb-4">
+                            <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">Temuan vs
+                                Laporan
+                            </h4>
+                            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Inisiatif Mandiri
+                                vs
+                                Penugasan</p>
+                        </div>
+                        <div class="relative w-full h-40">
+                            <canvas id="donutInisiatif"></canvas>
+                            <div id="donutInisiatifLegend"
+                                class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            </div>
+                        </div>
+                    </div>
+                    {{-- Donut 2 --}}
+                    <div
+                        class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center">
+                        <div class="text-center mb-4">
+                            <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">Mandiri vs
+                                Bantuan
+                            </h4>
+                            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Penyelesaian Case
+                                Tanpa Eskalasi</p>
+                        </div>
+                        <div class="relative w-full h-40">
+                            <canvas id="donutMandiri"></canvas>
+                            <div id="donutMandiriLegend"
+                                class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ROW 2: STAFF & MIX --}}
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-3 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                    <div class="mb-8 px-2">
+                        <h3 class="font-black text-slate-800 uppercase text-xs tracking-widest">Staff Productivity Ratio
+                        </h3>
+                        <p class="text-[10px] text-slate-400 font-medium uppercase mt-1 tracking-wider">Perbandingan
+                            distribusi pekerjaan teknis, umum, dan dukungan per staff.</p>
+                    </div>
+                    <div style="height:350px;"><canvas id="chartStaffProductivity"></canvas></div>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div
+                        class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex-1 flex flex-col items-center justify-center">
+                        <div class="text-center mb-4">
+                            <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest">Workload Mix</h4>
+                            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Proporsi Case vs
+                                Activity Tim</p>
+                        </div>
+                        <div class="relative w-full h-40">
+                            <canvas id="chartWorkloadMix"></canvas>
+                            <div id="workloadLegend"
+                                class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex-1">
+                        <h4 class="text-[9px] font-black uppercase text-slate-400 mb-2 tracking-widest text-center">Avg
+                            Response Limit</h4>
+                        <p
+                            class="text-[8px] text-slate-400 font-bold tracking-tighter text-center mb-4 uppercase text-rose-400 italic">
+                            Target: Di bawah 15 Menit</p>
+                        <div style="height:120px;"><canvas id="barResponseThreshold"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ROW 3: MINI CARDS --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                @php
+                    $miniCharts = [
+                        [
+                            'title' => 'Total Cases',
+                            'id' => 'chartCountCase',
+                            'desc' => 'Akumulasi case teknis ditangani.',
+                        ],
+                        ['title' => 'Avg Response', 'id' => 'chartAvgTime', 'desc' => 'Rata-rata respon (Menit).'],
+                        ['title' => 'Inisiatif', 'id' => 'chartInisiatif', 'desc' => 'Jumlah temuan mandiri staff.'],
+                        ['title' => 'Mandiri', 'id' => 'chartMandiri', 'desc' => 'Case yang selesai tanpa bantuan.'],
+                    ];
+                @endphp
+                @foreach ($miniCharts as $mc)
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <div class="text-center mb-4">
+                            <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                                {{ $mc['title'] }}
+                            </p>
+                            <p class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">
+                                {{ $mc['desc'] }}
+                            </p>
+                        </div>
+                        <div style="height:150px;"><canvas id="{{ $mc['id'] }}"></canvas></div>
+                    </div>
+                @endforeach
             </div>
         </div>
-
-        <div class="info-card p-6 flex flex-col items-center">
-            <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-6 tracking-widest">Execution: Mandiri vs
-                Bantuan</h4>
-            <div style="position: relative; height:160px; width:100%"><canvas id="donutMandiri"></canvas></div>
-            <div class="flex gap-4 mt-6 text-[10px] font-black uppercase tracking-tighter">
-                <span class="flex items-center gap-1 text-emerald-500"><i class="fas fa-circle text-[8px]"></i>
-                    Mandiri</span>
-                <span class="flex items-center gap-1 text-slate-400"><i class="fas fa-circle text-[8px]"></i>
-                    Bantuan</span>
-            </div>
-        </div>
-
-        <div class="info-card p-6">
-            <h4 class="text-[10px] font-bold uppercase text-slate-500 mb-6 tracking-widest text-center">Avg Response
-                Time (Limit: 15m)</h4>
-            <div style="position: relative; height:180px; width:100%"><canvas id="barResponseThreshold"></canvas></div>
-        </div>
     </div>
 
-    {{-- --- ROW 2: TRENDS --- --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="info-card p-6">
-            <h3 class="text-slate-800 font-black mb-6 text-sm uppercase tracking-wider border-b border-slate-50 pb-3">
-                Productivity Mix</h3>
-            <div style="position: relative; height:250px; width:100%"><canvas id="chartWorkloadMix"></canvas></div>
-        </div>
+    {{-- SCRIPTS --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
 
-        <div class="info-card p-6">
-            <h3 class="text-slate-800 font-black mb-6 text-sm uppercase tracking-wider border-b border-slate-50 pb-3">
-                Daily Activity Trend</h3>
-            <div style="position: relative; height:250px; width:100%"><canvas id="chartDailyTrend"></canvas></div>
-        </div>
-    </div>
+    <script>
+        Chart.register(window['chartjs-plugin-annotation']);
 
-    {{-- --- ROW 3: STAFF PRODUCTIVITY RATIO --- --}}
-    <div class="info-card p-8 mb-8">
-        <h3 class="text-slate-800 font-black mb-8 text-sm uppercase tracking-widest text-center">Staff Productivity
-            Ratio</h3>
-        <div style="position: relative; height:350px; width:100%"><canvas id="chartStaffProductivity"></canvas></div>
-    </div>
+        // --- CONFIG & COLORS ---
+        const colors = {
+            emerald: '#10b981',
+            amber: '#f59e0b',
+            sky: '#0ea5e9',
+            indigo: '#6366f1',
+            rose: '#f43f5e',
+            slate: '#f1f5f9'
+        };
 
-    {{-- --- ROW 4: STAFF COMPARISON SMALL CARDS --- --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="info-card p-6">
-            <h4 class="text-[10px] font-bold uppercase text-slate-400 mb-4 tracking-widest text-center">Total Cases</h4>
-            <div style="position: relative; height:150px; width:100%"><canvas id="chartCountCase"></canvas></div>
-        </div>
-        <div class="info-card p-6">
-            <h4 class="text-[10px] font-bold uppercase text-slate-400 mb-4 tracking-widest text-center">Avg Response
-            </h4>
-            <div style="position: relative; height:150px; width:100%"><canvas id="chartAvgTime"></canvas></div>
-        </div>
-        <div class="info-card p-6">
-            <h4 class="text-[10px] font-bold uppercase text-slate-400 mb-4 tracking-widest text-center">Inisiatif Count
-            </h4>
-            <div style="position: relative; height:150px; width:100%"><canvas id="chartInisiatif"></canvas></div>
-        </div>
-        <div class="info-card p-6">
-            <h4 class="text-[10px] font-bold uppercase text-slate-400 mb-4 tracking-widest text-center">Mandiri Count
-            </h4>
-            <div style="position: relative; height:150px; width:100%"><canvas id="chartMandiri"></canvas></div>
-        </div>
-    </div>
-</div>
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.font.weight = '700';
+        Chart.defaults.plugins.legend.display = false;
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
+        // --- HELPER PERSENTASE ---
+        function setDonutLabel(id, val1, val2, label) {
+            const total = val1 + val2;
+            const percent = total > 0 ? Math.round((val1 / total) * 100) : 0;
+            document.getElementById(id).innerHTML = `
+            <span class="text-2xl font-black text-slate-800 leading-none">${percent}%</span>
+            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">${label}</span>
+        `;
+        }
 
-<script>
-    Chart.register(window['chartjs-plugin-annotation']);
-
-    const staffLabels = @json($staffChartData->pluck('nama_lengkap'));
-
-    // Default Style Global untuk Light Mode
-    Chart.defaults.color = '#94a3b8'; // Slate 400
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-    Chart.defaults.font.size = 11;
-    Chart.defaults.font.weight = '600';
-
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: '#f1f5f9'
-                },
-                ticks: {
-                    color: '#64748b'
-                }
+        // --- 1. DAILY TREND ---
+        const ctxTrend = document.getElementById('chartDailyTrend').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: @json($trendLabels),
+                datasets: [{
+                        label: 'Cases',
+                        data: @json($trendCases),
+                        borderColor: colors.emerald,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        fill: true,
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)'
+                    },
+                    {
+                        label: 'Activities',
+                        data: @json($trendActivities),
+                        borderColor: colors.amber,
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        pointRadius: 0
+                    }
+                ]
             },
-            x: {
-                grid: {
-                    display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: {
+                            color: '#f8fafc'
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 2. DONUT CHARTS ---
+        const configDonut = (id, data, colorArr) => new Chart(document.getElementById(id), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: data,
+                    backgroundColor: colorArr,
+                    borderWidth: 0,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                cutout: '82%',
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        configDonut('donutInisiatif', [{{ $summaryData['proaktif'] }}, {{ $summaryData['penugasan'] }}], [colors.amber,
+            colors.emerald
+        ]);
+        setDonutLabel('donutInisiatifLegend', {{ $summaryData['proaktif'] }}, {{ $summaryData['penugasan'] }},
+            'Inisiatif');
+
+        configDonut('donutMandiri', [{{ $summaryData['mandiri'] }}, {{ $summaryData['bantuan'] }}], [colors.emerald,
+            colors.slate
+        ]);
+        setDonutLabel('donutMandiriLegend', {{ $summaryData['mandiri'] }}, {{ $summaryData['bantuan'] }}, 'Mandiri');
+
+        configDonut('chartWorkloadMix', [{{ $workloadMix['case'] ?? 0 }}, {{ $workloadMix['activity'] ?? 0 }}], [colors
+            .sky, colors.amber
+        ]);
+        setDonutLabel('workloadLegend', {{ $workloadMix['case'] ?? 0 }}, {{ $workloadMix['activity'] ?? 0 }},
+            'Technical');
+
+        // --- 3. PRODUCTIVITY RATIO ---
+        new Chart(document.getElementById('chartStaffProductivity'), {
+            type: 'bar',
+            data: {
+                labels: @json($staffChartData->pluck('nama_lengkap')),
+                datasets: [{
+                        label: 'Technical',
+                        data: @json($staffChartData->pluck('total_case')),
+                        backgroundColor: colors.sky,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'General',
+                        data: @json($staffChartData->pluck('total_activity')),
+                        backgroundColor: colors.amber,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Self-Inisiatif',
+                        data: @json($staffChartData->pluck('inisiatif_count')),
+                        backgroundColor: colors.emerald,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: {
+                            color: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 4. THRESHOLD ---
+        new Chart(document.getElementById('barResponseThreshold'), {
+            type: 'bar',
+            data: {
+                labels: ['Avg'],
+                datasets: [{
+                    data: [{{ $summaryData['avg_time'] }}],
+                    backgroundColor: {{ $summaryData['avg_time'] }} > 15 ? colors.rose : colors.emerald,
+                    borderRadius: 20
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        max: 30,
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
                 },
-                ticks: {
-                    color: '#64748b'
-                }
-            }
-        }
-    };
-
-    // --- CHART IMPLEMENTATION WITH NEW COLOR PALETTE ---
-
-    new Chart(document.getElementById('donutInisiatif'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Temuan', 'Laporan'],
-            datasets: [{
-                data: [{{ $summaryData['proaktif'] }}, {{ $summaryData['penugasan'] }}],
-                backgroundColor: ['#f59e0b', '#059669'], // Amber & Emerald 600
-                hoverOffset: 4,
-                borderWidth: 5,
-                borderColor: '#f8fafc'
-            }]
-        },
-        options: {
-            cutout: '75%',
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('donutMandiri'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Mandiri', 'Bantuan'],
-            datasets: [{
-                data: [{{ $summaryData['mandiri'] }}, {{ $summaryData['bantuan'] }}],
-                backgroundColor: ['#10b981', '#cbd5e1'], // Emerald 500 & Slate 300
-                borderWidth: 5,
-                borderColor: '#f8fafc'
-            }]
-        },
-        options: {
-            cutout: '75%',
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('barResponseThreshold'), {
-        type: 'bar',
-        data: {
-            labels: ['Team Avg'],
-            datasets: [{
-                data: [{{ $summaryData['avg_time'] }}],
-                backgroundColor: '{{ $summaryData['avg_time'] > 15 ? '#f43f5e' : '#10b981' }}',
-                borderRadius: 12,
-                barThickness: 40
-            }]
-        },
-        options: {
-            ...commonOptions,
-            plugins: {
-                annotation: {
-                    annotations: {
-                        line1: {
-                            type: 'line',
-                            yMin: 15,
-                            yMax: 15,
-                            borderColor: '#f43f5e',
-                            borderDash: [5, 5],
-                            borderWidth: 2,
-                            label: {
-                                display: true,
-                                content: 'LIMIT 15m',
-                                position: 'end',
-                                backgroundColor: '#f43f5e',
-                                font: {
-                                    size: 9,
-                                    weight: 'bold'
-                                }
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            line1: {
+                                type: 'line',
+                                xMin: 15,
+                                xMax: 15,
+                                borderColor: colors.rose,
+                                borderDash: [4, 4],
+                                borderWidth: 2
                             }
                         }
                     }
                 }
             }
-        }
-    });
+        });
 
-    new Chart(document.getElementById('chartCountCase'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: @json($staffChartData->pluck('total_case')),
-                backgroundColor: '#0ea5e9', // Sky 500
-                borderRadius: 6
-            }]
-        },
-        options: commonOptions
-    });
-
-    new Chart(document.getElementById('chartAvgTime'), {
-        type: 'line',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: @json($staffChartData->pluck('avg_time')),
-                borderColor: '#f59e0b',
-                backgroundColor: '#f59e0b',
-                pointRadius: 4,
-                tension: 0.4,
-                fill: false
-            }]
-        },
-        options: commonOptions
-    });
-
-    new Chart(document.getElementById('chartInisiatif'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: @json($staffChartData->pluck('inisiatif_count')),
-                backgroundColor: '#f43f5e',
-                borderRadius: 6
-            }]
-        },
-        options: commonOptions
-    });
-
-    new Chart(document.getElementById('chartMandiri'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: @json($staffChartData->pluck('mandiri_count')),
-                backgroundColor: '#10b981',
-                borderRadius: 6
-            }]
-        },
-        options: commonOptions
-    });
-
-    new Chart(document.getElementById('chartWorkloadMix'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Technical', 'General'],
-            datasets: [{
-                data: [{{ $workloadMix['case'] ?? 0 }}, {{ $workloadMix['activity'] ?? 0 }}],
-                backgroundColor: ['#059669', '#10b981'],
-                borderWidth: 0
-            }]
-        },
-        options: {
+        // --- 5. MINI CHARTS WITH AXIS ---
+        const staffShort = @json($staffChartData->pluck('nama_lengkap')).map(n => n.split(' ')[0]);
+        const miniOpt = {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
+            scales: {
+                x: {
+                    ticks: {
+                        font: {
+                            size: 8
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 8
+                        }
+                    },
+                    grid: {
+                        color: '#f1f5f9'
+                    },
+                    border: {
+                        display: false
                     }
                 }
             }
-        }
-    });
+        };
 
-    new Chart(document.getElementById('chartDailyTrend'), {
-        type: 'line',
-        data: {
-            labels: @json($trendLabels),
-            datasets: [{
-                    label: 'Cases',
-                    data: @json($trendCases),
-                    borderColor: '#059669',
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderWidth: 3
-                },
-                {
-                    label: 'Activities',
-                    data: @json($trendActivities),
-                    borderColor: '#f59e0b',
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderWidth: 3
-                }
-            ]
-        },
-        options: {
-            ...commonOptions,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end'
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('chartStaffProductivity'), {
-        type: 'bar',
-        data: {
-            labels: @json($staffChartData->pluck('nama')),
-            datasets: [{
-                    label: 'Technical',
-                    data: @json($staffChartData->pluck('cases')),
-                    backgroundColor: '#059669',
+        new Chart(document.getElementById('chartCountCase'), {
+            type: 'bar',
+            data: {
+                labels: staffShort,
+                datasets: [{
+                    data: @json($staffChartData->pluck('total_case')),
+                    backgroundColor: colors.sky,
                     borderRadius: 4
-                },
-                {
-                    label: 'General',
-                    data: @json($staffChartData->pluck('activities')),
-                    backgroundColor: '#cbd5e1',
-                    borderRadius: 4
-                }
-            ]
-        },
-        options: {
-            ...commonOptions,
-            scales: {
-                x: {
-                    stacked: true
-                },
-                y: {
-                    stacked: true
-                }
+                }]
             },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-</script>
+            options: miniOpt
+        });
+        new Chart(document.getElementById('chartAvgTime'), {
+            type: 'line',
+            data: {
+                labels: staffShort,
+                datasets: [{
+                    data: @json($staffChartData->pluck('avg_time')),
+                    borderColor: colors.amber,
+                    tension: 0.4,
+                    pointRadius: 2
+                }]
+            },
+            options: miniOpt
+        });
+        new Chart(document.getElementById('chartInisiatif'), {
+            type: 'bar',
+            data: {
+                labels: staffShort,
+                datasets: [{
+                    data: @json($staffChartData->pluck('inisiatif_count')),
+                    backgroundColor: colors.emerald,
+                    borderRadius: 4
+                }]
+            },
+            options: miniOpt
+        });
+        new Chart(document.getElementById('chartMandiri'), {
+            type: 'bar',
+            data: {
+                labels: staffShort,
+                datasets: [{
+                    data: @json($staffChartData->pluck('mandiri_count')),
+                    backgroundColor: colors.indigo,
+                    borderRadius: 4
+                }]
+            },
+            options: miniOpt
+        });
+    </script>
