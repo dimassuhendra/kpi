@@ -74,7 +74,7 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Temuan vs Laporan</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Temuan vs Laporan</h4>
                     <select onchange="updateDynamicChart('donutInisiatif', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -101,7 +101,7 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Mandiri vs Bantuan</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Mandiri vs Bantuan</h4>
                     <select onchange="updateDynamicChart('donutMandiri', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -127,7 +127,7 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Workload Mix</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Workload Mix</h4>
                     <select onchange="updateDynamicChart('chartWorkloadMix', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -143,9 +143,9 @@
                 </div>
                 <div class="flex justify-center gap-3 mt-4">
                     <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">TECH</span></div>
+                            class="text-[7px] font-bold text-slate-400">CASE</span></div>
                     <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">GEN</span></div>
+                            class="text-[7px] font-bold text-slate-400">ACTIVITY</span></div>
                 </div>
             </div>
 
@@ -153,7 +153,7 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Response Limit</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Response Limit</h4>
                     <select onchange="updateDynamicChart('barResponseThreshold', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -198,14 +198,14 @@
                 $miniCharts = [
                     ['title' => 'Total Cases', 'id' => 'chartCountCase', 'desc' => 'Akumulasi case teknis.'],
                     ['title' => 'Avg Response', 'id' => 'chartAvgTime', 'desc' => 'Rata-rata respon (Menit).'],
-                    ['title' => 'Inisiatif', 'id' => 'chartInisiatif', 'desc' => 'Jumlah temuan mandiri.'],
-                    ['title' => 'Mandiri', 'id' => 'chartMandiri', 'desc' => 'Case tanpa bantuan.'],
+                    ['title' => 'Temuan TAC', 'id' => 'chartInisiatif', 'desc' => 'Jumlah temuan mandiri.'],
+                    ['title' => 'Penyelesaian TAC', 'id' => 'chartMandiri', 'desc' => 'Case tanpa bantuan tim infra.'],
                 ];
             @endphp
             @foreach ($miniCharts as $mc)
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm group">
-                    <div class="text-center mb-4">
-                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest">{{ $mc['title'] }}
+                    <div class="text-left mb-4">
+                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest"><i class="fas fa-chart-bar mr-2 text-emerald-600"></i> {{ $mc['title'] }}
                         </p>
                         <p class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">{{ $mc['desc'] }}
                         </p>
@@ -289,7 +289,7 @@
                 setDonutLabel('donutMandiriLegend', globalSummary.mandiri, globalSummary.bantuan, 'Penyelesaian TAC');
             } else if (chartId === 'chartWorkloadMix') {
                 chart.data.datasets[0].data = [globalWorkload.case, globalWorkload.activity];
-                setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Technical');
+                setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Case');
             } else if (chartId === 'barResponseThreshold') {
                 chart.data.datasets[0].data = [globalSummary.avg_time];
                 chart.data.datasets[0].backgroundColor = globalSummary.avg_time > 15 ? colors.rose : colors.emerald;
@@ -310,7 +310,7 @@
                     'Penyelesaian TAC');
             } else if (chartId === 'chartWorkloadMix') {
                 chart.data.datasets[0].data = [s.cases, s.activities];
-                setDonutLabel('workloadLegend', s.cases, s.activities, 'Technical');
+                setDonutLabel('workloadLegend', s.cases, s.activities, 'Case');
             } else if (chartId === 'barResponseThreshold') {
                 chart.data.datasets[0].data = [s.avg_time];
                 chart.data.datasets[0].backgroundColor = s.avg_time > 15 ? colors.rose : colors.emerald;
@@ -393,7 +393,7 @@
         },
         options: donutOpt
     });
-    setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Technical');
+    setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Case');
 
     // 3. Productivity Ratio
     new Chart(document.getElementById('chartStaffProductivity'), {

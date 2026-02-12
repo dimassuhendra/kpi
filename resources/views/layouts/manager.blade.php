@@ -191,11 +191,6 @@
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-3">
                             <div
-                                class="px-3 py-1.5 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase flex items-center gap-2">
-                                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                                System Online
-                            </div>
-                            <div
                                 class="px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white text-[10px] font-bold uppercase flex items-center gap-2">
                                 <i class="fas fa-sun text-amber-400"></i>
                                 <span>29°C Bandar Lampung</span>
@@ -227,20 +222,6 @@
                                 </span>
                             </div>
                         </div>
-
-                        @if (request()->routeIs('manager.dashboard'))
-                            <div class="hidden md:flex gap-6">
-                                <div class="text-right">
-                                    <span class="block text-[9px] font-black text-emerald-500 uppercase">Pending</span>
-                                    <span class="text-white font-mono text-lg font-bold leading-none">12 Task</span>
-                                </div>
-                                <div class="text-right">
-                                    <span
-                                        class="block text-[9px] font-black text-emerald-500 uppercase">Efficiency</span>
-                                    <span class="text-white font-mono text-lg font-bold leading-none">94%</span>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
