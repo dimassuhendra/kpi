@@ -59,7 +59,7 @@ class ManagerController extends Controller
         // ==========================================
 
         if ($selectedDivisi == '2') {
-            // --- DIVISI INFRASTRUCTURE (ID: 2) ---
+            // --- Data yang sudah ada ---
             $allDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($currentMonth, $currentYear) {
                 $q->whereMonth('tanggal', $currentMonth)
                     ->whereYear('tanggal', $currentYear)
@@ -69,6 +69,34 @@ class ManagerController extends Controller
             $infraWorkload = $allDetails->whereNotNull('kategori')->groupBy('kategori')->map->count();
             $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
 
+            // --- TAMBAHAN: Logika Tren Kategori Harian ---
+            $daysInMonth = now()->daysInMonth;
+            $infraTrendData = [];
+            $trendLabels = [];
+
+            for ($i = 1; $i <= $daysInMonth; $i++) {
+                $trendLabels[] = $i;
+            }
+
+            foreach ($availableCategories as $cat) {
+                $dailyCounts = [];
+                for ($i = 1; $i <= $daysInMonth; $i++) {
+                    // Format tanggal untuk pencocokan (Y-m-d)
+                    $targetDate = now()->setDate($currentYear, $currentMonth, $i)->format('Y-m-d');
+
+                    // Filter data dari koleksi $allDetails yang sudah diambil di atas
+                    $count = $allDetails->filter(function ($detail) use ($cat, $targetDate) {
+                        return $detail->kategori === $cat &&
+                            date('Y-m-d', strtotime($detail->dailyReport->tanggal)) === $targetDate;
+                    })->count();
+
+                    $dailyCounts[] = $count;
+                }
+                $infraTrendData[$cat] = $dailyCounts;
+            }
+            // Hapus duplikat labels jika loop sebelumnya sudah mengisinya
+            $trendLabels = array_values(array_unique($trendLabels));
+
             $staffInfraData = User::where('divisi_id', 2)->where('role', 'staff')->get()->map(function ($u) use ($currentMonth, $currentYear, $availableCategories) {
                 $res = ['nama' => $u->nama_lengkap];
                 foreach ($availableCategories as $cat) {
@@ -77,6 +105,19 @@ class ManagerController extends Controller
                         ->count();
                 }
                 return $res;
+            });
+
+            $staffWorkloadDist = User::where('divisi_id', 2)->where('role', 'staff')->get()->mapWithKeys(function ($u) use ($currentMonth, $currentYear) {
+                $dist = KegiatanDetail::whereHas('dailyReport', function ($q) use ($u, $currentMonth, $currentYear) {
+                    $q->where('user_id', $u->id)
+                        ->whereMonth('tanggal', $currentMonth)
+                        ->whereYear('tanggal', $currentYear);
+                })->whereNotNull('kategori')
+                    ->get()
+                    ->groupBy('kategori')
+                    ->map->count();
+
+                return [$u->nama_lengkap => $dist];
             });
 
             $leaderboard = User::where('role', 'staff')->where('divisi_id', 2)
@@ -151,6 +192,9 @@ class ManagerController extends Controller
             'selectedDivisi',
             'heatmapData',
             'infraWorkload',
+            'infraTrendData',
+            'staffWorkloadDist',
+            'trendLabels',
             'staffInfraData',
             'availableCategories',
             'staffChartData',
