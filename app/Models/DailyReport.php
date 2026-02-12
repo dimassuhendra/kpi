@@ -19,7 +19,11 @@ class DailyReport extends Model
     {
         return $this->hasMany(KegiatanDetail::class, 'daily_report_id');
     }
-    
+
+    public function divisi()
+    {
+        return $this->belongsTo(Divisi::class, 'divisi_id');
+    }
     protected $casts = [
         'tanggal' => 'date',
     ];

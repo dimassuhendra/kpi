@@ -1,41 +1,44 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     {{-- Card 1: Donut Chart --}}
-    <div class="lg:col-span-1 p-6 border border-white/5 rounded-xl flex flex-col" style="background: var(--dark-card)">
-        <h3 class="text-sm font-bold uppercase tracking-widest mb-6" style="color: var(--text-muted)">
-            <i class="fas fa-chart-pie mr-2" style="color: var(--primary)"></i> Workload Distribution
+    <div class="lg:col-span-1 info-card p-6 flex flex-col">
+        <h3 class="text-[10px] font-black uppercase tracking-widest mb-8 text-slate-500">
+            <i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Workload Distribution
         </h3>
         <div class="flex-grow flex items-center justify-center relative" style="min-height: 250px;">
             <canvas id="infraWorkloadChart"></canvas>
         </div>
 
-        <div class="mt-6 grid grid-cols-2 gap-2 border-t border-white/5 pt-4">
+        <div class="mt-8 grid grid-cols-2 gap-3 border-t border-slate-50 pt-5">
             @forelse ($infraWorkload as $kat => $total)
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full"
-                        style="background-color: @if ($kat == 'Network') var(--primary) @elseif($kat == 'CCTV') var(--accent) @else var(--text-muted) @endif">
+                        style="background-color: @if ($kat == 'Network') #059669 @elseif($kat == 'CCTV') #0ea5e9 @else #94a3b8 @endif">
                     </span>
-                    <span class="text-[10px] uppercase font-medium" style="color: var(--text-muted)">
-                        {{ $kat }}: {{ $total }}
+                    <span class="text-[10px] uppercase font-black text-slate-400">
+                        {{ $kat }}: <span class="text-slate-700">{{ $total }}</span>
                     </span>
                 </div>
             @empty
-                <div class="col-span-2 text-center text-[10px]" style="color: var(--text-muted)">No category data</div>
+                <div class="col-span-2 text-center text-[10px] font-bold text-slate-300">No category data</div>
             @endforelse
         </div>
     </div>
 
     {{-- Card 2: Bar Chart Productivity Staff --}}
-    <div class="lg:col-span-2 p-6 border border-white/5 rounded-xl flex flex-col" style="background: var(--dark-card)">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-sm font-bold uppercase tracking-widest" style="color: var(--text-muted)">
-                <i class="fas fa-users-cog mr-2" style="color: var(--primary)"></i> Staff Technical Focus
+    <div class="lg:col-span-2 info-card p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <i class="fas fa-users-cog mr-2 text-emerald-600"></i> Staff Technical Focus
             </h3>
-            <div class="flex p-1 rounded-lg" style="background: rgba(0,0,0,0.2)">
+            <div class="flex p-1 bg-slate-100 rounded-xl">
                 <button onclick="updateChartMode('total')" id="btn-mode-total"
-                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all btn-primary">TOTAL</button>
+                    class="px-4 py-1.5 text-[9px] font-black rounded-lg transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100/50">
+                    TOTAL
+                </button>
                 <button onclick="updateChartMode('staff')" id="btn-mode-staff"
-                    class="px-3 py-1 text-[10px] font-bold rounded-md transition-all"
-                    style="color: var(--text-muted)">PER STAFF</button>
+                    class="px-4 py-1.5 text-[9px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600">
+                    PER STAFF
+                </button>
             </div>
         </div>
         <div class="flex-grow" style="min-height: 300px;">
@@ -47,50 +50,54 @@
 <script>
     let infraChartInstance = null;
 
-    // Helper untuk mengambil warna asli dari CSS Variable
-    const getThemeColor = (varName) => getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-
     const infraDataRaw = @json($infraWorkload);
     const staffDataRaw = @json($staffInfraData);
     const categories = @json($availableCategories);
 
-    // Color map sekarang merujuk ke variabel CSS
-    const getColorMap = () => ({
-        'Network': getThemeColor('--primary'),
-        'CCTV': getThemeColor('--accent'),
-        'GPS': '#f59e0b', // Tetap jika tidak ada variabelnya
-        'Lainnya': '#ef4444'
-    });
+    // Light Palette senada Master Manager
+    const colorPalette = {
+        'Network': '#059669', // Emerald 600
+        'CCTV': '#0ea5e9', // Sky 500
+        'GPS': '#f59e0b', // Amber 500
+        'Lainnya': '#94a3b8' // Slate 400
+    };
 
     function updateChartMode(mode) {
         if (!infraChartInstance) return;
         const btnTotal = document.getElementById('btn-mode-total');
         const btnStaff = document.getElementById('btn-mode-staff');
-        const colors = getColorMap();
 
         if (mode === 'total') {
             infraChartInstance.data.labels = ['Total Kolektif'];
             infraChartInstance.data.datasets.forEach(ds => {
                 ds.data = [staffDataRaw.reduce((acc, curr) => acc + (Number(curr[ds.label]) || 0), 0)];
             });
-            btnTotal.style.backgroundColor = 'var(--primary)';
-            btnTotal.style.color = 'white';
-            btnStaff.style.backgroundColor = 'transparent';
+
+            // UI Toggle
+            btnTotal.className =
+                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100/50";
+            btnStaff.className =
+                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600";
         } else {
             infraChartInstance.data.labels = staffDataRaw.map(s => s.nama);
             infraChartInstance.data.datasets.forEach(ds => {
                 ds.data = staffDataRaw.map(s => Number(s[ds.label]) || 0);
             });
-            btnStaff.style.backgroundColor = 'var(--primary)';
-            btnStaff.style.color = 'white';
-            btnTotal.style.backgroundColor = 'transparent';
+
+            // UI Toggle
+            btnStaff.className =
+                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100/50";
+            btnTotal.className =
+                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600";
         }
         infraChartInstance.update();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const colors = getColorMap();
-        const textMuted = getThemeColor('--text-muted');
+        // Global Chart Defaults for Light Mode
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.font.weight = '700';
+        Chart.defaults.color = '#94a3b8';
 
         // Donut Chart
         const ctxDonut = document.getElementById('infraWorkloadChart');
@@ -101,14 +108,17 @@
                     labels: Object.keys(infraDataRaw),
                     datasets: [{
                         data: Object.values(infraDataRaw),
-                        backgroundColor: Object.keys(infraDataRaw).map(k => colors[k] ||
-                            '#64748b'),
-                        borderWidth: 0
+                        backgroundColor: Object.keys(infraDataRaw).map(k => colorPalette[k] ||
+                            '#cbd5e1'),
+                        borderWidth: 6,
+                        borderColor: '#ffffff',
+                        hoverOffset: 10
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '75%',
                     plugins: {
                         legend: {
                             display: false
@@ -129,8 +139,9 @@
                         label: cat,
                         data: [staffDataRaw.reduce((acc, curr) => acc + (Number(curr[
                             cat]) || 0), 0)],
-                        backgroundColor: colors[cat] || '#64748b',
-                        borderRadius: 4
+                        backgroundColor: colorPalette[cat] || '#cbd5e1',
+                        borderRadius: 6,
+                        barPercentage: 0.6
                     }))
                 },
                 options: {
@@ -139,13 +150,16 @@
                     scales: {
                         y: {
                             beginAtZero: true,
+                            grid: {
+                                color: '#f8fafc'
+                            },
                             ticks: {
-                                color: textMuted
+                                padding: 10
                             }
                         },
                         x: {
-                            ticks: {
-                                color: textMuted
+                            grid: {
+                                display: false
                             }
                         }
                     },
@@ -153,22 +167,16 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: textMuted,
-                                boxWidth: 12
+                                usePointStyle: true,
+                                padding: 25,
+                                font: {
+                                    size: 10
+                                }
                             }
                         }
                     }
                 }
             });
-        }
-    });
-
-    // Listener agar chart update saat manager ganti tema klik tombol
-    window.addEventListener('click', function(e) {
-        if (e.target.onclick && e.target.onclick.toString().includes('setTheme')) {
-            setTimeout(() => {
-                location.reload(); // Cara paling aman agar Chart.js merender ulang warna variabel baru
-            }, 100);
         }
     });
 </script>

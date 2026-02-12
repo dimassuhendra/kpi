@@ -43,4 +43,50 @@ class ReportController extends Controller
 
         return Excel::download(new KpiExport($filters), $fileName);
     }
+
+    public function preview(Request $request)
+    {
+        try {
+            // Query langsung ke Detail Kegiatan agar sesuai dengan Excel
+            $query = \App\Models\KegiatanDetail::with(['dailyReport.user.divisi'])
+                ->whereHas('dailyReport', function ($q) use ($request) {
+                    $q->where('status', 'approved');
+
+                    if ($request->filled('user_id')) {
+                        $q->where('user_id', $request->user_id);
+                    }
+
+                    if ($request->filled('start_date')) {
+                        $q->whereDate('tanggal', '>=', $request->start_date);
+                    }
+
+                    if ($request->filled('end_date')) {
+                        $q->whereDate('tanggal', '<=', $request->end_date);
+                    }
+                });
+
+            $details = $query->get();
+
+            $formattedData = $details->map(function ($item) {
+                $user = $item->dailyReport->user;
+                $divisiId = $user->divisi_id;
+
+                return [
+                    'tanggal' => $item->dailyReport->tanggal->format('d/m/Y'),
+                    'nama_staff' => $user->nama_lengkap,
+                    'divisi' => $divisiId == 1 ? 'TAC' : 'INFRA',
+                    // Logika kolom gabungan sesuai Excel
+                    'col_5' => $divisiId == 1 ? strtoupper($item->tipe_kegiatan) : ($item->kategori ?? 'Lainnya'),
+                    'judul' => $item->deskripsi_kegiatan,
+                    'inisiatif' => $divisiId == 1 ? ($item->temuan_sendiri ? 'Ya' : 'Tidak') : '-',
+                    'mandiri' => $divisiId == 1 ? ($item->is_mandiri ? 'Ya' : 'Tidak') : '-',
+                    'durasi' => $divisiId == 1 ? $item->value_raw : '-',
+                ];
+            });
+
+            return response()->json($formattedData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

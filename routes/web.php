@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::put('/variables/{id}', [ManagerController::class, 'variablesUpdate'])->name('variables.update');
     Route::delete('/variables/{id}', [ManagerController::class, 'variablesDestroy'])->name('variables.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/preview', [ReportController::class, 'preview'])->name('reports.preview');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');

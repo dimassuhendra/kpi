@@ -1,173 +1,208 @@
 @extends('layouts.manager')
 
 @section('content')
-    <div class="space-y-8">
-        <div class="flex justify-between items-center">
+    <div class="p-6 space-y-8 max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-header font-bold uppercase" style="color: var(--text-main)">
-                    User <span style="color: var(--primary)">Management</span>
+                <nav class="flex mb-2" aria-label="Breadcrumb">
+                    <ol
+                        class="inline-flex items-center space-x-1 md:space-x-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <li class="inline-flex items-center">Admin</li>
+                        <li><i class="fas fa-chevron-right mx-2 text-[8px]"></i></li>
+                        <li class="text-emerald-600">Users</li>
+                    </ol>
+                </nav>
+                <h1 class="text-3xl font-black tracking-tight text-slate-800 uppercase">
+                    User <span class="text-emerald-600">Management</span>
                 </h1>
-                <p class="text-[10px] italic font-bold uppercase tracking-widest opacity-70" style="color: var(--text-muted)">
-                    Manajemen akun & monitoring performa staff
+                <p class="text-sm font-medium text-slate-500 mt-1">
+                    Total <span class="text-slate-800 font-bold">{{ $users->count() }}</span> staff terdaftar dalam sistem
+                    monitoring.
                 </p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="openUserModal('create')"
-                    class="px-6 py-2 rounded-xl text-xs font-bold uppercase transition-all shadow-lg hover:opacity-90 active:scale-95"
-                    style="background: var(--primary); color: white; shadow-color: var(--primary)">
-                    + Tambah Staff
-                </button>
-            </div>
+            <button onclick="openUserModal('create')"
+                class="group px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center gap-3">
+                <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
+                    <i class="fas fa-plus text-xs"></i>
+                </div>
+                Tambah Staff Baru
+            </button>
         </div>
 
-        {{-- TABLE --}}
-        <div class="organic-card overflow-hidden border border-white/5">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-[10px] uppercase font-bold tracking-widest border-b border-white/5"
-                        style="background: rgba(0,0,0,0.1); color: var(--text-muted)">
-                        <th class="px-6 py-4">Nama Staff</th>
-                        <th class="px-6 py-4 text-center">Email</th>
-                        <th class="px-6 py-4 text-center">Divisi</th>
-                        <th class="px-6 py-4 text-center">Terakhir Update</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    @foreach ($users as $u)
-                        <tr class="hover:bg-white/[0.02] transition-all group">
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="font-bold" style="color: var(--text-main)">{{ $u->nama_lengkap }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="font-bold" style="color: var(--text-main)">{{ $u->email }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="font-bold" style="color: var(--text-main)">{{ $u->divisi->nama_divisi }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                @if ($u->latestReport)
-                                    <span class="font-bold" style="color: var(--text-main)">
-                                        {{ $u->latestReport->created_at->diffForHumans() }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted" style="font-size: 0.75rem; opacity: 0.7;">
-                                        {{ $u->latestReport->created_at->format('d M Y, H:i') }}
-                                    </small>
-                                @else
-                                    <span class="text-gray-400">Belum melapor</span>
-                                @endif
-                            </td>
-                            {{-- <td class="px-6 py-4 text-center">
-                                <div class="flex justify-center gap-4">
-                                    <div class="text-center">
-                                        <span
-                                            class="font-bold block leading-none text-emerald-500">{{ $u->mandiri_count }}</span>
-                                        <span class="text-[8px] uppercase font-bold opacity-60"
-                                            style="color: var(--text-muted)">Mandiri</span>
-                                    </div>
-                                    <div class="text-center">
-                                        <span
-                                            class="font-bold block leading-none text-amber-500">{{ $u->inisiatif_count }}</span>
-                                        <span class="text-[8px] uppercase font-bold opacity-60"
-                                            style="color: var(--text-muted)">Temuan</span>
-                                    </div>
-                                </div>
-                            </td> --}}
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex justify-end gap-3">
-                                    {{-- Tombol Edit --}}
-                                    <button
-                                        onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }})"
-                                        class="transition-colors opacity-50 hover:opacity-100"
-                                        style="color: var(--text-main)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-
-                                    {{-- Tombol Hapus --}}
-                                    <form action="{{ route('manager.users.destroy', $u->id) }}" method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus staff ini?')"
-                                        class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="text-rose-500 hover:text-rose-400 transition-colors opacity-80 hover:opacity-100">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
+        <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-100">
+                            <th class="pl-8 py-6 text-[11px] uppercase font-black text-slate-500 tracking-[0.15em]">
+                                Informasi Staff</th>
+                            <th
+                                class="px-6 py-6 text-[11px] uppercase font-black text-slate-500 tracking-[0.15em] text-center">
+                                Divisi & Akses</th>
+                            <th
+                                class="px-6 py-6 text-[11px] uppercase font-black text-slate-500 tracking-[0.15em] text-center">
+                                Aktivitas Terakhir</th>
+                            <th
+                                class="pr-8 py-6 text-[11px] uppercase font-black text-slate-500 tracking-[0.15em] text-right">
+                                Aksi</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($users as $u)
+                            <tr class="hover:bg-slate-50/50 transition-all duration-300 group">
+                                <td class="pl-8 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="relative">
+                                            <div
+                                                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-100">
+                                                {{ substr($u->nama_lengkap, 0, 2) }}
+                                            </div>
+                                            <div
+                                                class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                                <div
+                                                    class="w-2 h-2 rounded-full {{ $u->latestReport ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300' }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div
+                                                class="font-bold text-slate-800 text-base leading-tight group-hover:text-emerald-700 transition-colors">
+                                                {{ $u->nama_lengkap }}</div>
+                                            <div class="text-xs font-medium text-slate-400 mt-0.5">{{ $u->email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-5 text-center">
+                                    <div class="inline-flex flex-col gap-1">
+                                        <span
+                                            class="px-4 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-100/50">
+                                            {{ $u->divisi->nama_divisi }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-5 text-center">
+                                    @if ($u->latestReport)
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                                <i class="far fa-clock text-emerald-500"></i>
+                                                {{ $u->latestReport->created_at->diffForHumans() }}
+                                            </span>
+                                            <span
+                                                class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">
+                                                {{ $u->latestReport->created_at->format('d M Y • H:i') }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest italic">
+                                            No Activity
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <td class="pr-8 py-5 text-right">
+                                    <div
+                                        class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }})"
+                                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg hover:shadow-emerald-100 transition-all flex items-center justify-center">
+                                            <i class="fas fa-pen text-xs"></i>
+                                        </button>
+
+                                        <form action="{{ route('manager.users.destroy', $u->id) }}" method="POST"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus staff ini?')"
+                                            class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-rose-500 hover:text-rose-500 hover:shadow-lg hover:shadow-rose-100 transition-all flex items-center justify-center">
+                                                <i class="fas fa-trash-alt text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    {{-- MODAL USER --}}
     <div id="userModalOverlay"
-        style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
-        <div class="w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-white/10"
-            style="background: var(--dark-card)">
-            <h3 id="modalTitle" class="text-xl font-header font-bold uppercase mb-6 text-center"
-                style="color: var(--primary)">
-                Tambah Staff
-            </h3>
-
-            <form id="userForm" method="POST">
-                @csrf
-                <div id="methodPlaceholder"></div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] uppercase font-bold mb-2 block ml-1" style="color: var(--text-muted)">Nama
-                            Lengkap</label>
-                        <input type="text" name="nama_lengkap" id="u_nama_lengkap" required
-                            class="w-full border border-white/5 rounded-2xl px-5 py-3 text-sm focus:border-primary outline-none transition-all disabled:opacity-50"
-                            style="background: rgba(0,0,0,0.2); color: var(--text-main)">
+        class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-[3rem] shadow-2xl border border-white p-2 transform transition-all">
+            <div class="bg-slate-50 rounded-[2.5rem] p-8">
+                <div class="text-center mb-8">
+                    <div
+                        class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-3xl mx-auto flex items-center justify-center mb-4 shadow-inner">
+                        <i class="fas fa-user-shield text-2xl"></i>
                     </div>
-                    <div>
-                        <label class="text-[10px] uppercase font-bold mb-2 block ml-1"
-                            style="color: var(--text-muted)">Email Access</label>
-                        <input type="email" name="email" id="u_email" required
-                            class="w-full border border-white/5 rounded-2xl px-5 py-3 text-sm focus:border-primary outline-none transition-all disabled:opacity-50"
-                            style="background: rgba(0,0,0,0.2); color: var(--text-main)">
-                    </div>
-                    <div>
-                        <label class="text-[10px] uppercase font-bold mb-2 block ml-1"
-                            style="color: var(--text-muted)">Divisi Assignment</label>
-                        <select name="divisi_id" id="u_divisi"
-                            class="w-full border border-white/5 rounded-2xl px-5 py-3 text-sm focus:border-primary outline-none transition-all appearance-none"
-                            style="background: rgba(0,0,0,0.2); color: var(--text-main)">
-                            @foreach ($divisis as $d)
-                                <option value="{{ $d->id }}" style="background: var(--dark-card)">
-                                    {{ $d->nama_divisi }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div id="passwordContainer">
-                        <label class="text-[10px] uppercase font-bold mb-2 block ml-1"
-                            style="color: var(--text-muted)">Password</label>
-                        <input type="password" name="password" id="u_password"
-                            class="w-full border border-white/5 rounded-2xl px-5 py-3 text-sm focus:border-primary outline-none transition-all"
-                            style="background: rgba(0,0,0,0.2); color: var(--text-main)">
-                    </div>
-
-                    <div class="flex gap-3 pt-6">
-                        <button type="button" onclick="closeUserModal()"
-                            class="flex-1 py-4 rounded-2xl text-xs font-bold uppercase transition-all"
-                            style="background: rgba(255,255,255,0.05); color: var(--text-main)">
-                            Batal
-                        </button>
-                        <button type="submit"
-                            class="flex-[2] py-4 rounded-2xl text-xs font-bold uppercase shadow-lg transition-all hover:opacity-90"
-                            style="background: var(--primary); color: white">
-                            Simpan Akun
-                        </button>
-                    </div>
+                    <h3 id="modalTitle" class="text-xl font-black text-slate-800 uppercase tracking-tighter">Registration
+                    </h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Sistem Otentikasi Staff
+                    </p>
                 </div>
-            </form>
+
+                <form id="userForm" method="POST" class="space-y-5">
+                    @csrf
+                    <div id="methodPlaceholder"></div>
+
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <label
+                                class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Nama
+                                Lengkap</label>
+                            <input type="text" name="nama_lengkap" id="u_nama_lengkap" required placeholder="John Doe"
+                                class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300 font-medium">
+                        </div>
+
+                        <div class="relative">
+                            <label
+                                class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Email
+                                Access</label>
+                            <input type="email" name="email" id="u_email" required placeholder="john@company.com"
+                                class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium">
+                        </div>
+
+                        <div class="relative">
+                            <label
+                                class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Divisi
+                                Assignment</label>
+                            <div class="relative">
+                                <select name="divisi_id" id="u_divisi"
+                                    class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all appearance-none font-bold text-slate-700">
+                                    @foreach ($divisis as $d)
+                                        <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
+                                    @endforeach
+                                </select>
+                                <i
+                                    class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                            </div>
+                        </div>
+
+                        <div id="passwordContainer" class="relative">
+                            <label
+                                class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Master
+                                Password</label>
+                            <input type="password" name="password" id="u_password" placeholder="••••••••"
+                                class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 pt-4">
+                        <button type="submit"
+                            class="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">
+                            Simpan Perubahan
+                        </button>
+                        <button type="button" onclick="closeUserModal()"
+                            class="w-full py-4 bg-transparent text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-all">
+                            Batalkan & Kembali
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -181,10 +216,11 @@
             const passwordContainer = document.getElementById('passwordContainer');
             const inputPassword = document.getElementById('u_password');
 
-            overlay.style.display = 'flex';
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
 
             if (type === 'create') {
-                document.getElementById('modalTitle').innerText = "Tambah Staff Baru";
+                document.getElementById('modalTitle').innerText = "Register New Staff";
                 form.action = "{{ route('manager.users.store') }}";
                 document.getElementById('methodPlaceholder').innerHTML = "";
                 inputNama.readOnly = false;
@@ -193,7 +229,7 @@
                 inputPassword.required = true;
                 form.reset();
             } else {
-                document.getElementById('modalTitle').innerText = "Ubah Divisi Staff";
+                document.getElementById('modalTitle').innerText = "Update Staff Profile";
                 form.action = "/manager/users/" + id;
                 document.getElementById('methodPlaceholder').innerHTML = '@method('PUT')';
                 inputNama.value = nama_lengkap;
@@ -207,14 +243,12 @@
         }
 
         function closeUserModal() {
-            overlay.style.display = 'none';
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
         }
 
-        // Menutup modal jika klik di luar area modal
         window.onclick = function(event) {
-            if (event.target == overlay) {
-                closeUserModal();
-            }
+            if (event.target == overlay) closeUserModal();
         }
     </script>
 @endsection
