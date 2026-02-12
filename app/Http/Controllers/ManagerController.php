@@ -26,12 +26,14 @@ class ManagerController extends Controller
         $infraWorkload = collect();
         $staffInfraData = collect();
         $availableCategories = [];
-        $staffChartData = collect(); // Untuk TAC
-        $workloadMix = ['case' => 0, 'activity' => 0]; // Untuk TAC
+        $staffChartData = collect();
+        $workloadMix = ['case' => 0, 'activity' => 0];
         $trendLabels = [];
         $trendCases = [];
         $trendActivities = [];
         $leaderboard = collect();
+        $infraTrendData = [];
+        $staffWorkloadDist = collect();
         $summaryData = [
             'total_case' => 0,
             'avg_time' => 0,
@@ -71,8 +73,6 @@ class ManagerController extends Controller
 
             // --- TAMBAHAN: Logika Tren Kategori Harian ---
             $daysInMonth = now()->daysInMonth;
-            $infraTrendData = [];
-            $trendLabels = [];
 
             for ($i = 1; $i <= $daysInMonth; $i++) {
                 $trendLabels[] = $i;
