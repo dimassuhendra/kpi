@@ -17,7 +17,7 @@ class ManagerController extends Controller
     public function dashboard(Request $request)
     {
         // 1. Inisialisasi Parameter
-        $selectedDivisi = $request->get('divisi_id', 'all');
+        $selectedDivisi = $request->get('divisi_id', '1');
         $currentMonth = now()->month;
         $currentYear = now()->year;
         $divisis = Divisi::all();

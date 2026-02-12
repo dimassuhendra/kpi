@@ -3,7 +3,7 @@
 @section('content')
     {{-- 1. SCOPE TUNGGAL: Inisialisasi activeTab sesuai $selectedDivisi dari Server --}}
     <div x-data="{
-        activeTab: '{{ $selectedDivisi == '1' ? 'tac' : ($selectedDivisi == '2' ? 'infra' : 'all') }}'
+        activeTab: '{{ $selectedDivisi == '2' ? 'infra' : 'tac' }}'
     }" class="space-y-10">
 
         {{-- HEADER & FILTER SECTION --}}
@@ -22,13 +22,12 @@
             <div
                 class="flex items-center gap-1 bg-[var(--bg-main)]/40 p-1 rounded-3xl border border-[var(--text-muted)]/10 shadow-inner">
 
-                {{-- Button All Division --}}
-                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => 'all']) }}'"
+                {{-- <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => 'all']) }}'"
                     :class="activeTab === 'all' ? 'bg-[var(--primary)] text-white shadow-lg' :
                         'text-[var(--text-muted)] hover:text-[var(--text-main)]'"
                     class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300">
                     All Division
-                </button>
+                </button> --}}
 
                 {{-- Button TAC --}}
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '1']) }}'"
