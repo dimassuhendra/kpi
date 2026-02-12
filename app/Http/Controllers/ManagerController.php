@@ -164,12 +164,21 @@ class ManagerController extends Controller
                 'penugasan' => $allDetailsTAC->where('temuan_sendiri', 0)->where('tipe_kegiatan', 'case')->count(),
             ];
 
-            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($currentMonth, $currentYear) {
+            // Di dalam loop $staffChartData pada Controller:
+            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($currentMonth, $currentYear, $daysInMonth) {
                 $uDetails = KegiatanDetail::whereHas(
                     'dailyReport',
                     fn($q) =>
                     $q->where('user_id', $u->id)->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear)
                 )->get();
+
+                // TAMBAHKAN INI: Ambil trend harian khusus staff ini
+                $dailyHistory = ['cases' => [], 'activities' => []];
+                for ($i = 1; $i <= $daysInMonth; $i++) {
+                    $date = now()->format("Y-m-") . sprintf("%02d", $i);
+                    $dailyHistory['cases'][] = $uDetails->where('tipe_kegiatan', 'case')->filter(fn($d) => date('Y-m-d', strtotime($d->dailyReport->tanggal)) == $date)->count();
+                    $dailyHistory['activities'][] = $uDetails->where('tipe_kegiatan', 'activity')->filter(fn($d) => date('Y-m-d', strtotime($d->dailyReport->tanggal)) == $date)->count();
+                }
 
                 return [
                     'nama' => $u->nama_lengkap,
@@ -180,6 +189,7 @@ class ManagerController extends Controller
                     'mandiri_count' => $uDetails->where('is_mandiri', 1)->count(),
                     'cases' => $uDetails->where('tipe_kegiatan', 'case')->count(),
                     'activities' => $uDetails->where('tipe_kegiatan', 'activity')->count(),
+                    'daily_history' => $dailyHistory // Data dikirim ke JS
                 ];
             });
 
