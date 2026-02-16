@@ -95,20 +95,51 @@
 
 {{-- Row 2: Trend Chart --}}
 <div id="card-trend" class="info-card p-6 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
-    <div class="flex justify-between items-start mb-6">
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
         <div>
             <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
                 <i class="fas fa-chart-line mr-2 text-emerald-600"></i> Monthly Category Trend
             </h3>
             <p class="text-[9px] text-slate-400 mt-1 italic description-text">
-                Tren volume harian (Tanggal 1-{{ $trendLabels[count($trendLabels) - 1] ?? '30' }}) untuk mendeteksi
-                anomali sistem secara real-time.
+                Tren volume harian untuk mendeteksi anomali sistem secara real-time.
             </p>
         </div>
-        <button onclick="exportCard('card-trend', 'Monthly-Trend')"
-            class="export-btn flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg text-slate-400 hover:text-emerald-600 border border-slate-100">
-            <i class="fas fa-download text-[10px]"></i> <span class="text-[9px] font-black">SAVE IMG</span>
-        </button>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                <input type="date" id="start_date_infra"
+                    class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
+                <span class="text-slate-400 text-[9px]">-</span>
+                <input type="date" id="end_date_infra"
+                    class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
+                <button onclick="changeInfraFilter('custom', this)"
+                    class="filter-btn-infra p-1.5 hover:bg-emerald-500 hover:text-white rounded-lg transition">
+                    <i class="fas fa-search text-[9px]"></i>
+                </button>
+            </div>
+
+            <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                <button onclick="changeInfraFilter('today', this)"
+                    class="filter-btn-infra px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">TODAY</button>
+                <button onclick="changeInfraFilter('weekly', this)"
+                    class="filter-btn-infra px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">WEEKLY</button>
+                <button onclick="changeInfraFilter('monthly', this)"
+                    class="filter-btn-infra px-3 py-1.5 text-[9px] font-bold rounded-lg bg-emerald-500 text-white shadow-sm transition">MONTHLY</button>
+            </div>
+
+            <select id="infraTrendStaffSelector" onchange="updateInfraTrendByStaff(this.value)"
+                class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer px-3 py-2">
+                <option value="all">ALL STAFF</option>
+                @foreach ($staffInfraData as $staff)
+                    <option value="{{ $staff['nama'] }}">{{ strtoupper($staff['nama']) }}</option>
+                @endforeach
+            </select>
+
+            <button onclick="exportCard('card-trend', 'Monthly-Trend')"
+                class="export-btn flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg text-slate-400 hover:text-emerald-600 border border-slate-100">
+                <i class="fas fa-download text-[10px]"></i> <span class="text-[9px] font-black">SAVE IMG</span>
+            </button>
+        </div>
     </div>
     <div style="height: 320px;">
         <canvas id="infraTrendChart"></canvas>
@@ -116,7 +147,7 @@
 </div>
 
 <script>
-    // Konfigurasi Global
+    // 1. Konfigurasi Global
     const colorPalette = {
         'Network': '#059669',
         'CCTV': '#0ea5e9',
@@ -124,35 +155,71 @@
         'Lainnya': '#94a3b8'
     };
 
-    // Data dari Backend
-    const infraWorkloadAll = @json($infraWorkload);
-    const staffWorkloadDist = @json($staffWorkloadDist);
-    const staffDataRaw = @json($staffInfraData);
-    const categories = @json($availableCategories);
-    const trendLabels = @json($trendLabels);
-    const trendData = @json($infraTrendData);
+    // Data Awal dari Backend
+    let infraWorkloadAll = @json($infraWorkload);
+    let staffWorkloadDist = @json($staffWorkloadDist);
+    let staffDataRaw = @json($staffInfraData);
+    let categories = @json($availableCategories);
+    let masterTrendData = @json($infraTrendData);
+    let masterTrendLabels = @json($trendLabels);
 
     let donutChartInstance = null;
     let barChartInstance = null;
+    let infraTrendChartInstance = null;
 
-    // --- FUNGSI EXPORT ---
-    function exportCard(elementId, fileName) {
-        const element = document.getElementById(elementId);
-        html2canvas(element, {
-            backgroundColor: "#ffffff",
-            scale: 2,
-            useCORS: true
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `${fileName}-${new Date().getTime()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        });
+    // --- FUNGSI AJAX FILTER (Hanya untuk Trend) ---
+    async function changeInfraFilter(type, element = null) {
+        if (element && element.tagName === 'BUTTON') {
+            element.parentElement.querySelectorAll('.filter-btn-infra').forEach(btn => {
+                btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-sm');
+            });
+            element.classList.add('bg-emerald-500', 'text-white', 'shadow-sm');
+        }
+
+        const startDate = document.getElementById('start_date_infra').value;
+        const endDate = document.getElementById('end_date_infra').value;
+        const divisiId = new URLSearchParams(window.location.search).get('divisi_id') || '2';
+
+        let url = `?divisi_id=${divisiId}&filter=${type}`;
+        if (type === 'custom') {
+            if (!startDate || !endDate) return alert('Pilih tanggal dulu!');
+            url += `&start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+
+            // 1. Update Data Trend (Labels & Data Points)
+            // Controller Anda mengirim trendLabels di dalam data.trend.labels (berdasarkan kode controller sebelumnya)
+            const newLabels = data.trend ? data.trend.labels : data.trendLabels;
+            const newData = data.infraTrendData;
+
+            if (infraTrendChartInstance) {
+                infraTrendChartInstance.data.labels = newLabels;
+                infraTrendChartInstance.data.datasets.forEach(ds => {
+                    ds.data = newData[ds.label] || [];
+                });
+                infraTrendChartInstance.update();
+            }
+            // Re-sync master data untuk filter staff trend
+            masterTrendData = newData;
+            masterTrendLabels = newLabels;
+
+        } catch (error) {
+            console.error("Gagal update data trend:", error);
+        }
     }
 
-    // --- UPDATE DONUT CHART ---
+    // --- REFRESH DONUT CHART ---
     function updateDonutChart(staffName) {
         if (!donutChartInstance) return;
+
+        // Proteksi jika data per staff tidak ada, gunakan data all
         const targetData = (staffName === 'all') ? infraWorkloadAll : (staffWorkloadDist[staffName] || {});
 
         const labels = Object.keys(targetData);
@@ -168,7 +235,7 @@
 
         const legendContainer = document.getElementById('donutLegend');
         legendContainer.innerHTML = labels.length ? '' :
-            '<div class="col-span-2 text-center text-[10px] font-bold text-slate-300">No records found</div>';
+            '<div class="col-span-2 text-center text-slate-400 text-[10px]">No Data</div>';
 
         labels.forEach((label, i) => {
             const pct = total > 0 ? ((values[i] / total) * 100).toFixed(1) : 0;
@@ -186,7 +253,7 @@
         });
     }
 
-    // --- UPDATE BAR CHART ---
+    // --- REFRESH BAR CHART ---
     function updateBarChartMode(mode) {
         if (!barChartInstance) return;
         const btnTotal = document.getElementById('btn-mode-total');
@@ -197,30 +264,24 @@
             barChartInstance.data.datasets.forEach(ds => {
                 ds.data = [staffDataRaw.reduce((acc, curr) => acc + (Number(curr[ds.label]) || 0), 0)];
             });
-            btnTotal.className =
-                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100/50";
-            btnStaff.className =
-                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600";
+            btnTotal.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+            btnStaff.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
         } else {
             barChartInstance.data.labels = staffDataRaw.map(s => s.nama);
             barChartInstance.data.datasets.forEach(ds => {
                 ds.data = staffDataRaw.map(s => Number(s[ds.label]) || 0);
             });
-            btnStaff.className =
-                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100/50";
-            btnTotal.className =
-                "px-4 py-1.5 text-[9px] font-black rounded-lg transition-all text-slate-400 hover:text-slate-600";
+            btnStaff.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+            btnTotal.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
         }
         barChartInstance.update();
     }
 
+    // --- INITIALIZE ON LOAD ---
     document.addEventListener('DOMContentLoaded', function() {
-        // Chart Defaults
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-        Chart.defaults.font.weight = '700';
-        Chart.defaults.color = '#94a3b8';
 
-        // Initialize Donut
+        // Donut
         const ctxDonut = document.getElementById('infraWorkloadChart');
         if (ctxDonut) {
             donutChartInstance = new Chart(ctxDonut, {
@@ -229,9 +290,8 @@
                     labels: [],
                     datasets: [{
                         data: [],
-                        borderWidth: 5,
-                        borderColor: '#fff',
-                        hoverOffset: 15
+                        borderWidth: 4,
+                        borderColor: '#fff'
                     }]
                 },
                 options: {
@@ -248,7 +308,7 @@
             updateDonutChart('all');
         }
 
-        // Initialize Bar
+        // Bar
         const ctxBar = document.getElementById('staffInfraChart');
         if (ctxBar) {
             barChartInstance = new Chart(ctxBar, {
@@ -259,97 +319,43 @@
                         label: cat,
                         data: [],
                         backgroundColor: colorPalette[cat] || '#cbd5e1',
-                        borderRadius: 5,
-                        barPercentage: 0.6
+                        borderRadius: 5
                     }))
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f8fafc'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    size: 9
-                                }
-                            }
-                        }
-                    }
+                    maintainAspectRatio: false
                 }
             });
             updateBarChartMode('total');
         }
 
-        // Initialize Line Trend
+        // Trend (Line)
         const ctxTrend = document.getElementById('infraTrendChart');
         if (ctxTrend) {
-            new Chart(ctxTrend, {
+            infraTrendChartInstance = new Chart(ctxTrend, {
                 type: 'line',
                 data: {
-                    labels: trendLabels,
-                    datasets: Object.keys(trendData).map(cat => ({
+                    labels: masterTrendLabels,
+                    datasets: Object.keys(masterTrendData).map(cat => ({
                         label: cat,
-                        data: trendData[cat],
+                        data: masterTrendData[cat],
                         borderColor: colorPalette[cat],
-                        backgroundColor: colorPalette[cat] + '10',
+                        backgroundColor: colorPalette[cat] + '15',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: (context) => context.dataset.data[context.dataIndex] >
-                            0 ? 3 : 0,
-                        pointHoverRadius: 6
+                        borderWidth: 2
                     }))
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: '#f1f5f9'
+                            ticks: {
+                                stepSize: 1
                             }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            align: 'end',
-                            labels: {
-                                usePointStyle: true,
-                                font: {
-                                    size: 9
-                                }
-                            }
-                        },
-                        tooltip: {
-                            padding: 12,
-                            cornerRadius: 10
                         }
                     }
                 }

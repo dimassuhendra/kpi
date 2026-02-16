@@ -74,7 +74,8 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Temuan vs Laporan</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
+                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Temuan vs Laporan</h4>
                     <select onchange="updateDynamicChart('donutInisiatif', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -101,7 +102,8 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Mandiri vs Bantuan</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
+                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Mandiri vs Bantuan</h4>
                     <select onchange="updateDynamicChart('donutMandiri', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -127,7 +129,8 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Workload Mix</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
+                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Workload Mix</h4>
                     <select onchange="updateDynamicChart('chartWorkloadMix', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -153,7 +156,8 @@
             <div
                 class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
                 <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i class="fas fa-chart-pie mr-2 text-emerald-600"></i> Response Limit</h4>
+                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
+                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Response Limit</h4>
                     <select onchange="updateDynamicChart('barResponseThreshold', this.value)"
                         class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
                         <option value="all">ALL</option>
@@ -172,16 +176,39 @@
 
         {{-- BARIS 2: 1 KOLOM (DAILY TREND FULL WIDTH) --}}
         <div class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-            <div class="mb-8 flex justify-between items-start">
+            <div class="mb-8 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
                         <i class="fas fa-chart-line mr-2 text-emerald-600"></i> Daily Activity Trend
                     </h3>
-                    <p class="text-[9px] text-slate-400 mt-1 italic">Grafik beban kerja harian seluruh tim.</p>
+                    <p class="text-[9px] text-slate-400 mt-1 italic">Grafik beban kerja harian tim & kustomisasi
+                        tanggal.</p>
                 </div>
-                <div class="flex gap-2">
-                    <select onchange="updateDynamicChart('chartDailyTrend', this.value)"
-                        class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer px-3">
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                        <input type="date" id="start_date_input"
+                            class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
+                        <span class="text-slate-400 text-[9px]">-</span>
+                        <input type="date" id="end_date_input"
+                            class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
+                        <button onclick="changeFilter('custom', this)"
+                            class="filter-btn p-1.5 hover:bg-emerald-500 hover:text-white rounded-lg transition">
+                            <i class="fas fa-search text-[9px]"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                        <button onclick="changeFilter('today', this)"
+                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">TODAY</button>
+                        <button onclick="changeFilter('weekly', this)"
+                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">WEEKLY</button>
+                        <button onclick="changeFilter('monthly', this)"
+                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg bg-emerald-500 text-white shadow-sm transition">MONTHLY</button>
+                    </div>
+
+                    <select id="staffSelector" onchange="updateDynamicChart('chartDailyTrend', this.value)"
+                        class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer px-3 py-2">
                         <option value="all">ALL TEAM</option>
                         @foreach ($staffChartData as $index => $staff)
                             <option value="{{ $index }}">{{ strtoupper($staff['nama']) }}</option>
@@ -189,7 +216,10 @@
                     </select>
                 </div>
             </div>
-            <div style="height:350px;"><canvas id="chartDailyTrend"></canvas></div>
+
+            <div style="height:350px;">
+                <canvas id="chartDailyTrend"></canvas>
+            </div>
         </div>
 
         {{-- BARIS 3: 4 KOLOM (MINI CARDS) --}}
@@ -205,7 +235,8 @@
             @foreach ($miniCharts as $mc)
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm group">
                     <div class="text-left mb-4">
-                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest"><i class="fas fa-chart-bar mr-2 text-emerald-600"></i> {{ $mc['title'] }}
+                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest"><i
+                                class="fas fa-chart-bar mr-2 text-emerald-600"></i> {{ $mc['title'] }}
                         </p>
                         <p class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">{{ $mc['desc'] }}
                         </p>
@@ -243,11 +274,99 @@
         activities: @json($trendActivities),
         labels: @json($trendLabels)
     };
+    let masterStaffData = @json($staffChartData);
+    let masterTrendLabels = @json($trendLabels);
+    let masterTrendCases = @json($trendCases);
+    let masterTrendActivities = @json($trendActivities);
 
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.font.weight = '700';
     Chart.defaults.plugins.legend.display = false;
+
+
+    async function changeFilter(type, element = null) {
+        // UI: Update tombol aktif
+        if (element && element.tagName === 'BUTTON') {
+            const parent = element.closest('.flex');
+            if (parent) {
+                parent.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-sm');
+                });
+                element.classList.add('bg-emerald-500', 'text-white', 'shadow-sm');
+            }
+        }
+
+        // Ambil input tanggal
+        const startDate = document.getElementById('start_date_input').value;
+        const endDate = document.getElementById('end_date_input').value;
+        const divisiId = new URLSearchParams(window.location.search).get('divisi_id') || '1';
+
+        // Susun URL
+        let url = `?divisi_id=${divisiId}&filter=${type}`;
+        if (type === 'custom') {
+            if (!startDate || !endDate) return alert('Pilih rentang tanggal dulu bos!');
+            url += `&start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+
+            // Update data master & UI (Gunakan fungsi updateDashboardUI yang sudah dibuat sebelumnya)
+            masterStaffData = data.staffChartData;
+            masterTrendLabels = data.trend.labels;
+            masterTrendCases = data.trend.cases;
+            masterTrendActivities = data.trend.activities;
+
+            document.getElementById('staffSelector').value = 'all';
+            updateDashboardUI(data);
+        } catch (error) {
+            console.error("Gagal update data:", error);
+        }
+    }
+
+    // Logika Filter Per Staff (Dropdown)
+    function updateDynamicChart(chartId, value) {
+        const chart = Chart.getChart(chartId);
+        if (!chart) return;
+
+        let dCases = (value === 'all') ? masterTrendCases : masterStaffData[value].daily_history.cases;
+        let dActs = (value === 'all') ? masterTrendActivities : masterStaffData[value].daily_history.activities;
+
+        chart.data.datasets[0].data = dCases;
+        chart.data.datasets[1].data = dActs;
+        chart.update();
+    }
+
+    // Fungsi Update Semua Visual Dashboard
+    function updateDashboardUI(data) {
+        // 1. Update Chart Utama (Trend)
+        updateChart('chartDailyTrend', [data.trend.cases, data.trend.activities], data.trend.labels);
+
+        // 4. Update Angka Statistik (H2)
+        const stats = document.querySelectorAll('h2.text-4xl');
+        if (stats.length >= 4) {
+            stats[0].innerText = data.stats.pending;
+            stats[1].innerText = parseFloat(data.stats.avg_response_time).toFixed(1);
+            stats[2].innerText = data.stats.resolved_month;
+            stats[3].innerText = data.stats.active_today;
+        }
+    }
+
+    function updateChart(id, datasets, labels = null) {
+        const chart = Chart.getChart(id);
+        if (!chart) return;
+        if (labels) chart.data.labels = labels;
+        datasets.forEach((d, i) => {
+            if (chart.data.datasets[i]) chart.data.datasets[i].data = d;
+        });
+        chart.update();
+    }
 
     // --- HELPER FUNCTIONS ---
     function setDonutLabel(id, val1, val2, label) {
@@ -345,7 +464,27 @@
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true, // Mulai dari angka 0
+                    ticks: {
+                        // Memaksa angka menjadi bulat (menghilangkan desimal)
+                        stepSize: 1,
+                        callback: function(value) {
+                            if (value % 1 === 0) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            },
+            // Tambahan agar tooltip tidak muncul desimal jika datanya bulat
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
         }
     });
 
