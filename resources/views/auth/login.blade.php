@@ -18,8 +18,8 @@
 
             <div class="mb-8 flex justify-center">
                 <div class="relative flex w-full rounded-full bg-black/20 p-1">
-                    <button type="button" id="btn-staff" class="z-10 w-1/2 rounded-full py-2 font-body text-white transition" onclick="setRole('staff')">Staff IT</button>
-                    <button type="button" id="btn-manager" class="z-10 w-1/2 rounded-full py-2 font-body text-white opacity-50 transition" onclick="setRole('manager')">Manager IT</button>
+                    <button type="button" id="btn-staff" class="z-10 w-1/2 rounded-full py-2 font-body text-white transition" onclick="setRole('staff')">Staff Access</button>
+                    <button type="button" id="btn-manager" class="z-10 w-1/2 rounded-full py-2 font-body text-white opacity-50 transition" onclick="setRole('manager')">Manager Access</button>
                     <div id="toggle-bg" class="absolute h-10 w-1/2 rounded-full bg-secondary shadow-lg transition-all duration-300"></div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
         const btnStaff = document.getElementById('btn-staff');
         const btnManager = document.getElementById('btn-manager');
 
-        if (role === 'manager') {
+        if (role === 'manager' || role === 'gm') {
             bg.style.left = '50%';
             bg.style.transform = 'translateX(0)';
             btnManager.classList.remove('opacity-50');

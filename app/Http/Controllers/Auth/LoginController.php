@@ -18,7 +18,7 @@ class LoginController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'role' => 'required|in:staff,manager'
+            'role' => 'required|in:staff,manager,gm'
         ]);
 
         $loginData = $request->only('email', 'password');
@@ -26,14 +26,21 @@ class LoginController extends Controller
         if (Auth::attempt($loginData)) {
             $user = Auth::user();
 
-            if ($user->role !== $credentials['role']) {
+            $isManagerGroup = ($credentials['role'] == 'manager' && ($user->role == 'manager' || $user->role == 'gm'));
+            $isStaffGroup = ($credentials['role'] == 'staff' && $user->role == 'staff');
+
+            if (!$isManagerGroup && !$isStaffGroup) {
                 Auth::logout();
                 return back()->withErrors(['email' => 'Akses ditolak. Peran Anda tidak sesuai.']);
             }
 
             $request->session()->regenerate();
 
-            return redirect()->intended($user->role == 'manager' ? route('manager.dashboard') : route('staff.input'));
+            if ($user->role == 'manager' || $user->role == 'gm') {
+                return redirect()->intended(route('manager.dashboard'));
+            }
+
+            return redirect()->intended(route('staff.input'));
         }
 
         return back()->withErrors(['email' => 'Email atau password salah.'])->withInput($request->only('email'));

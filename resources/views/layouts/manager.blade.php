@@ -99,7 +99,7 @@
         }
 
         .hero-image {
-            background: url("{{ asset('img/3.jpg') }}") no-repeat center center;
+            background: url("{{ asset('img/lampion.jpg') }}") no-repeat center center;
             background-size: cover;
             position: absolute;
             inset: 0;
@@ -223,7 +223,8 @@
         <div class="max-w-[1440px] mx-auto px-6 lg:px-10">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center gap-12">
-                    <a href="{{ route('manager.dashboard') }}" class="flex items-center group">
+                    <a href="{{ Auth::user()->role == 'gm' ? route('manager.dashboard') : route('manager.dashboard') }}"
+                        class="flex items-center group">
                         <div
                             class="w-10 h-10 bg-imperial-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-200 group-hover:rotate-12 transition-transform border border-gold-400">
                             <i class="fas fa-dragon text-gold-400 text-lg"></i>
@@ -236,10 +237,15 @@
                     <div class="hidden lg:flex items-center space-x-8 mt-1">
                         <a href="{{ route('manager.dashboard') }}"
                             class="nav-link {{ request()->routeIs('manager.dashboard') ? 'active' : '' }} uppercase">Dashboard</a>
-                        <a href="{{ route('manager.approval.index') }}"
-                            class="nav-link {{ request()->routeIs('manager.approval.*') ? 'active' : '' }} uppercase">Validation</a>
-                        <a href="{{ route('manager.users.index') }}"
-                            class="nav-link {{ request()->routeIs('manager.users.*') ? 'active' : '' }} uppercase">Users</a>
+
+                        {{-- Sembunyikan Validation dan Users jika role adalah GM --}}
+                        @if (Auth::user()->role !== 'gm')
+                            <a href="{{ route('manager.approval.index') }}"
+                                class="nav-link {{ request()->routeIs('manager.approval.*') ? 'active' : '' }} uppercase">Validation</a>
+                            <a href="{{ route('manager.users.index') }}"
+                                class="nav-link {{ request()->routeIs('manager.users.*') ? 'active' : '' }} uppercase">Users</a>
+                        @endif
+
                         <a href="{{ route('manager.reports.index') }}"
                             class="nav-link {{ request()->routeIs('manager.reports.*') ? 'active' : '' }} uppercase">Archive</a>
                     </div>
@@ -252,7 +258,9 @@
 
                     <div class="text-right hidden sm:block border-r border-slate-100 pr-6">
                         <p class="text-[9px] text-imperial-500 font-black uppercase tracking-widest leading-none mb-1">
-                            Lead Manager</p>
+                            {{-- Label Dinamis --}}
+                            {{ Auth::user()->role == 'gm' ? 'General Manager' : 'Lead Manager' }}
+                        </p>
                         <p class="text-xs font-bold text-slate-800 tracking-tight">{{ Auth::user()->name }}</p>
                     </div>
 
@@ -311,11 +319,12 @@
                                 Welcome, <span class="text-gold-400">{{ explode(' ', Auth::user()->name)[0] }}</span>
                             </h1>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em]">Manager
-                                    Console</span>
+                                <span class="text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em]">
+                                    {{ Auth::user()->role == 'gm' ? 'General Manager' : 'Manager' }} Console
+                                </span>
                                 <span class="text-white/20">•</span>
                                 <span class="text-gold-500 text-[10px] font-black uppercase tracking-[0.2em]">
-                                    {{ request()->routeIs('manager.dashboard') ? 'Overview' : str_replace('manager.', '', request()->route()->getName()) }}
+                                    {{ request()->routeIs('manager.dashboard') ? 'Overview' : 'Archive' }}
                                 </span>
                             </div>
                         </div>

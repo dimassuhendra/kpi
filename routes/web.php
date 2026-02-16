@@ -35,7 +35,7 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::put('/profile', [StaffKpiController::class, 'updateProfile'])->name('staff.profile.update');
 });
 
-Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
+Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     Route::get('/validation', [ManagerController::class, 'validationIndex'])->name('approval.index');
     Route::get('/validation/{id}', [ManagerController::class, 'validationShow'])->name('approval.show');

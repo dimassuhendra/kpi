@@ -18,6 +18,15 @@ class KpiSeeder extends Seeder
         // 2. Seeder User
         // Manager
         User::create([
+            'nama_lengkap' => 'Mrs. Mei Yung',
+            'email' => 'mei@mybolo.com',
+            'username' => 'meiyung',
+            'password' => Hash::make('12345678'),
+            'role' => 'gm',
+            'divisi_id' => $tac->id,
+        ]);
+
+        User::create([
             'nama_lengkap' => 'Jay Manager',
             'email' => 'jay@mybolo.com',
             'username' => 'jay_manager',
