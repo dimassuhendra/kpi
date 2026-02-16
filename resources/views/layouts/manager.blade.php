@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -23,7 +22,7 @@
                 extend: {
                     colors: {
                         imperial: {
-                            500: '#dc2626', // Red
+                            500: '#dc2626',
                             600: '#b91c1c',
                             700: '#991b1b'
                         },
@@ -46,7 +45,6 @@
         :root {
             --primary: #dc2626;
             --bg-body: #fffaf0;
-            /* Creamy white for elegance */
         }
 
         body {
@@ -54,8 +52,6 @@
             background-color: var(--bg-body);
             color: #1e293b;
             overflow-x: hidden;
-            cursor: crosshair;
-            /* Menandakan bisa diklik untuk kembang api */
         }
 
         .nav-glass {
@@ -77,25 +73,34 @@
             color: var(--primary);
         }
 
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -28px;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to right, #dc2626, #fbbf24);
-            border-radius: 50px 50px 0 0;
+        /* Border bawah hanya muncul di desktop */
+        @media (min-width: 1024px) {
+            .nav-link.active::after {
+                content: '';
+                position: absolute;
+                bottom: -28px;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(to right, #dc2626, #fbbf24);
+                border-radius: 50px 50px 0 0;
+            }
         }
 
-        /* Hero Section Styling */
         .hero-container {
             position: relative;
-            height: 220px;
-            border-radius: 32px;
+            height: auto;
+            min-height: 220px;
+            border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 20px 40px -15px rgba(220, 38, 38, 0.3);
             border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        @media (min-width: 1024px) {
+            .hero-container {
+                border-radius: 32px;
+            }
         }
 
         .hero-image {
@@ -103,7 +108,6 @@
             background-size: cover;
             position: absolute;
             inset: 0;
-            transition: transform 0.7s ease;
         }
 
         .hero-overlay {
@@ -112,12 +116,11 @@
             background: linear-gradient(135deg, rgba(127, 29, 29, 0.9) 0%, rgba(2, 6, 23, 0.6) 100%);
         }
 
-        /* Naga Watermark Animasi */
         .dragon-bg {
             position: fixed;
             bottom: -50px;
             right: -50px;
-            font-size: 300px;
+            font-size: 200px;
             color: rgba(220, 38, 38, 0.04);
             transform: rotate(-15deg);
             pointer-events: none;
@@ -137,7 +140,6 @@
             }
         }
 
-        /* Lampion & Ornamen */
         @keyframes swing {
 
             0%,
@@ -156,14 +158,13 @@
             background: #dc2626;
             border-radius: 40%;
             border: 2px solid #fbbf24;
-            position: relative;
-            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             color: #fbbf24;
             font-size: 12px;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
         }
 
         .ornament-side {
@@ -176,7 +177,6 @@
             pointer-events: none;
         }
 
-        /* Canvas Fireworks */
         #fireworks-canvas {
             position: fixed;
             top: 0;
@@ -189,7 +189,7 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col antialiased">
+<body class="min-h-screen flex flex-col antialiased" x-data="{ mobileMenu: false }">
 
     <canvas id="fireworks-canvas"></canvas>
 
@@ -198,20 +198,12 @@
             <div class="w-0.5 h-24 bg-red-600 mx-auto"></div>
             <div class="lampion-body">福</div>
         </div>
-        <div class="animate-[swing_4s_ease-in-out_infinite] origin-top -mt-4" style="animation-delay: -1s;">
-            <div class="w-0.5 h-12 bg-red-600 mx-auto"></div>
-            <div class="lampion-body" style="width:25px; height:20px; font-size:8px;">吉</div>
-        </div>
     </div>
 
     <div class="ornament-side right-8 hidden xl:flex">
         <div class="animate-[swing_3.5s_ease-in-out_infinite] origin-top">
             <div class="w-0.5 h-16 bg-red-600 mx-auto"></div>
             <div class="lampion-body">禄</div>
-        </div>
-        <div class="animate-[swing_4.5s_ease-in-out_infinite] origin-top -mt-2">
-            <div class="w-0.5 h-32 bg-red-600 mx-auto"></div>
-            <div class="lampion-body">寿</div>
         </div>
     </div>
 
@@ -220,13 +212,12 @@
     </div>
 
     <nav class="nav-glass sticky top-0 z-[60] w-full">
-        <div class="max-w-[1440px] mx-auto px-6 lg:px-10">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-10">
             <div class="flex justify-between h-20 items-center">
-                <div class="flex items-center gap-12">
-                    <a href="{{ Auth::user()->role == 'gm' ? route('manager.dashboard') : route('manager.dashboard') }}"
-                        class="flex items-center group">
+                <div class="flex items-center gap-4 lg:gap-12">
+                    <a href="#" class="flex items-center group">
                         <div
-                            class="w-10 h-10 bg-imperial-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-200 group-hover:rotate-12 transition-transform border border-gold-400">
+                            class="w-10 h-10 bg-imperial-500 rounded-xl flex items-center justify-center shadow-lg border border-gold-400 group-hover:rotate-12 transition-transform">
                             <i class="fas fa-dragon text-gold-400 text-lg"></i>
                         </div>
                         <span class="ml-3 font-header font-black text-lg tracking-tighter text-slate-800 uppercase">
@@ -237,97 +228,115 @@
                     <div class="hidden lg:flex items-center space-x-8 mt-1">
                         <a href="{{ route('manager.dashboard') }}"
                             class="nav-link {{ request()->routeIs('manager.dashboard') ? 'active' : '' }} uppercase">Dashboard</a>
-
-                        {{-- Sembunyikan Validation dan Users jika role adalah GM --}}
                         @if (Auth::user()->role !== 'gm')
                             <a href="{{ route('manager.approval.index') }}"
                                 class="nav-link {{ request()->routeIs('manager.approval.*') ? 'active' : '' }} uppercase">Validation</a>
                             <a href="{{ route('manager.users.index') }}"
                                 class="nav-link {{ request()->routeIs('manager.users.*') ? 'active' : '' }} uppercase">Users</a>
                         @endif
-
                         <a href="{{ route('manager.reports.index') }}"
                             class="nav-link {{ request()->routeIs('manager.reports.*') ? 'active' : '' }} uppercase">Archive</a>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <div class="hidden lg:block text-gold-500 animate-bounce">
-                        <i class="fas fa-coins text-sm"></i>
-                    </div>
-
-                    <div class="text-right hidden sm:block border-r border-slate-100 pr-6">
+                <div class="flex items-center gap-3 lg:gap-6">
+                    <div class="hidden sm:block text-right border-r border-slate-100 pr-6">
                         <p class="text-[9px] text-imperial-500 font-black uppercase tracking-widest leading-none mb-1">
-                            {{-- Label Dinamis --}}
                             {{ Auth::user()->role == 'gm' ? 'General Manager' : 'Lead Manager' }}
                         </p>
                         <p class="text-xs font-bold text-slate-800 tracking-tight">{{ Auth::user()->name }}</p>
                     </div>
 
-                    <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open"
-                            class="w-10 h-10 rounded-full bg-imperial-500 border-2 border-gold-400 flex items-center justify-center text-gold-400 hover:scale-110 transition-all shadow-lg">
-                            <i class="fas fa-dragon text-sm"></i>
-                        </button>
-                        <div x-show="open" @click.away="open = false" x-transition
-                            class="absolute right-0 mt-3 w-48 bg-white border border-red-100 shadow-2xl rounded-2xl py-2 z-50">
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                    class="w-full text-left px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 flex items-center gap-2 uppercase tracking-wider">
-                                    <i class="fas fa-sign-out-alt"></i> Sign Out System
-                                </button>
-                            </form>
-                        </div>
+                    <div class="hidden lg:block">
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-wider border border-rose-100 hover:bg-rose-600 hover:text-white transition-all">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
                     </div>
+
+                    <button @click="mobileMenu = !mobileMenu"
+                        class="lg:hidden w-10 h-10 flex items-center justify-center text-slate-600 text-xl">
+                        <i class="fas" :class="mobileMenu ? 'fa-times' : 'fa-bars-staggered'"></i>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-4"
+            class="lg:hidden bg-white border-t border-gold-400 px-4 py-6 shadow-xl">
+
+            <div class="flex flex-col space-y-4">
+                <a href="{{ route('manager.dashboard') }}"
+                    class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.dashboard') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
+                    Dashboard <i class="fas fa-chevron-right text-[10px]"></i>
+                </a>
+                @if (Auth::user()->role !== 'gm')
+                    <a href="{{ route('manager.approval.index') }}"
+                        class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.approval.*') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
+                        Validation <i class="fas fa-chevron-right text-[10px]"></i>
+                    </a>
+                    <a href="{{ route('manager.users.index') }}"
+                        class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.users.*') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
+                        Users <i class="fas fa-chevron-right text-[10px]"></i>
+                    </a>
+                @endif
+                <a href="{{ route('manager.reports.index') }}"
+                    class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.reports.*') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
+                    Archive <i class="fas fa-chevron-right text-[10px]"></i>
+                </a>
+
+                <hr class="border-slate-100">
+
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                        class="w-full flex items-center gap-3 p-4 bg-imperial-500 text-white rounded-2xl font-black text-sm uppercase shadow-lg shadow-red-200">
+                        <i class="fas fa-power-off"></i> Sign Out System
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
 
     <main class="flex-grow relative z-10">
-        <div class="max-w-[1440px] mx-auto px-6 lg:px-10 py-6">
+        <div class="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
 
-            <div class="hero-container mb-10">
+            <div class="hero-container mb-6 lg:mb-10">
                 <div class="hero-image"></div>
                 <div class="hero-overlay"></div>
-                <div class="tech-pattern"></div>
 
-                <div class="relative z-10 h-full p-8 lg:p-10 flex flex-col justify-between">
+                <div class="relative z-10 h-full p-6 lg:p-10 flex flex-col justify-between gap-8">
                     <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="px-3 py-1.5 rounded-full bg-red-600/20 backdrop-blur-md border border-gold-500/30 text-white text-[10px] font-bold uppercase flex items-center gap-2">
-                                <i class="fas fa-fire text-gold-400"></i>
-                                <span>29°C Bandar Lampung</span>
-                            </div>
+                        <div
+                            class="px-3 py-1.5 rounded-full bg-red-600/20 backdrop-blur-md border border-gold-500/30 text-white text-[10px] font-bold uppercase flex items-center gap-2">
+                            <i class="fas fa-fire text-gold-400 animate-pulse"></i>
+                            <span>29°C Bandar Lampung</span>
                         </div>
 
                         <div class="text-right text-white">
                             <div id="digital-clock"
-                                class="font-mono text-2xl lg:text-3xl font-bold tracking-tighter leading-none text-gold-400">
-                                00:00:00</div>
+                                class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-gold-400">00:00:00
+                            </div>
                             <div id="current-date"
-                                class="text-[10px] font-black text-red-400 uppercase tracking-widest mt-1 opacity-80">
+                                class="text-[9px] font-black text-red-400 uppercase tracking-widest mt-1 opacity-80">
                                 Loading...</div>
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <h1 class="text-2xl lg:text-3xl font-black text-white tracking-tight uppercase">
-                                Welcome, <span class="text-gold-400">{{ explode(' ', Auth::user()->name)[0] }}</span>
-                            </h1>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em]">
-                                    {{ Auth::user()->role == 'gm' ? 'General Manager' : 'Manager' }} Console
-                                </span>
-                                <span class="text-white/20">•</span>
-                                <span class="text-gold-500 text-[10px] font-black uppercase tracking-[0.2em]">
-                                    {{ request()->routeIs('manager.dashboard') ? 'Overview' : 'Archive' }}
-                                </span>
-                            </div>
-                        </div>
+                    <div>
+                        <h1 class="text-xl lg:text-3xl font-black text-white tracking-tight uppercase">
+                            Welcome, <span class="text-gold-400">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                        </h1>
+                        <p class="text-slate-300 text-[9px] font-bold uppercase tracking-[0.2em] mt-1">
+                            {{ Auth::user()->role == 'gm' ? 'General Manager' : 'Manager' }} Console •
+                            {{ request()->routeIs('manager.dashboard') ? 'Overview' : 'Archive' }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -339,50 +348,36 @@
     </main>
 
     <footer class="mt-auto py-8 border-t border-slate-200 bg-white relative z-10">
-        <div class="max-w-[1440px] mx-auto px-6 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <div
-                    class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-imperial-500 border border-red-100">
-                    <i class="fas fa-fan text-xs"></i>
-                </div>
                 <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">
-                    &copy; 2026 MyBolo <span class="text-imperial-600">Console</span> • Build v2.5
+                    &copy; 2026 MyBolo <span class="text-imperial-600">Console</span>
                 </p>
             </div>
-
-            <div class="flex gap-6 items-center">
-                <div class="text-right">
-                    <span class="block text-[9px] font-black text-slate-300 uppercase tracking-widest">Server
-                        Status</span>
-                    <span
-                        class="text-[10px] font-bold text-imperial-600 uppercase tracking-widest flex items-center gap-2 justify-end">
-                        Optimal <div class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-ping"></div>
-                    </span>
-                </div>
+            <div class="text-[10px] font-bold text-imperial-600 uppercase tracking-widest flex items-center gap-2">
+                Server Optimal <div class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-ping"></div>
             </div>
         </div>
     </footer>
 
     <script>
-        // 1. Digital Clock & Date
+        // Digital Clock
         function updateTime() {
             const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('digital-clock').textContent = `${h}:${m}:${s}`;
-            const options = {
+            document.getElementById('digital-clock').textContent = now.toLocaleTimeString('id-ID', {
+                hour12: false
+            });
+            document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
-            };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', options);
+            });
         }
         setInterval(updateTime, 1000);
         updateTime();
 
-        // 2. Super Fireworks Effect on Click
+        // Canvas Fireworks (Simplified for performance)
         const canvas = document.getElementById('fireworks-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -418,23 +413,17 @@
                 this.velocity.y *= this.friction;
                 this.x += this.velocity.x;
                 this.y += this.velocity.y;
-                this.alpha -= 0.01;
-            }
-        }
-
-        function createFirework(x, y) {
-            const colors = ['#fbbf24', '#f59e0b', '#dc2626', '#ffffff'];
-            for (let i = 0; i < 30; i++) {
-                particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
+                this.alpha -= 0.02;
             }
         }
 
         window.addEventListener('click', (e) => {
-            createFirework(e.clientX, e.clientY);
+            const colors = ['#fbbf24', '#dc2626', '#ffffff'];
+            for (let i = 0; i < 20; i++) particles.push(new Particle(e.clientX, e.clientY, colors[Math.floor(Math
+                .random() * colors.length)]));
         });
 
         function animate() {
-            ctx.fillStyle = 'rgba(0,0,0,0)'; // Transparent clear
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach((p, i) => {
                 if (p.alpha > 0) {
