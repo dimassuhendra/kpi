@@ -257,7 +257,7 @@ class StaffKpiController extends Controller
 
     public function logs(Request $request)
     {
-        $query = DailyReport::with('details')
+        $query = DailyReport::with(['user.divisi', 'details']) // Pastikan user.divisi juga di-load
             ->where('user_id', Auth::id());
 
         // Fitur Search (berdasarkan deskripsi di tabel detail)
