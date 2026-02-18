@@ -88,4 +88,80 @@
             width: 100%;
         }
     </style>
+
+    <script>
+        function exportToPdf() {
+            // 1. Identifikasi Divisi yang aktif (mengambil data dari Alpine.js jika memungkinkan)
+            // Atau kita bisa gunakan variabel PHP yang dikirim ke view
+            const selectedDivisi = '{{ $selectedDivisi }}';
+
+            // 2. Cari canvas yang sedang tampil (Chart.js)
+            // Kita cari canvas di dalam section yang tidak tersembunyi
+            const activeCanvas = document.querySelector('canvas');
+
+            if (!activeCanvas) {
+                alert("Grafik analisa tidak ditemukan. Pastikan chart sudah muncul di layar.");
+                return;
+            }
+
+            try {
+                // 3. Konversi Chart ke Base64 Image
+                // Penting: Pastikan di opsi Chart.js Anda, animation: false atau tunggu render selesai
+                const chartBase64 = activeCanvas.toDataURL('image/png');
+
+                // 4. Buat Form secara dinamis
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/manager/export-pdf'; // Pastikan route ini sesuai di web.php
+                form.target = '_blank'; // Membuka PDF di tab baru agar dashboard tidak tertutup
+
+                // CSRF Token (Wajib di Laravel)
+                const inputToken = document.createElement('input');
+                inputToken.type = 'hidden';
+                inputToken.name = '_token';
+                inputToken.value = '{{ csrf_token() }}';
+                form.appendChild(inputToken);
+
+                // Data Gambar Chart
+                const inputChart = document.createElement('input');
+                inputChart.type = 'hidden';
+                inputChart.name = 'chart_base64';
+                inputChart.value = chartBase64;
+                form.appendChild(inputChart);
+
+                // Data Divisi
+                const inputDivisi = document.createElement('input');
+                inputDivisi.type = 'hidden';
+                inputDivisi.name = 'divisi_id';
+                inputDivisi.value = selectedDivisi;
+                form.appendChild(inputDivisi);
+
+                // Data Filter (Opsional: ambil dari URL/Request saat ini)
+                const urlParams = new URLSearchParams(window.location.search);
+                const params = ['filter', 'start_date', 'end_date'];
+                params.forEach(param => {
+                    if (urlParams.has(param)) {
+                        let input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = param;
+                        input.value = urlParams.get(param);
+                        form.appendChild(input);
+                    }
+                });
+
+                // 5. Eksekusi
+                document.body.appendChild(form);
+                form.submit();
+
+                // Hapus form dari dokumen setelah beberapa saat agar tidak menumpuk
+                setTimeout(() => {
+                    document.body.removeChild(form);
+                }, 100);
+
+            } catch (error) {
+                console.error("Gagal mengekspor PDF:", error);
+                alert("Terjadi kesalahan saat memproses gambar chart.");
+            }
+        }
+    </script>
 @endsection

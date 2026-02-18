@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="p-6 space-y-8 max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>
                 <nav class="flex mb-2" aria-label="Breadcrumb">
                     <ol
@@ -21,21 +21,30 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-3">
-                <button onclick="openUserModal('create_managerial')"
-                    class="group px-6 py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-3">
-                    <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
-                        <i class="fas fa-user-tie text-xs"></i>
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <a href="{{ route('manager.export.all') }}"
+                    class="group flex-1 lg:flex-none px-5 py-3.5 bg-white border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-3">
+                    <div
+                        class="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-file-pdf"></i>
                     </div>
-                    Tambah Akses Managerial
+                    <span>Export All Performance</span>
+                </a>
+
+                <button onclick="openUserModal('create_managerial')"
+                    class="group flex-1 lg:flex-none px-5 py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3">
+                    <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <span>Managerial</span>
                 </button>
 
                 <button onclick="openUserModal('create')"
-                    class="group px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center gap-3">
+                    class="group flex-1 lg:flex-none px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center justify-center gap-3">
                     <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
-                        <i class="fas fa-plus text-xs"></i>
+                        <i class="fas fa-plus"></i>
                     </div>
-                    Tambah Staff Baru
+                    <span>Tambah Staff</span>
                 </button>
             </div>
         </div>
@@ -118,7 +127,14 @@
 
                                 <td class="pr-8 py-5 text-right">
                                     <div
-                                        class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+
+                                        <button onclick="exportUserPdf({{ $u->id }})"
+                                            title="Download Laporan Bulanan"
+                                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-500 hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg transition-all flex items-center justify-center">
+                                            <i class="fas fa-file-pdf text-xs"></i>
+                                        </button>
+
                                         <button
                                             onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }}, '{{ $u->role }}')"
                                             class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg hover:shadow-emerald-100 transition-all flex items-center justify-center">
@@ -162,7 +178,6 @@
                 <form id="userForm" method="POST" class="space-y-5">
                     @csrf
                     <div id="methodPlaceholder"></div>
-
                     <div class="space-y-4">
                         <div id="roleSelectionContainer" class="hidden relative">
                             <label
@@ -222,13 +237,11 @@
 
                     <div class="flex flex-col gap-3 pt-4">
                         <button type="submit"
-                            class="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">
-                            Simpan Perubahan
-                        </button>
+                            class="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">Simpan
+                            Perubahan</button>
                         <button type="button" onclick="closeUserModal()"
-                            class="w-full py-4 bg-transparent text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-all">
-                            Batalkan & Kembali
-                        </button>
+                            class="w-full py-4 bg-transparent text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-all">Batalkan
+                            & Kembali</button>
                     </div>
                 </form>
             </div>
@@ -238,6 +251,30 @@
     <script>
         const overlay = document.getElementById('userModalOverlay');
         const form = document.getElementById('userForm');
+
+        // Fungsi Baru: Export PDF via Form Post Dinamis
+        function exportUserPdf(userId) {
+            const formExport = document.createElement('form');
+            formExport.method = 'POST';
+            formExport.action = "{{ route('manager.export.pdf') }}"; // Pastikan route ini ada di web.php
+            formExport.target = '_blank';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = "{{ csrf_token() }}";
+            formExport.appendChild(csrfInput);
+
+            const userInput = document.createElement('input');
+            userInput.type = 'hidden';
+            userInput.name = 'user_id';
+            userInput.value = userId;
+            formExport.appendChild(userInput);
+
+            document.body.appendChild(formExport);
+            formExport.submit();
+            document.body.removeChild(formExport);
+        }
 
         function openUserModal(type, id = null, nama_lengkap = '', email = '', divisiId = '', role = 'staff') {
             const inputNama = document.getElementById('u_nama_lengkap');
@@ -254,53 +291,38 @@
             form.reset();
 
             if (type === 'create') {
-                // Mode Tambah Staff Biasa
                 document.getElementById('modalTitle').innerText = "Register New Staff";
                 form.action = "{{ route('manager.users.store') }}";
                 document.getElementById('methodPlaceholder').innerHTML = "";
-
                 roleContainer.classList.add('hidden');
                 inputRole.value = 'staff';
-
                 divisiContainer.classList.remove('hidden');
-
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
                 passwordContainer.style.display = 'block';
                 inputPassword.required = true;
-
             } else if (type === 'create_managerial') {
-                // Mode Tambah Manager/GM (Otomatis Divisi 3)
                 document.getElementById('modalTitle').innerText = "Managerial Access";
                 form.action = "{{ route('manager.users.store') }}";
                 document.getElementById('methodPlaceholder').innerHTML = "";
-
                 roleContainer.classList.remove('hidden');
-                inputRole.value = 'manager'; // default
-
-                // Set Divisi ID 3 Otomatis & Sembunyikan
+                inputRole.value = 'manager';
                 inputDivisi.value = "4";
                 divisiContainer.classList.add('hidden');
-
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
                 passwordContainer.style.display = 'block';
                 inputPassword.required = true;
-
             } else {
-                // Mode Edit
                 document.getElementById('modalTitle').innerText = "Update Profile";
                 form.action = "/manager/users/" + id;
                 document.getElementById('methodPlaceholder').innerHTML = '@method('PUT')';
-
                 inputNama.value = nama_lengkap;
                 inputEmail.value = email;
                 inputDivisi.value = divisiId;
                 inputRole.value = role;
-
                 roleContainer.classList.add('hidden');
                 divisiContainer.classList.remove('hidden');
-
                 inputNama.readOnly = true;
                 inputEmail.readOnly = true;
                 passwordContainer.style.display = 'none';

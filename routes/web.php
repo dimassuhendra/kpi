@@ -55,6 +55,8 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/export-pdf', [UserController::class, 'exportPdf'])->name('export.pdf');
+    Route::get('/export-all-staff', [UserController::class, 'exportAll'])->name('export.all');
     Route::get('/profile', [ManagerProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ManagerProfileController::class, 'update'])->name('profile.update');
 });
