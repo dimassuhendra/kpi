@@ -307,7 +307,7 @@
                 document.getElementById('methodPlaceholder').innerHTML = "";
                 roleContainer.classList.remove('hidden');
                 inputRole.value = 'manager';
-                inputDivisi.value = "4";
+                inputDivisi.value = "3";
                 divisiContainer.classList.add('hidden');
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
