@@ -236,6 +236,8 @@
                         @endif
                         <a href="{{ route('manager.reports.index') }}"
                             class="nav-link {{ request()->routeIs('manager.reports.*') ? 'active' : '' }} uppercase">Archive</a>
+                        <a href="{{ route('manager.profile.index') }}"
+                            class="nav-link {{ request()->routeIs('manager.profile.*') ? 'active' : '' }} uppercase">Profile</a>
                     </div>
                 </div>
 
@@ -289,6 +291,10 @@
                 <a href="{{ route('manager.reports.index') }}"
                     class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.reports.*') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
                     Archive <i class="fas fa-chevron-right text-[10px]"></i>
+                </a>
+                <a href="{{ route('manager.profile.index') }}"
+                    class="flex items-center justify-between p-3 rounded-xl {{ request()->routeIs('manager.profile.*') ? 'bg-red-50 text-red-600' : 'text-slate-600' }} font-bold text-sm uppercase">
+                    Profile <i class="fas fa-chevron-right text-[10px]"></i>
                 </a>
 
                 <hr class="border-slate-100">

@@ -16,6 +16,7 @@ use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\ValidationController;
 use App\Http\Controllers\Manager\ReportController;
 use App\Http\Controllers\Manager\UserController;
+use App\Http\Controllers\Manager\ProfileController;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -54,4 +55,6 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
