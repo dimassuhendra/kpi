@@ -45,11 +45,12 @@ class InputController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        $hariIni = now()->toDateString();
 
-        // 1. Validasi awal
+        // 1. Validasi awal: Memastikan ada input yang dikirim
         if ($user->divisi_id == 1) { // Logika TAC
             if (!$request->has('case') && !$request->has('activity')) {
-                return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
+                return back()->with('error', 'Mohon isi setidaknya satu kegiatan (Case atau Activity).');
             }
         } else { // Logika Infra
             if (!$request->has('infra_activity')) {
@@ -57,12 +58,15 @@ class InputController extends Controller
             }
         }
 
-        // 2. Buat Header DailyReport
-        $report = DailyReport::create([
-            'user_id' => $user->id,
-            'tanggal' => now()->toDateString(),
-            'status'  => 'pending',
-        ]);
+        // 2. LOGIKA UTAMA: Cari laporan yang sudah ada atau buat baru
+        // Kita filter berdasarkan user_id, tanggal hari ini, dan status pending.
+        $report = DailyReport::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'tanggal' => $hariIni,
+                'status'  => 'pending',
+            ]
+        );
 
         // ---------------------------------------------------------
         // LOGIKA PROSES: DIVISI TAC (DIVISI ID: 1)
@@ -77,21 +81,10 @@ class InputController extends Controller
             // Proses Case TAC
             if ($request->has('case')) {
                 foreach ($request->case as $item) {
-                    $poinCaseIni = 0;
-                    if ($vCount) $poinCaseIni += $vCount->bobot;
+                    // Lewati jika deskripsi kosong
+                    if (empty($item['deskripsi'])) continue;
 
                     $isTemuan = isset($item['temuan_sendiri']);
-                    if ($isTemuan) {
-                        if ($vTemuan) $poinCaseIni += $vTemuan->bobot;
-                    } else {
-                        if ($vRespons) {
-                            $poinCaseIni += (($item['respons'] ?? 0) <= 15) ? $vRespons->bobot : ($vRespons->bobot * 0.5);
-                        }
-                    }
-
-                    if (($item['is_mandiri'] ?? '1') == '1') {
-                        if ($vMandiri) $poinCaseIni += $vMandiri->bobot;
-                    }
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
@@ -109,6 +102,8 @@ class InputController extends Controller
             // Proses General Activity TAC
             if ($request->has('activity')) {
                 foreach ($request->activity as $act) {
+                    if (empty($act['deskripsi'])) continue;
+
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
                         'tipe_kegiatan'      => 'activity',
@@ -121,26 +116,25 @@ class InputController extends Controller
         // ---------------------------------------------------------
         // LOGIKA PROSES: DIVISI INFRASTRUKTUR (DIVISI ID: 2)
         // ---------------------------------------------------------
-        // DI DALAM FUNCTION store()
         else if ($user->divisi_id == 2) {
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
 
-            foreach ($request->infra_activity as $infra) {
-                KegiatanDetail::create([
-                    'daily_report_id'    => $report->id,
-                    'tipe_kegiatan'      => 'activity',
+            if ($request->has('infra_activity')) {
+                foreach ($request->infra_activity as $infra) {
+                    // Lewati jika nama kegiatan kosong
+                    if (empty($infra['nama_kegiatan'])) continue;
 
-                    // 1. INI YANG PALING PENTING: Simpan kategorinya ke kolom kategori
-                    'kategori'           => $infra['kategori'],
-
-                    // 2. Deskripsi biar rapi, tidak perlu pakai kurung siku lagi kalau sudah ada kolomnya
-                    'deskripsi_kegiatan' => $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
-
-                    'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
-                ]);
+                    KegiatanDetail::create([
+                        'daily_report_id'    => $report->id,
+                        'tipe_kegiatan'      => 'activity',
+                        'kategori'           => $infra['kategori'],
+                        'deskripsi_kegiatan' => $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
+                        'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
+                    ]);
+                }
             }
         }
 
-        return redirect()->route('staff.input')->with('success', 'Laporan Berhasil Disimpan!');
+        return redirect()->route('staff.input')->with('success', 'Laporan berhasil diperbarui!');
     }
 }
