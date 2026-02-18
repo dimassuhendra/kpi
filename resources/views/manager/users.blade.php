@@ -20,13 +20,24 @@
                     monitoring.
                 </p>
             </div>
-            <button onclick="openUserModal('create')"
-                class="group px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center gap-3">
-                <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
-                    <i class="fas fa-plus text-xs"></i>
-                </div>
-                Tambah Staff Baru
-            </button>
+
+            <div class="flex flex-wrap gap-3">
+                <button onclick="openUserModal('create_managerial')"
+                    class="group px-6 py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-3">
+                    <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
+                        <i class="fas fa-user-tie text-xs"></i>
+                    </div>
+                    Tambah Akses Managerial
+                </button>
+
+                <button onclick="openUserModal('create')"
+                    class="group px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center gap-3">
+                    <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
+                        <i class="fas fa-plus text-xs"></i>
+                    </div>
+                    Tambah Staff Baru
+                </button>
+            </div>
         </div>
 
         <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden">
@@ -67,18 +78,21 @@
                                         <div>
                                             <div
                                                 class="font-bold text-slate-800 text-base leading-tight group-hover:text-emerald-700 transition-colors">
-                                                {{ $u->nama_lengkap }}</div>
+                                                {{ $u->nama_lengkap }}
+                                            </div>
                                             <div class="text-xs font-medium text-slate-400 mt-0.5">{{ $u->email }}</div>
                                         </div>
                                     </div>
                                 </td>
 
                                 <td class="px-6 py-5 text-center">
-                                    <div class="inline-flex flex-col gap-1">
+                                    <div class="flex flex-col items-center gap-1">
                                         <span
                                             class="px-4 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-100/50">
                                             {{ $u->divisi->nama_divisi }}
                                         </span>
+                                        <span
+                                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $u->role }}</span>
                                     </div>
                                 </td>
 
@@ -106,13 +120,13 @@
                                     <div
                                         class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }})"
+                                            onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }}, '{{ $u->role }}')"
                                             class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg hover:shadow-emerald-100 transition-all flex items-center justify-center">
                                             <i class="fas fa-pen text-xs"></i>
                                         </button>
 
                                         <form action="{{ route('manager.users.destroy', $u->id) }}" method="POST"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus staff ini?')"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
                                             class="inline">
                                             @csrf @method('DELETE')
                                             <button type="submit"
@@ -141,7 +155,7 @@
                     </div>
                     <h3 id="modalTitle" class="text-xl font-black text-slate-800 uppercase tracking-tighter">Registration
                     </h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Sistem Otentikasi Staff
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Sistem Otentikasi User
                     </p>
                 </div>
 
@@ -150,6 +164,21 @@
                     <div id="methodPlaceholder"></div>
 
                     <div class="space-y-4">
+                        <div id="roleSelectionContainer" class="hidden relative">
+                            <label
+                                class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Akses
+                                Level</label>
+                            <div class="relative">
+                                <select name="role" id="u_role"
+                                    class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all appearance-none font-bold text-slate-700">
+                                    <option value="manager">MANAGER</option>
+                                    <option value="gm">GENERAL MANAGER (GM)</option>
+                                </select>
+                                <i
+                                    class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                            </div>
+                        </div>
+
                         <div class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Nama
@@ -166,7 +195,7 @@
                                 class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium">
                         </div>
 
-                        <div class="relative">
+                        <div id="divisiContainer" class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Divisi
                                 Assignment</label>
@@ -210,31 +239,68 @@
         const overlay = document.getElementById('userModalOverlay');
         const form = document.getElementById('userForm');
 
-        function openUserModal(type, id = null, nama_lengkap = '', email = '', divisiId = '') {
+        function openUserModal(type, id = null, nama_lengkap = '', email = '', divisiId = '', role = 'staff') {
             const inputNama = document.getElementById('u_nama_lengkap');
             const inputEmail = document.getElementById('u_email');
+            const inputDivisi = document.getElementById('u_divisi');
+            const inputRole = document.getElementById('u_role');
+            const roleContainer = document.getElementById('roleSelectionContainer');
+            const divisiContainer = document.getElementById('divisiContainer');
             const passwordContainer = document.getElementById('passwordContainer');
             const inputPassword = document.getElementById('u_password');
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
+            form.reset();
 
             if (type === 'create') {
+                // Mode Tambah Staff Biasa
                 document.getElementById('modalTitle').innerText = "Register New Staff";
                 form.action = "{{ route('manager.users.store') }}";
                 document.getElementById('methodPlaceholder').innerHTML = "";
+
+                roleContainer.classList.add('hidden');
+                inputRole.value = 'staff';
+
+                divisiContainer.classList.remove('hidden');
+
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
                 passwordContainer.style.display = 'block';
                 inputPassword.required = true;
-                form.reset();
+
+            } else if (type === 'create_managerial') {
+                // Mode Tambah Manager/GM (Otomatis Divisi 3)
+                document.getElementById('modalTitle').innerText = "Managerial Access";
+                form.action = "{{ route('manager.users.store') }}";
+                document.getElementById('methodPlaceholder').innerHTML = "";
+
+                roleContainer.classList.remove('hidden');
+                inputRole.value = 'manager'; // default
+
+                // Set Divisi ID 3 Otomatis & Sembunyikan
+                inputDivisi.value = "4";
+                divisiContainer.classList.add('hidden');
+
+                inputNama.readOnly = false;
+                inputEmail.readOnly = false;
+                passwordContainer.style.display = 'block';
+                inputPassword.required = true;
+
             } else {
-                document.getElementById('modalTitle').innerText = "Update Staff Profile";
+                // Mode Edit
+                document.getElementById('modalTitle').innerText = "Update Profile";
                 form.action = "/manager/users/" + id;
                 document.getElementById('methodPlaceholder').innerHTML = '@method('PUT')';
+
                 inputNama.value = nama_lengkap;
                 inputEmail.value = email;
-                document.getElementById('u_divisi').value = divisiId;
+                inputDivisi.value = divisiId;
+                inputRole.value = role;
+
+                roleContainer.classList.add('hidden');
+                divisiContainer.classList.remove('hidden');
+
                 inputNama.readOnly = true;
                 inputEmail.readOnly = true;
                 passwordContainer.style.display = 'none';

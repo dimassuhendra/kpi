@@ -14,17 +14,8 @@ class UserController extends Controller
     {
         $divisis = Divisi::all();
 
-        $users = User::where('role', 'staff')
+        $users = User::whereIn('role', ['staff', 'manager', 'gm'])
             ->with('divisi')
-            ->withCount([
-                'details as total_case',
-                'details as mandiri_count' => function ($q) {
-                    $q->where('is_mandiri', 1);
-                },
-                'details as inisiatif_count' => function ($q) {
-                    $q->where('temuan_sendiri', 1);
-                }
-            ])
             ->latest()
             ->get();
 
@@ -37,7 +28,8 @@ class UserController extends Controller
             'nama_lengkap' => 'required|string|max:255',
             'email'        => 'required|email|unique:users',
             'password'     => 'required|min:6',
-            'divisi_id'    => 'required|exists:divisi,id'
+            'divisi_id'    => 'required',
+            'role'         => 'required|in:staff,manager,gm'
         ]);
 
         User::create([
@@ -45,22 +37,28 @@ class UserController extends Controller
             'username'     => explode('@', $request->email)[0],
             'email'        => $request->email,
             'password'     => Hash::make($request->password),
-            'role'         => 'staff',
+            'role'         => $request->role,
             'divisi_id'    => $request->divisi_id,
         ]);
 
-        return back()->with('success', 'Staff berhasil ditambahkan ke database.');
+        return back()->with('success', 'User berhasil ditambahkan.');
     }
 
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $user->update([
-            'divisi_id' => $request->divisi_id
+        $request->validate([
+            'divisi_id' => 'required|exists:divisi,id',
+            'role'      => 'required|in:staff,gm'
         ]);
 
-        return back()->with('success', 'Divisi staff ' . $user->nama_lengkap . ' berhasil diperbarui.');
+        $user->update([
+            'divisi_id' => $request->divisi_id,
+            'role'      => $request->role
+        ]);
+
+        return back()->with('success', 'Data user berhasil diperbarui.');
     }
 
     public function destroy($id)
