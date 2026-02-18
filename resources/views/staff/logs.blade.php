@@ -140,13 +140,22 @@
                                             </h4>
                                             <div
                                                 class="flex flex-wrap gap-4 text-[10px] text-slate-400 uppercase tracking-wide border-t border-slate-700/50 pt-3 mt-3 font-bold">
-                                                <span><i class="far fa-clock mr-1 text-emerald-400"></i>
-                                                    {{ $detail->value_raw }} Menit</span>
-                                                <span
-                                                    class="{{ $detail->is_mandiri ? 'text-emerald-400' : 'text-blue-400' }}">
-                                                    <i class="fas fa-user mr-1"></i>
-                                                    {{ $detail->is_mandiri ? 'Mandiri' : 'Bantuan' }}
-                                                </span>
+                                                @if ($log->user->divisi->nama_divisi == 'TAC')
+                                                    <span><i class="far fa-clock mr-1 text-emerald-400"></i>
+                                                        {{ $detail->value_raw }} Menit</span>
+                                                    <span
+                                                        class="{{ $detail->is_mandiri ? 'text-emerald-400' : 'text-blue-400' }}">
+                                                        <i class="fas fa-user mr-1"></i>
+                                                        {{ $detail->is_mandiri ? 'Mandiri' : 'Bantuan' }}
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800/50 text-slate-300 border border-slate-700">
+                                                        <i class="fas fa-layer-group text-emerald-400"></i>
+                                                        {{ $detail->kategori ?? 'Lainnya' }}
+                                                    </span>
+                                                @endif
+
                                                 @if ($detail->temuan_sendiri)
                                                     <span class="text-amber-400"><i class="fas fa-bolt mr-1"></i>
                                                         Temuan</span>
@@ -220,19 +229,20 @@
                                     <h4 class="text-white text-sm mb-3 leading-snug">{{ $detail->deskripsi_kegiatan }}
                                     </h4>
                                     <div class="flex flex-wrap gap-3 text-[9px] font-bold uppercase text-slate-400">
-                                        {{-- 1. Selalu Tampilkan Menit --}}
-                                        <span>
-                                            <i class="far fa-clock text-emerald-400"></i> {{ $detail->value_raw }} Menit
-                                        </span>
+                                        @if ($log->user->divisi->nama_divisi == 'TAC')
+                                            {{-- Tampilkan Waktu & Mandiri hanya untuk TAC --}}
+                                            <span>
+                                                <i class="far fa-clock text-emerald-400"></i> {{ $detail->value_raw }}
+                                                Menit
+                                            </span>
 
-                                        {{-- 2. Selalu Tampilkan Status Mandiri/Bantuan --}}
-                                        <span class="{{ $detail->is_mandiri ? 'text-emerald-400' : 'text-blue-400' }}">
-                                            <i class="fas fa-user mr-1"></i>
-                                            {{ $detail->is_mandiri ? 'Mandiri' : 'Bantuan' }}
-                                        </span>
-
-                                        {{-- 3. Jika Divisi BUKAN TAC, Tambahkan info Kategori --}}
-                                        @if ($log->user->divisi->nama_divisi != 'TAC')
+                                            <span
+                                                class="{{ $detail->is_mandiri ? 'text-emerald-400' : 'text-blue-400' }}">
+                                                <i class="fas fa-user mr-1"></i>
+                                                {{ $detail->is_mandiri ? 'Mandiri' : 'Bantuan' }}
+                                            </span>
+                                        @else
+                                            {{-- Jika BUKAN TAC, Tampilkan Kategori --}}
                                             <span
                                                 class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800/50 text-slate-300 border border-slate-700">
                                                 <i class="fas fa-layer-group text-emerald-400"></i>
@@ -240,7 +250,6 @@
                                             </span>
                                         @endif
 
-                                        {{-- 4. Tampilkan badge Temuan jika ada --}}
                                         @if ($detail->temuan_sendiri)
                                             <span class="text-amber-400"><i class="fas fa-bolt mr-1"></i> Temuan</span>
                                         @endif
