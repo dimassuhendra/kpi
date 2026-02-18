@@ -57,25 +57,33 @@
     </div>
 
     {{-- Action Footer --}}
-    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
-        <form action="{{ route('manager.approval.store') }}" method="POST">
+    <div class="mt-8 pt-6 border-t border-slate-100">
+        <form action="{{ route('manager.approval.store') }}" method="POST"
+            class="flex flex-col md:flex-row items-end md:items-center justify-between gap-4">
             @csrf
             <input type="hidden" name="report_id" value="{{ $report->id }}">
-            <input type="hidden" name="status" value="rejected">
-            <button type="submit"
-                class="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
-                Reject
-            </button>
-        </form>
 
-        <form action="{{ route('manager.approval.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="report_id" value="{{ $report->id }}">
-            <input type="hidden" name="status" value="approved">
-            <button type="submit"
-                class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center gap-2">
-                <i class="fas fa-check-double"></i> Approve Mission
-            </button>
+            {{-- Bagian Input Catatan (Opsional) --}}
+            <div class="w-full md:max-w-xs">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Manager's Note
+                    (Optional)</label>
+                <input type="text" name="keterangan_manager" placeholder="Alasan reject atau apresiasi..."
+                    class="w-full text-xs border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+            </div>
+
+            <div class="flex items-center gap-3">
+                {{-- Tombol Reject --}}
+                <button type="submit" name="status" value="rejected"
+                    class="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
+                    Reject
+                </button>
+
+                {{-- Tombol Approve --}}
+                <button type="submit" name="status" value="approved"
+                    class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-100 transition-all flex items-center gap-2">
+                    <i class="fas fa-check-double"></i> Approve Mission
+                </button>
+            </div>
         </form>
     </div>
 </div>

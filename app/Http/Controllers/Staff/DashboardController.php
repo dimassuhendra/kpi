@@ -1,52 +1,118 @@
 <?php
 
 namespace App\Http\Controllers\Staff;
-
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\KpiSubmission;
-use Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function dashboard()
     {
         $user = Auth::user();
-        $last30Days = Carbon::now()->subDays(30);
+        $now = Carbon::now();
 
-        // 1. Status Hari Ini & Skor Rata-rata (Tetap)
-        $todaySubmission = KpiSubmission::where('user_id', $user->id)
-            ->whereDate('assessment_date', Carbon::today())
-            ->first();
+        // --- DATA UMUM ---
+        $dailyCount = DB::table('kegiatan_detail')
+            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+            ->where('daily_reports.user_id', $user->id)
+            ->whereDate('daily_reports.tanggal', $now->toDateString())
+            ->count();
 
-        $averageScore = KpiSubmission::where('user_id', $user->id)
-            ->where('status', 'approved')
-            ->where('assessment_date', '>=', $last30Days)
-            ->avg('total_final_score') ?? 0;
-
-        // 2. Data Tren 7 Hari (Line Chart)
-        $chartData = KpiSubmission::where('user_id', $user->id)
-            ->where('status', 'approved')
-            ->where('assessment_date', '>=', Carbon::now()->subDays(7))
-            ->orderBy('assessment_date', 'asc')
-            ->get(['assessment_date', 'total_final_score']);
-
-        // 3. Data Komposisi Skor per Variabel (Donut Chart)
-        $variableDistributions = \App\Models\KpiDetail::join('kpi_variables', 'kpi_details.kpi_variable_id', '=', 'kpi_variables.id')
-            ->join('kpi_submissions', 'kpi_details.kpi_submission_id', '=', 'kpi_submissions.id')
-            ->where('kpi_submissions.user_id', $user->id)
-            ->where('kpi_submissions.status', 'approved')
-            ->select('kpi_variables.variable_name', \DB::raw('AVG(calculated_score) as avg_val'))
-            ->groupBy('kpi_variables.variable_name')
+        $trendData = DB::table('daily_reports')
+            ->leftJoin('kegiatan_detail', 'daily_reports.id', '=', 'kegiatan_detail.daily_report_id')
+            ->where('daily_reports.user_id', $user->id)
+            ->where('daily_reports.tanggal', '>=', $now->copy()->subDays(6)->toDateString())
+            ->selectRaw('daily_reports.tanggal, count(kegiatan_detail.id) as total')
+            ->groupBy('daily_reports.tanggal')
+            ->orderBy('daily_reports.tanggal', 'ASC')
             ->get();
 
+        // Inisialisasi variabel agar tidak error di blade
+        $infraWorkload = [];
+        $staffInfraData = [];
+        $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
+        $autonomyData = collect();
+        $sourceData = collect();
+        $weeklyCount = 0;
+        $monthlyCount = 0;
+
+        // --- LOGIKA DATA BERDASARKAN ID DIVISI ---
+        if ($user->divisi_id == 2) {
+            // Tentukan bulan dan tahun saat ini
+            $currentMonth = $now->month;
+            $currentYear = $now->year;
+
+            $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
+
+            // 1. Workload Distribution (HANYA BULAN INI)
+            $infraWorkload = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereMonth('daily_reports.tanggal', $currentMonth) // Filter Bulan
+                ->whereYear('daily_reports.tanggal', $currentYear)   // Filter Tahun
+                ->selectRaw('kategori, count(*) as total')
+                ->groupBy('kategori')
+                ->pluck('total', 'kategori')->toArray();
+
+            // 2. Staff Technical Focus (HANYA BULAN INI)
+            $staffInfraData = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereMonth('daily_reports.tanggal', $currentMonth) // Filter Bulan
+                ->whereYear('daily_reports.tanggal', $currentYear)   // Filter Tahun
+                ->selectRaw('daily_reports.tanggal as tgl, kategori, count(*) as total')
+                ->groupBy('daily_reports.tanggal', 'kategori')
+                ->orderBy('daily_reports.tanggal', 'ASC') // Urutkan dari tanggal awal bulan
+                ->get()
+                ->groupBy('tgl')
+                ->map(function ($items, $date) use ($availableCategories) {
+                    $res = ['nama' => date('d M', strtotime($date))];
+                    foreach ($availableCategories as $cat) {
+                        $res[$cat] = $items->where('kategori', $cat)->first()->total ?? 0;
+                    }
+                    return $res;
+                })->values();
+        } else {
+            // DIVISI TAC (Default)
+            $weeklyCount = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereBetween('daily_reports.tanggal', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()])
+                ->count();
+
+            $monthlyCount = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereMonth('daily_reports.tanggal', $now->month)
+                ->count();
+
+            $autonomyData = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->selectRaw('is_mandiri, count(*) as total')
+                ->groupBy('is_mandiri')->get();
+
+            $sourceData = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->selectRaw('temuan_sendiri, count(*) as total')
+                ->groupBy('temuan_sendiri')->get();
+        }
+
+        // Kirim ke SATU file blade yang sama
         return view('staff.dashboard', compact(
-            'user',
-            'todaySubmission',
-            'averageScore',
-            'chartData',
-            'variableDistributions'
+            'dailyCount',
+            'trendData',
+            'infraWorkload',
+            'staffInfraData',
+            'availableCategories',
+            'weeklyCount',
+            'monthlyCount',
+            'autonomyData',
+            'sourceData'
         ));
     }
 }
