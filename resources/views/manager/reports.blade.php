@@ -68,11 +68,18 @@
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-4 pt-6 border-t border-slate-50">
+                    <button type="button" id="btnResetData"
+                        class="flex-none px-6 bg-rose-50 hover:bg-rose-100 text-rose-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-3 border border-rose-100">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                        Reset Data
+                    </button>
+
                     <button type="button" id="btnPreview"
                         class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-3">
                         <i class="fas fa-search text-xs"></i>
                         Preview Data
                     </button>
+
                     <button type="submit"
                         class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-3">
                         <i class="fas fa-file-excel text-sm"></i>
@@ -222,6 +229,57 @@
                     btn.innerHTML = originalContent;
                     btn.disabled = false;
                 });
+        });
+        document.getElementById('btnResetData').addEventListener('click', function() {
+            const userId = document.getElementById('user_id').value;
+            const start = document.getElementById('start_date').value;
+            const end = document.getElementById('end_date').value;
+            const staffName = document.getElementById('user_id').options[document.getElementById('user_id')
+                .selectedIndex].text;
+
+            if (!start || !end) return alert('Pilih rentang tanggal penghapusan!');
+
+            const confirmMsg =
+                `PERINGATAN KERAS!\n\nAnda akan menghapus SEMUA data laporan dari:\nTarget: ${staffName}\nPeriode: ${start} s/d ${end}\n\nData yang dihapus TIDAK DAPAT dikembalikan. Lanjutkan?`;
+
+            if (confirm(confirmMsg)) {
+                const secondConfirm = confirm("Konfirmasi terakhir: Anda benar-benar yakin?");
+                if (!secondConfirm) return;
+
+                const btn = this;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                btn.disabled = true;
+
+                fetch("{{ route('manager.reports.destroy') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            start_date: start,
+                            end_date: end
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload(); // Refresh untuk melihat perubahan
+                        } else {
+                            alert(data.error || data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Reset Error:', error);
+                        alert('Terjadi kesalahan sistem.');
+                    })
+                    .finally(() => {
+                        btn.innerHTML = '<i class="fas fa-trash-alt text-xs"></i> Reset Data';
+                        btn.disabled = false;
+                    });
+            }
         });
     </script>
 @endsection

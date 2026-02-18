@@ -138,10 +138,14 @@ class DashboardController extends Controller
             $summaryData = [
                 'total_case' => $stats['resolved_month'],
                 'avg_time' => round($stats['avg_response_time'], 2),
-                'mandiri' => $allDetailsTAC->where('is_mandiri', 1)->count(),
-                'bantuan' => $allDetailsTAC->where('is_mandiri', 0)->where('tipe_kegiatan', 'case')->count(),
-                'proaktif' => $allDetailsTAC->where('temuan_sendiri', 1)->count(),
-                'penugasan' => $allDetailsTAC->where('temuan_sendiri', 0)->where('tipe_kegiatan', 'case')->count(),
+
+                // Mandiri vs Bantuan (Hanya untuk tipe 'case')
+                'mandiri' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
+                'bantuan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
+
+                // Temuan vs Laporan (Hanya untuk tipe 'case')
+                'proaktif' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
+                'penugasan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
             ];
 
             $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($start, $end, $diffInDays) {
@@ -158,6 +162,8 @@ class DashboardController extends Controller
                     'avg_time' => round($uDetails->where('tipe_kegiatan', 'case')->avg('value_raw') ?? 0, 1),
                     'inisiatif_count' => $uDetails->where('temuan_sendiri', 1)->count(),
                     'mandiri_count' => $uDetails->where('is_mandiri', 1)->count(),
+                    'penugasan_count' => $uDetails->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
+                    'bantuan_count' => $uDetails->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
                     'cases' => $uDetails->where('tipe_kegiatan', 'case')->count(),
                     'activities' => $uDetails->where('tipe_kegiatan', 'activity')->count(),
                     'daily_history' => $dailyHistory

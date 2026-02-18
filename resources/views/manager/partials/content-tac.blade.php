@@ -369,15 +369,16 @@
     }
 
     // --- HELPER FUNCTIONS ---
-    function setDonutLabel(id, val1, val2, label) {
-        const total = Number(val1) + Number(val2);
-        const percent = total > 0 ? Math.round((val1 / total) * 100) : 0;
+    function setDonutLabel(id, value, total, label) {
+        // Pastikan total adalah angka valid dan lebih dari 0
+        const percent = (total > 0) ? Math.round((value / total) * 100) : 0;
+
         const el = document.getElementById(id);
         if (el) {
             el.innerHTML = `
-                <span class="text-2xl font-black text-slate-800 leading-none">${percent}%</span>
-                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">${label}</span>
-            `;
+            <span class="text-2xl font-black text-slate-800 leading-none">${percent}%</span>
+            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">${label}</span>
+        `;
         }
     }
 
@@ -393,48 +394,58 @@
         const chart = Chart.getChart(chartId);
         if (!chart) return;
 
-        let newData, label1, label2;
+        let val1, val2, total, label;
 
-        if (index === 'all') {
-            // Restore Original
-            if (chartId === 'chartDailyTrend') {
-                chart.data.datasets[0].data = globalTrend.cases;
-                chart.data.datasets[1].data = globalTrend.activities;
-            } else if (chartId === 'donutInisiatif') {
-                chart.data.datasets[0].data = [globalSummary.proaktif, globalSummary.penugasan];
-                setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, globalSummary.penugasan, 'Temuan TAC');
-            } else if (chartId === 'donutMandiri') {
-                chart.data.datasets[0].data = [globalSummary.mandiri, globalSummary.bantuan];
-                setDonutLabel('donutMandiriLegend', globalSummary.mandiri, globalSummary.bantuan, 'Penyelesaian TAC');
-            } else if (chartId === 'chartWorkloadMix') {
-                chart.data.datasets[0].data = [globalWorkload.case, globalWorkload.activity];
-                setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Case');
-            } else if (chartId === 'barResponseThreshold') {
-                chart.data.datasets[0].data = [globalSummary.avg_time];
-                chart.data.datasets[0].backgroundColor = globalSummary.avg_time > 15 ? colors.rose : colors.emerald;
-            }
-        } else {
-            // Staff Specific
-            const s = rawStaffData[index];
-            if (chartId === 'chartDailyTrend' && s.daily_history) {
-                chart.data.datasets[0].data = s.daily_history.cases;
-                chart.data.datasets[1].data = s.daily_history.activities;
-            } else if (chartId === 'donutInisiatif') {
-                chart.data.datasets[0].data = [s.inisiatif_count, (s.total_case - s.inisiatif_count)];
-                setDonutLabel('donutInisiatifLegend', s.inisiatif_count, (s.total_case - s.inisiatif_count),
-                    'Temuan TAC');
-            } else if (chartId === 'donutMandiri') {
-                chart.data.datasets[0].data = [s.mandiri_count, (s.total_case - s.mandiri_count)];
-                setDonutLabel('donutMandiriLegend', s.mandiri_count, (s.total_case - s.mandiri_count),
-                    'Penyelesaian TAC');
-            } else if (chartId === 'chartWorkloadMix') {
-                chart.data.datasets[0].data = [s.cases, s.activities];
-                setDonutLabel('workloadLegend', s.cases, s.activities, 'Case');
-            } else if (chartId === 'barResponseThreshold') {
-                chart.data.datasets[0].data = [s.avg_time];
-                chart.data.datasets[0].backgroundColor = s.avg_time > 15 ? colors.rose : colors.emerald;
-            }
+        // 1. Ambil Sumber Data berdasarkan pilihan (Global vs Staff)
+        const isAll = (index === 'all');
+        const dataSrc = isAll ? globalSummary : masterStaffData[index];
+        const workloadSrc = isAll ? globalWorkload : masterStaffData[index];
+
+        // 2. Logika Update berdasarkan Chart ID
+        switch (chartId) {
+            case 'chartDailyTrend':
+                const trendSrc = isAll ? globalTrend : masterStaffData[index].daily_history;
+                chart.data.datasets[0].data = trendSrc.cases;
+                chart.data.datasets[1].data = trendSrc.activities;
+                break;
+
+            case 'donutInisiatif':
+                // Temuan (val1) vs Laporan (val2)
+                val1 = isAll ? dataSrc.proaktif : dataSrc.inisiatif_count;
+                val2 = isAll ? dataSrc.penugasan : (dataSrc.total_case - dataSrc.inisiatif_count);
+                label = 'Temuan TAC';
+
+                chart.data.datasets[0].data = [val1, val2];
+                setDonutLabel('donutInisiatifLegend', val1, (val1 + val2), label);
+                break;
+
+            case 'donutMandiri':
+                // Mandiri (val1) vs Bantuan (val2)
+                val1 = isAll ? dataSrc.mandiri : dataSrc.mandiri_count;
+                val2 = isAll ? dataSrc.bantuan : (dataSrc.total_case - dataSrc.mandiri_count);
+                label = 'Penyelesaian TAC';
+
+                chart.data.datasets[0].data = [val1, val2];
+                setDonutLabel('donutMandiriLegend', val1, (val1 + val2), label);
+                break;
+
+            case 'chartWorkloadMix':
+                // Case (val1) vs Activity (val2)
+                val1 = isAll ? workloadSrc.case : dataSrc.total_case;
+                val2 = isAll ? workloadSrc.activity : dataSrc.activities;
+                label = 'Case';
+
+                chart.data.datasets[0].data = [val1, val2];
+                setDonutLabel('workloadLegend', val1, (val1 + val2), label);
+                break;
+
+            case 'barResponseThreshold':
+                const avg = isAll ? dataSrc.avg_time : dataSrc.avg_time;
+                chart.data.datasets[0].data = [avg];
+                chart.data.datasets[0].backgroundColor = avg > 15 ? colors.rose : colors.emerald;
+                break;
         }
+
         chart.update();
     }
 
@@ -506,7 +517,7 @@
         },
         options: donutOpt
     });
-    setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, globalSummary.penugasan, 'Temuan TAC');
+    setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, (globalSummary.proaktif + globalSummary.penugasan), 'Temuan TAC');
 
     new Chart(document.getElementById('donutMandiri'), {
         type: 'doughnut',
@@ -519,7 +530,7 @@
         },
         options: donutOpt
     });
-    setDonutLabel('donutMandiriLegend', globalSummary.mandiri, globalSummary.bantuan, 'Penyelesaian TAC');
+    setDonutLabel('donutMandiriLegend', globalSummary.mandiri, (globalSummary.mandiri + globalSummary.bantuan), 'Penyelesaian TAC');
 
     new Chart(document.getElementById('chartWorkloadMix'), {
         type: 'doughnut',
@@ -532,7 +543,7 @@
         },
         options: donutOpt
     });
-    setDonutLabel('workloadLegend', globalWorkload.case, globalWorkload.activity, 'Case');
+setDonutLabel('workloadLegend', globalWorkload.case, (globalWorkload.case + globalWorkload.activity), 'Case');
 
     // 3. Productivity Ratio
     new Chart(document.getElementById('chartStaffProductivity'), {

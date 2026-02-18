@@ -89,4 +89,37 @@ class ReportController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function destroyRange(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'user_id' => 'nullable|exists:users,id'
+        ]);
+
+        try {
+            $query = DailyReport::whereBetween('tanggal', [$request->start_date, $request->end_date]);
+
+            // Jika manager memilih staff spesifik, hanya hapus data staff tersebut
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+
+            $count = $query->count();
+
+            if ($count === 0) {
+                return response()->json(['message' => 'Tidak ada data ditemukan pada periode tersebut.'], 404);
+            }
+
+            $query->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus $count laporan beserta detail kegiatannya."
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal menghapus data: ' . $e->getMessage()], 500);
+        }
+    }
 }
