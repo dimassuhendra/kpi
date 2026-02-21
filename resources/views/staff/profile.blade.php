@@ -32,8 +32,8 @@
                         <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">ACTIVE</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Role</span>
-                        <span class="text-[10px] text-slate-300 font-bold uppercase">Staff TAC</span>
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Role / Divisi</span>
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">Staff / {{ $user->divisi->nama_divisi }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Bergabung</span>
