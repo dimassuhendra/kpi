@@ -2,6 +2,22 @@
 
 @section('content')
     <div class="p-6 space-y-8 max-w-7xl mx-auto">
+        {{-- Alert Error Validasi --}}
+        @if ($errors->any())
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4 shadow-sm">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span class="font-bold">Terjadi Kesalahan:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs font-bold">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Header Section --}}
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>
                 <nav class="flex mb-2" aria-label="Breadcrumb">
@@ -16,8 +32,7 @@
                     User <span class="text-emerald-600">Management</span>
                 </h1>
                 <p class="text-sm font-medium text-slate-500 mt-1">
-                    Total <span class="text-slate-800 font-bold">{{ $users->count() }}</span> staff terdaftar dalam sistem
-                    monitoring.
+                    Total <span class="text-slate-800 font-bold">{{ $users->count() }}</span> staff terdaftar dalam sistem.
                 </p>
             </div>
 
@@ -49,6 +64,7 @@
             </div>
         </div>
 
+        {{-- Table Section --}}
         <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -93,7 +109,6 @@
                                         </div>
                                     </div>
                                 </td>
-
                                 <td class="px-6 py-5 text-center">
                                     <div class="flex flex-col items-center gap-1">
                                         <span
@@ -104,7 +119,6 @@
                                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $u->role }}</span>
                                     </div>
                                 </td>
-
                                 <td class="px-6 py-5 text-center">
                                     @if ($u->latestReport)
                                         <div class="flex flex-col items-center">
@@ -124,29 +138,24 @@
                                         </span>
                                     @endif
                                 </td>
-
                                 <td class="pr-8 py-5 text-right">
                                     <div
                                         class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-
                                         <button onclick="exportUserPdf({{ $u->id }})"
                                             title="Download Laporan Bulanan"
                                             class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-500 hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg transition-all flex items-center justify-center">
                                             <i class="fas fa-file-pdf text-xs"></i>
                                         </button>
-
                                         <button
                                             onclick="openUserModal('edit', {{ $u->id }}, '{{ $u->nama_lengkap }}', '{{ $u->email }}', {{ $u->divisi_id }}, '{{ $u->role }}')"
-                                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg hover:shadow-emerald-100 transition-all flex items-center justify-center">
+                                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg transition-all flex items-center justify-center">
                                             <i class="fas fa-pen text-xs"></i>
                                         </button>
-
                                         <form action="{{ route('manager.users.destroy', $u->id) }}" method="POST"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
-                                            class="inline">
+                                            onsubmit="return confirm('Apakah Anda yakin?')" class="inline">
                                             @csrf @method('DELETE')
                                             <button type="submit"
-                                                class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-rose-500 hover:text-rose-500 hover:shadow-lg hover:shadow-rose-100 transition-all flex items-center justify-center">
+                                                class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:border-rose-500 hover:text-rose-500 hover:shadow-lg transition-all flex items-center justify-center">
                                                 <i class="fas fa-trash-alt text-xs"></i>
                                             </button>
                                         </form>
@@ -160,6 +169,7 @@
         </div>
     </div>
 
+    {{-- Modal Overlay --}}
     <div id="userModalOverlay"
         class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] items-center justify-center p-4">
         <div class="w-full max-w-md bg-white rounded-[3rem] shadow-2xl border border-white p-2 transform transition-all">
@@ -178,7 +188,9 @@
                 <form id="userForm" method="POST" class="space-y-5">
                     @csrf
                     <div id="methodPlaceholder"></div>
+
                     <div class="space-y-4">
+                        {{-- Field Role --}}
                         <div id="roleSelectionContainer" class="hidden relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Akses
@@ -186,6 +198,7 @@
                             <div class="relative">
                                 <select name="role" id="u_role"
                                     class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all appearance-none font-bold text-slate-700">
+                                    <option value="staff">STAFF</option> {{-- PENTING: Harus ada agar JS bisa set value staff --}}
                                     <option value="manager">MANAGER</option>
                                     <option value="gm">GENERAL MANAGER (GM)</option>
                                 </select>
@@ -194,14 +207,17 @@
                             </div>
                         </div>
 
+                        {{-- Field Nama --}}
                         <div class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Nama
                                 Lengkap</label>
-                            <input type="text" name="nama_lengkap" id="u_nama_lengkap" required placeholder="John Doe"
+                            <input type="text" name="nama_lengkap" id="u_nama_lengkap" required
+                                placeholder="John Doe"
                                 class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300 font-medium">
                         </div>
 
+                        {{-- Field Email --}}
                         <div class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Email
@@ -210,6 +226,7 @@
                                 class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium">
                         </div>
 
+                        {{-- Field Divisi --}}
                         <div id="divisiContainer" class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Divisi
@@ -226,6 +243,7 @@
                             </div>
                         </div>
 
+                        {{-- Field Password --}}
                         <div id="passwordContainer" class="relative">
                             <label
                                 class="text-[10px] uppercase font-black text-slate-400 mb-1.5 ml-4 block tracking-widest">Master
@@ -237,11 +255,13 @@
 
                     <div class="flex flex-col gap-3 pt-4">
                         <button type="submit"
-                            class="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">Simpan
-                            Perubahan</button>
+                            class="w-full py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-[0.98]">
+                            Simpan Data
+                        </button>
                         <button type="button" onclick="closeUserModal()"
-                            class="w-full py-4 bg-transparent text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-all">Batalkan
-                            & Kembali</button>
+                            class="w-full py-4 bg-transparent text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-all">
+                            Batalkan & Kembali
+                        </button>
                     </div>
                 </form>
             </div>
@@ -252,11 +272,10 @@
         const overlay = document.getElementById('userModalOverlay');
         const form = document.getElementById('userForm');
 
-        // Fungsi Baru: Export PDF via Form Post Dinamis
         function exportUserPdf(userId) {
             const formExport = document.createElement('form');
             formExport.method = 'POST';
-            formExport.action = "{{ route('manager.export.pdf') }}"; // Pastikan route ini ada di web.php
+            formExport.action = "{{ route('manager.export.pdf') }}";
             formExport.target = '_blank';
 
             const csrfInput = document.createElement('input');
@@ -288,39 +307,51 @@
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
+
+            // Reset form ke awal
             form.reset();
+            document.getElementById('methodPlaceholder').innerHTML = "";
 
             if (type === 'create') {
                 document.getElementById('modalTitle').innerText = "Register New Staff";
                 form.action = "{{ route('manager.users.store') }}";
-                document.getElementById('methodPlaceholder').innerHTML = "";
+
                 roleContainer.classList.add('hidden');
                 inputRole.value = 'staff';
+
                 divisiContainer.classList.remove('hidden');
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
                 passwordContainer.style.display = 'block';
                 inputPassword.required = true;
+
             } else if (type === 'create_managerial') {
                 document.getElementById('modalTitle').innerText = "Managerial Access";
                 form.action = "{{ route('manager.users.store') }}";
-                document.getElementById('methodPlaceholder').innerHTML = "";
+
                 roleContainer.classList.remove('hidden');
                 inputRole.value = 'manager';
+
+                // Set default Backoffice (ID 3)
                 inputDivisi.value = "3";
                 divisiContainer.classList.add('hidden');
+
                 inputNama.readOnly = false;
                 inputEmail.readOnly = false;
                 passwordContainer.style.display = 'block';
                 inputPassword.required = true;
+
             } else {
+                // MODE EDIT
                 document.getElementById('modalTitle').innerText = "Update Profile";
                 form.action = "/manager/users/" + id;
                 document.getElementById('methodPlaceholder').innerHTML = '@method('PUT')';
+
                 inputNama.value = nama_lengkap;
                 inputEmail.value = email;
                 inputDivisi.value = divisiId;
                 inputRole.value = role;
+
                 roleContainer.classList.add('hidden');
                 divisiContainer.classList.remove('hidden');
                 inputNama.readOnly = true;

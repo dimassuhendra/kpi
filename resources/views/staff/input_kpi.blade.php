@@ -14,20 +14,26 @@
 
             <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 @if (auth()->user()->divisi_id == 1)
-                    {{-- KHUSUS TAC --}}
+                    {{-- TOMBOL KHUSUS TAC --}}
                     <button type="button" @click="addActivity()"
                         class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center">
                         <i class="fas fa-tasks mr-2"></i> + Activity Umum
                     </button>
                     <button type="button" @click="addRow()"
-                        class="bg-primary hover:bg-accent text-secondary font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center">
+                        class="bg-primary hover:bg-accent text-secondary font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center">
                         <i class="fas fa-plus mr-2"></i> + Technical Case
                     </button>
-                @else
-                    {{-- KHUSUS INFRASTRUKTUR --}}
+                @elseif (auth()->user()->divisi_id == 2)
+                    {{-- TOMBOL KHUSUS INFRA --}}
                     <button type="button" @click="addInfraActivity()"
-                        class="bg-primary hover:bg-accent text-secondary font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center">
-                        <i class="fas fa-hammer mr-2"></i> + Tambah Kegiatan Infra
+                        class="bg-primary hover:bg-accent text-secondary font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center">
+                        <i class="fas fa-tools mr-2"></i> + Tambah Kegiatan Infra
+                    </button>
+                @else
+                    {{-- TOMBOL KHUSUS BACKOFFICE --}}
+                    <button type="button" @click="addBoActivity()"
+                        class="bg-primary hover:bg-accent text-secondary font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center">
+                        <i class="fas fa-edit mr-2"></i> + Tambah Kegiatan Backoffice
                     </button>
                 @endif
             </div>
@@ -36,9 +42,7 @@
         <form action="{{ route('staff.kpi.store') }}" method="POST">
             @csrf
 
-            {{-- ========================================== --}}
-            {{-- VIEW KHUSUS TAC (DIVISI 1)                --}}
-            {{-- ========================================== --}}
+            {{-- 1. VIEW TAC (DIVISI 1) --}}
             @if (auth()->user()->divisi_id == 1)
                 {{-- SECTION 1: TECHNICAL CASES --}}
                 <div class="mb-10" x-show="rows.length > 0">
@@ -119,17 +123,16 @@
                                         class="w-full bg-secondary/30 border border-white/5 rounded-xl px-4 py-2 text-white outline-none"
                                         required>
                                 </div>
-                                <button type="button" @click="removeActivity(index)" class="text-red-500 p-2"><i
-                                        class="fas fa-trash"></i></button>
+                                <button type="button" @click="removeActivity(index)" class="text-red-500 p-2">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                {{-- ========================================== --}}
-                {{-- VIEW KHUSUS INFRASTRUKTUR (DIVISI 2)      --}}
-                {{-- ========================================== --}}
-            @else
+                {{-- 2. VIEW INFRASTRUKTUR (DIVISI 2) --}}
+            @elseif (auth()->user()->divisi_id == 2)
                 <div class="mb-10">
                     <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
                         <i class="fas fa-tools mr-3"></i> Infrastruktur Daily Activities
@@ -141,9 +144,7 @@
                                     class="absolute top-4 right-4 text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl transition">
                                     <i class="fas fa-times-circle text-xl"></i>
                                 </button>
-
                                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                                    {{-- Kolom Kiri: Nama & Kategori --}}
                                     <div class="md:col-span-4 space-y-4">
                                         <div>
                                             <label
@@ -167,8 +168,6 @@
                                                 placeholder="Contoh: Pemasangan NVR Baru" required>
                                         </div>
                                     </div>
-
-                                    {{-- Kolom Kanan: Deskripsi Detail --}}
                                     <div class="md:col-span-8">
                                         <label
                                             class="text-[10px] uppercase text-primary font-bold ml-1 tracking-widest">Deskripsi
@@ -180,7 +179,6 @@
                                 </div>
                             </div>
                         </template>
-
                         <div x-show="infra_activities.length === 0"
                             class="text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
                             <i class="fas fa-hard-hat text-4xl text-slate-700 mb-4 block"></i>
@@ -189,8 +187,50 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- 3. VIEW BACKOFFICE (DIVISI LAINNYA/3) --}}
+            @else
+                <div class="mb-10">
+                    <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
+                        <i class="fas fa-briefcase mr-3"></i> Backoffice Daily Activities
+                    </h2>
+                    <div class="space-y-4">
+                        <template x-for="(bo, index) in bo_activities" :key="index">
+                            <div class="organic-card p-6 border-l-4 border-primary relative animate-fadeIn">
+                                <button type="button" @click="removeBoActivity(index)"
+                                    class="absolute top-4 right-4 text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl transition">
+                                    <i class="fas fa-times-circle text-xl"></i>
+                                </button>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label class="text-[10px] uppercase text-primary font-bold ml-1">Judul
+                                            Kegiatan</label>
+                                        <input type="text" :name="'bo_activity[' + index + '][judul]'"
+                                            x-model="bo.judul"
+                                            class="w-full bg-secondary/50 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary"
+                                            placeholder="Contoh: Rekap Data Absensi" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] uppercase text-primary font-bold ml-1">Detail
+                                            Activity</label>
+                                        <textarea :name="'bo_activity[' + index + '][deskripsi]'" x-model="bo.deskripsi" rows="3"
+                                            class="w-full bg-secondary/50 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-primary resize-none"
+                                            placeholder="Jelaskan detail apa yang dikerjakan..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="bo_activities.length === 0"
+                            class="text-center py-20 border-2 border-dashed border-white/5 rounded-3xl">
+                            <i class="fas fa-folder-open text-4xl text-slate-700 mb-4 block"></i>
+                            <p class="text-slate-500 italic uppercase text-xs tracking-widest">Belum ada laporan kegiatan
+                                backoffice</p>
+                        </div>
+                    </div>
+                </div>
             @endif
 
+            {{-- SUBMIT BUTTON --}}
             <div class="mt-10 flex justify-end border-t border-white/5 pt-8 mb-20">
                 <button type="submit"
                     class="w-full md:w-auto px-12 py-4 rounded-2xl bg-primary text-secondary font-bold hover:bg-accent transition shadow-xl shadow-primary/20 flex items-center justify-center">
@@ -203,17 +243,19 @@
     <script>
         function kpiForm() {
             return {
-                // State untuk TAC
+                // State
                 rows: @json($formattedRows ?? []),
                 activities: [],
-
-                // State untuk INFRA
                 infra_activities: [],
+                bo_activities: [],
 
                 init() {
-                    // Jika Infra dan masih kosong, kasih 1 baris awal
-                    if ({{ auth()->user()->divisi_id }} != 1 && this.infra_activities.length === 0) {
+                    const divisiId = {{ auth()->user()->divisi_id }};
+                    // Auto-tambah baris jika masih kosong saat load
+                    if (divisiId == 2 && this.infra_activities.length === 0) {
                         this.addInfraActivity();
+                    } else if (divisiId != 1 && divisiId != 2 && this.bo_activities.length === 0) {
+                        this.addBoActivity();
                     }
                 },
 
@@ -249,6 +291,17 @@
                 },
                 removeInfraActivity(index) {
                     this.infra_activities.splice(index, 1);
+                },
+
+                // Method BACKOFFICE
+                addBoActivity() {
+                    this.bo_activities.push({
+                        judul: '',
+                        deskripsi: ''
+                    });
+                },
+                removeBoActivity(index) {
+                    this.bo_activities.splice(index, 1);
                 }
             }
         }

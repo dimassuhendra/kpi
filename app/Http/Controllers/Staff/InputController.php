@@ -15,30 +15,16 @@ class InputController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        // Ambil variabel KPI sesuai divisi (untuk TAC biasanya Case, untuk Infra biasanya Kategori)
         $variabelKpis = VariabelKpi::where('divisi_id', $user->divisi_id)->get();
 
-        // Logika baris awal (formattedRows)
-        if ($user->divisi_id == 2) {
-            // Baris awal default untuk tim Infrastruktur
-            $formattedRows = [[
-                'nama_kegiatan' => '',
-                'deskripsi' => '',
-                'kategori' => 'Network',
-            ]];
-        } else {
-            // Baris awal default untuk tim TAC
-            $formattedRows = [[
-                'deskripsi' => '',
-                'respons' => '',
-                'temuan_sendiri' => false,
-                'is_mandiri' => 1,
-                'pic_name' => ''
-            ]];
+        if ($user->divisi_id == 1) { // TAC
+            $formattedRows = [['deskripsi' => '', 'respons' => '', 'temuan_sendiri' => false, 'is_mandiri' => 1, 'pic_name' => '']];
+        } elseif ($user->divisi_id == 2) { // INFRA
+            $formattedRows = [['nama_kegiatan' => '', 'deskripsi' => '', 'kategori' => 'Network']];
+        } else { // BACKOFFICE (ID 3 atau lainnya)
+            $formattedRows = [['judul' => '', 'deskripsi' => '']];
         }
 
-        // SEMUA DIVISI diarahkan ke file yang sama: staff/input_kpi.blade.php
         return view('staff.input_kpi', compact('variabelKpis', 'formattedRows'));
     }
 
@@ -48,14 +34,13 @@ class InputController extends Controller
         $hariIni = now()->toDateString();
 
         // 1. Validasi awal: Memastikan ada input yang dikirim
-        if ($user->divisi_id == 1) { // Logika TAC
-            if (!$request->has('case') && !$request->has('activity')) {
-                return back()->with('error', 'Mohon isi setidaknya satu kegiatan (Case atau Activity).');
-            }
-        } else { // Logika Infra
-            if (!$request->has('infra_activity')) {
-                return back()->with('error', 'Mohon isi setidaknya satu kegiatan infrastruktur.');
-            }
+        // 1. Validasi awal
+        if ($user->divisi_id == 1) {
+            if (!$request->has('case') && !$request->has('activity')) return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
+        } elseif ($user->divisi_id == 2) {
+            if (!$request->has('infra_activity')) return back()->with('error', 'Mohon isi setidaknya satu kegiatan infrastruktur.');
+        } else { // BACKOFFICE
+            if (!$request->has('bo_activity')) return back()->with('error', 'Mohon isi setidaknya satu kegiatan backoffice.');
         }
 
         // 2. LOGIKA UTAMA: Cari laporan yang sudah ada atau buat baru
@@ -130,6 +115,22 @@ class InputController extends Controller
                         'kategori'           => $infra['kategori'],
                         'deskripsi_kegiatan' => $infra['nama_kegiatan'] . ': ' . $infra['deskripsi'],
                         'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
+                    ]);
+                }
+            }
+            
+        } else {
+            $vBo = VariabelKpi::where('divisi_id', $user->divisi_id)->first();
+
+            if ($request->has('bo_activity')) {
+                foreach ($request->bo_activity as $bo) {
+                    if (empty($bo['judul'])) continue;
+
+                    KegiatanDetail::create([
+                        'daily_report_id'    => $report->id,
+                        'tipe_kegiatan'      => 'activity',
+                        'deskripsi_kegiatan' => $bo['judul'] . ': ' . $bo['deskripsi'],
+                        'variabel_kpi_id'    => $vBo ? $vBo->id : null,
                     ]);
                 }
             }
