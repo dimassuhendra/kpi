@@ -104,7 +104,7 @@ class DashboardController extends Controller
                 ->selectRaw('temuan_sendiri, count(*) as total')
                 ->groupBy('temuan_sendiri')->get();
 
-        } elseif ($user->divisi_id == 6) {
+        } elseif ($user->divisi_id == 4) {
             // ==========================================
             // LOGIKA BACKOFFICE (SEDERHANA)
             // ==========================================

@@ -150,7 +150,7 @@
         @endif
 
         {{-- --- LOGIKA KHUSUS DIVISI 6: BACKOFFICE --- --}}
-        @if (Auth::user()->divisi_id == 6)
+        @if (Auth::user()->divisi_id == 4)
             <div class="organic-card p-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div>
