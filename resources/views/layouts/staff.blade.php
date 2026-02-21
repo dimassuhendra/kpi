@@ -7,7 +7,9 @@
     <title>Staff Dashboard - KPI System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Bree+Serif:wght@400;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Bree+Serif:wght@400;800&display=swap"
+        rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -112,8 +114,7 @@
                 <div class="flex items-center">
                     <a href="#" class="flex-shrink-0 flex items-center group">
                         <img class="h-10 w-auto md:h-12 logo-silhouette group-hover:scale-110 transition-transform"
-                            src="{{ asset('img/logo.png') }}"
-                            alt="Logo KPI System">
+                            src="{{ asset('img/logo.png') }}" alt="Logo KPI System">
                     </a>
 
                     <div class="hidden lg:ml-10 lg:flex lg:space-x-2">
@@ -132,10 +133,13 @@
                             <i class="fas fa-history mr-1"></i> Submission Logs
                         </a>
 
-                        <a href="{{ route('staff.kpi.achievements') }}"
-                            class="nav-link px-4 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'active text-primary' : 'text-slate-300 hover:text-primary' }}">
-                            <i class="fas fa-chart-line mr-1"></i> Achievement Stats
-                        </a>
+                        {{-- Sembunyikan jika divisi_id == 6 --}}
+                        @if (Auth::user()->divisi_id != 6)
+                            <a href="{{ route('staff.kpi.achievements') }}"
+                                class="nav-link px-4 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'active text-primary' : 'text-slate-300 hover:text-primary' }}">
+                                <i class="fas fa-chart-line mr-1"></i> Achievement Stats
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -150,8 +154,10 @@
                     </div>
 
                     <div class="relative group cursor-pointer">
-                        <div class="w-11 h-11 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg group-hover:rotate-6 transition-all">
-                            <a href="{{ route('staff.profile.edit') }}"><i class="fas fa-user-astronaut text-xl text-white"></i></a>
+                        <div
+                            class="w-11 h-11 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center border-2 border-white/10 shadow-lg group-hover:rotate-6 transition-all">
+                            <a href="{{ route('staff.profile.edit') }}"><i
+                                    class="fas fa-user-astronaut text-xl text-white"></i></a>
                         </div>
                     </div>
 
@@ -159,14 +165,16 @@
 
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="group flex items-center justify-center w-11 h-11 bg-red-500/10 hover:bg-red-500 rounded-2xl transition-all duration-300">
+                        <button type="submit"
+                            class="group flex items-center justify-center w-11 h-11 bg-red-500/10 hover:bg-red-500 rounded-2xl transition-all duration-300">
                             <i class="fas fa-power-off text-red-500 group-hover:text-white"></i>
                         </button>
                     </form>
                 </div>
 
                 <div class="flex items-center lg:hidden">
-                    <button id="menu-btn" class="inline-flex items-center justify-center p-2 rounded-2xl bg-white/5 hover:bg-white/10 focus:outline-none transition-all">
+                    <button id="menu-btn"
+                        class="inline-flex items-center justify-center p-2 rounded-2xl bg-white/5 hover:bg-white/10 focus:outline-none transition-all">
                         <i id="menu-icon" class="fas fa-bars-staggered text-xl text-primary"></i>
                     </button>
                 </div>
@@ -191,24 +199,31 @@
                     <i class="fas fa-history mr-3"></i> Submission Logs
                 </a>
 
-                <a href="{{ route('staff.kpi.achievements') }}"
-                    class="flex items-center px-4 py-4 rounded-3xl transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 'text-slate-300 hover:bg-white/5' }}">
-                    <i class="fas fa-chart-line mr-3"></i> Achievement Stats
-                </a>
+                @if (Auth::user()->divisi_id != 6)
+                    <a href="{{ route('staff.kpi.achievements') }}"
+                        class="flex items-center px-4 py-4 rounded-3xl transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 'text-slate-300 hover:bg-white/5' }}">
+                        <i class="fas fa-chart-line mr-3"></i> Achievement Stats
+                    </a>
+                @endif
 
                 <div class="my-6 border-t border-white/5 pt-6">
                     <div class="flex items-center px-4 py-2 mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-emerald-500/20">
-                            <a href="{{ route('staff.profile.edit') }}"><i class="fas fa-user text-xl text-white"></i></a>
+                        <div
+                            class="w-12 h-12 bg-gradient-to-tr from-primary to-emerald-700 rounded-2xl flex items-center justify-center mr-4 shadow-lg shadow-emerald-500/20">
+                            <a href="{{ route('staff.profile.edit') }}"><i
+                                    class="fas fa-user text-xl text-white"></i></a>
                         </div>
                         <div>
-                            <p class="text-base font-bold text-white">{{ Auth::user()->nama_lengkap ?? 'Staff Name' }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wider">{{ Auth::user()->divisi->nama_divisi ?? 'No Desc' }}</p>
+                            <p class="text-base font-bold text-white">{{ Auth::user()->nama_lengkap ?? 'Staff Name' }}
+                            </p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider">
+                                {{ Auth::user()->divisi->nama_divisi ?? 'No Desc' }}</p>
                         </div>
                     </div>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
+                        <button type="submit"
+                            class="w-full flex items-center justify-center px-4 py-4 rounded-3xl bg-red-500/10 text-red-500 font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                             <i class="fas fa-sign-out-alt mr-2"></i> Logout
                         </button>
                     </form>

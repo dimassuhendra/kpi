@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Staff;
+
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,8 @@ class DashboardController extends Controller
         $sourceData = collect();
         $weeklyCount = 0;
         $monthlyCount = 0;
+        $lastReportDate = [];
+        $yesterdayActivities = [];
 
         // --- LOGIKA DATA BERDASARKAN ID DIVISI ---
         if ($user->divisi_id == 2) {
@@ -75,7 +78,7 @@ class DashboardController extends Controller
                     }
                     return $res;
                 })->values();
-        } else {
+        } elseif ($user->divisi_id == 1) {
             // DIVISI TAC (Default)
             $weeklyCount = DB::table('kegiatan_detail')
                 ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
@@ -100,6 +103,42 @@ class DashboardController extends Controller
                 ->where('daily_reports.user_id', $user->id)
                 ->selectRaw('temuan_sendiri, count(*) as total')
                 ->groupBy('temuan_sendiri')->get();
+
+        } elseif ($user->divisi_id == 6) {
+            // ==========================================
+            // LOGIKA BACKOFFICE (SEDERHANA)
+            // ==========================================
+
+            // 1. Hitung total aktivitas minggu ini & bulan ini
+            $weeklyCount = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereBetween('daily_reports.tanggal', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()])
+                ->count();
+
+            $monthlyCount = DB::table('kegiatan_detail')
+                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                ->where('daily_reports.user_id', $user->id)
+                ->whereMonth('daily_reports.tanggal', $now->month)
+                ->count();
+
+            // 2. Ambil Daftar Pekerjaan Kemarin (Last Working Day)
+            // Kita cari tanggal laporan terakhir sebelum hari ini
+            $lastReportDate = DB::table('daily_reports')
+                ->where('user_id', $user->id)
+                ->where('tanggal', '<', $now->toDateString())
+                ->orderBy('tanggal', 'DESC')
+                ->value('tanggal');
+
+            $yesterdayActivities = [];
+            if ($lastReportDate) {
+                $yesterdayActivities = DB::table('kegiatan_detail')
+                    ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
+                    ->where('daily_reports.user_id', $user->id)
+                    ->where('daily_reports.tanggal', $lastReportDate)
+                    ->select('kegiatan_detail.*', 'daily_reports.tanggal')
+                    ->get();
+            }
         }
 
         // Kirim ke SATU file blade yang sama
@@ -112,7 +151,9 @@ class DashboardController extends Controller
             'weeklyCount',
             'monthlyCount',
             'autonomyData',
-            'sourceData'
+            'sourceData',
+            'lastReportDate',
+            'yesterdayActivities'
         ));
     }
 }
