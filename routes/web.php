@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\UpdateController;
 
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\ProfileController as StaffProfileController;
@@ -26,6 +27,7 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect('/');
 })->name('logout');
+Route::get('/system-updates', [UpdateController::class, 'index'])->name('updates.index');
 
 // Grup Route Dashboard (Gunakan Middleware)
 Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], function () {
