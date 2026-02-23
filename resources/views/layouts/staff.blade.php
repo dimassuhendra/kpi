@@ -100,7 +100,7 @@
         }
 
         .hero-image {
-            background: url("https://images.unsplash.com/photo-1519491056120-d03f1598ca06?q=80&w=2071&auto=format&fit=crop") no-repeat center center;
+            background: url("https://images.unsplash.com/photo-1564121211835-e88c852648ab?q=80&w=2070&auto=format&fit=crop") no-repeat center center;
             background-size: cover;
             position: absolute;
             inset: 0;
@@ -226,7 +226,7 @@
                             Case</a>
                         <a href="{{ route('staff.kpi.logs') }}"
                             class="nav-link {{ request()->routeIs('staff.kpi.logs') ? 'active' : '' }} uppercase">Logs</a>
-                        @if (Auth::user()->divisi_id != 6)
+                        @if (Auth::user()->divisi_id == 1)
                             <a href="{{ route('staff.kpi.achievements') }}"
                                 class="nav-link {{ request()->routeIs('staff.kpi.achievements') ? 'active' : '' }} uppercase">Stats</a>
                         @endif
@@ -289,7 +289,7 @@
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
 
-                @if (Auth::user()->divisi_id != 6)
+                @if (Auth::user()->divisi_id == 1)
                     <a href="{{ route('staff.kpi.achievements') }}"
                         class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
                         <span class="flex items-center gap-3"><i class="fas fa-chart-line w-5"></i> Achievement
@@ -329,9 +329,11 @@
 
     <main class="flex-grow relative z-10">
         <div class="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
+
             <div class="hero-container mb-6 lg:mb-10">
                 <div class="hero-image"></div>
                 <div class="hero-overlay"></div>
+
                 <div class="relative z-10 h-full p-6 lg:p-10 flex flex-col justify-between gap-8">
                     <div class="flex justify-between items-start">
                         <div
@@ -339,6 +341,7 @@
                             <i class="fas fa-clock text-gold-400 animate-pulse"></i>
                             <span id="next-prayer">Memuat Jadwal...</span>
                         </div>
+
                         <div class="text-right text-white">
                             <div id="digital-clock"
                                 class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-gold-400">00:00:00
@@ -348,12 +351,13 @@
                                 Loading...</div>
                         </div>
                     </div>
+
                     <div>
-                        <h1 class="text-xl lg:text-3xl font-black text-white tracking-tight uppercase leading-tight">
+                        <h1 class="text-xl lg:text-3xl font-black text-white tracking-tight uppercase">
                             Selamat Berpuasa, </br><span class="text-gold-400">{{ Auth::user()->nama_lengkap }}</span>
                         </h1>
                         <p class="text-slate-300 text-[9px] font-bold uppercase tracking-[0.2em] mt-1 italic">
-                            "Dedikasi Anda adalah kunci kesuksesan tim kami."
+                            "Semoga keberkahan menyertai setiap pekerjaan Anda hari ini."
                         </p>
                     </div>
                 </div>
@@ -445,14 +449,23 @@
         }
         animate();
 
-        // Prayer Logic
+        // ============================================
+        // Logic JS untuk modul Waktu Sholat
+        // ============================================
+
         async function updatePrayerSchedule() {
             const prayerElement = document.getElementById('next-prayer');
+            const city = "Bandar Lampung";
+            const country = "Indonesia";
+
             try {
+                // Mengambil jadwal berdasarkan tanggal hari ini
                 const response = await fetch(
-                    `https://api.aladhan.com/v1/timingsByCity?city=Bandar Lampung&country=Indonesia&method=11`);
+                    `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=11`);
                 const data = await response.json();
                 const timings = data.data.timings;
+
+                // Daftar waktu yang ingin dipantau (Termasuk Imsak)
                 const schedule = [{
                         name: "Imsak",
                         time: timings.Imsak
@@ -478,29 +491,43 @@
                         time: timings.Isha
                     }
                 ];
+
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-                let nextPrayer = schedule[0];
+
+                let nextPrayer = schedule[0]; // Default ke Imsak besok jika sudah lewat Isya
                 let found = false;
+
                 for (let item of schedule) {
-                    const [h, m] = item.time.split(':').map(Number);
-                    if ((h * 60 + m) > currentTime) {
+                    const [hours, minutes] = item.time.split(':').map(Number);
+                    const prayerTimeInMinutes = hours * 60 + minutes;
+
+                    if (prayerTimeInMinutes > currentTime) {
                         nextPrayer = item;
                         found = true;
                         break;
                     }
                 }
-                prayerElement.innerHTML =
-                    `<span class="text-gold-400">${found ? nextPrayer.name : 'Imsak Besok'} ${nextPrayer.time}</span>`;
-            } catch (e) {
-                prayerElement.innerText = "Jadwal Offline";
+
+                // Tampilkan hasil
+                const statusText = found ? nextPrayer.name : `Imsak Besok`;
+                prayerElement.innerHTML = `
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-gold-400">${statusText} ${nextPrayer.time}</span>
+                        <span class="text-[8px] opacity-80">${city}</span>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error("Gagal mengambil jadwal sholat:", error);
+                prayerElement.innerText = "Jadwal Tidak Tersedia";
             }
         }
-        updatePrayerSchedule();
 
-        // ============================================
-        // Logic JS untuk modul Pembaruan Sistem
-        // ============================================
+        // Jalankan saat load dan update setiap 1 menit
+        updatePrayerSchedule();
+        setInterval(updatePrayerSchedule, 60000);
+
         // ============================================
         // Logic JS untuk modul Pembaruan Sistem
         // ============================================
