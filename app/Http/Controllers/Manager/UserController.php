@@ -21,22 +21,24 @@ class UserController extends Controller
 
         $users = User::with(['divisi', 'latestReport'])
             ->whereIn('role', ['staff', 'manager', 'gm'])
-            ->where('users.id', '!=', 22) // Sembunyikan ID 22
-            // 1. Urutan Role: GM (1), Manager (2), Sisanya/Staff (3)
+            ->where('users.id', '!=', 22)
+            // Mengambil created_at laporan terakhir sebagai virtual column 'last_report_date'
+            ->addSelect([
+                'last_report_date' => \App\Models\DailyReport::select('created_at')
+                    ->whereColumn('user_id', 'users.id')
+                    ->latest()
+                    ->take(1)
+            ])
+            // 1. Urutan Role (GM > Manager > Staff)
             ->orderByRaw("CASE 
             WHEN role = 'gm' THEN 1 
             WHEN role = 'manager' THEN 2 
             ELSE 3 
-        END ASC")
-            // 2. Jika Role sama-sama GM atau sama-sama Manager, urut Abjad Nama
+            END ASC")
+            // 2. Jika GM/Manager, urut Nama A-Z
             ->orderBy('nama_lengkap', 'asc')
-            // 3. Untuk Staff, urutkan berdasarkan laporan terbaru (Daily Report)
-            ->leftJoin('daily_reports', function ($join) {
-                $join->on('users.id', '=', 'daily_reports.user_id')
-                    ->whereRaw('daily_reports.id = (select max(id) from daily_reports where user_id = users.id)');
-            })
-            ->select('users.*') // Sangat penting agar ID tidak tertukar dengan ID laporan
-            ->orderBy('daily_reports.created_at', 'desc')
+            // 3. Jika Staff, urut berdasarkan laporan terbaru (yang baru kita ambil di atas)
+            ->orderBy('last_report_date', 'desc')
             ->get();
 
         return view('manager.users', compact('users', 'divisis'));
