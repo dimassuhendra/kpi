@@ -19,13 +19,26 @@ class UserController extends Controller
     {
         $divisis = Divisi::all();
 
-        // Mengambil user dengan relasi divisi dan report terbaru
-        $users = User::whereIn('role', ['staff', 'manager', 'gm'])
-            ->with(['divisi', 'latestReport'])
-            ->latest()
+        $users = User::with(['divisi', 'latestReport'])
+            ->whereIn('role', ['staff', 'manager', 'gm'])
+            ->where('users.id', '!=', 22) // Sembunyikan ID 22
+            // 1. Urutan Role: GM (1), Manager (2), Sisanya/Staff (3)
+            ->orderByRaw("CASE 
+            WHEN role = 'gm' THEN 1 
+            WHEN role = 'manager' THEN 2 
+            ELSE 3 
+        END ASC")
+            // 2. Jika Role sama-sama GM atau sama-sama Manager, urut Abjad Nama
+            ->orderBy('nama_lengkap', 'asc')
+            // 3. Untuk Staff, urutkan berdasarkan laporan terbaru (Daily Report)
+            ->leftJoin('daily_reports', function ($join) {
+                $join->on('users.id', '=', 'daily_reports.user_id')
+                    ->whereRaw('daily_reports.id = (select max(id) from daily_reports where user_id = users.id)');
+            })
+            ->select('users.*') // Sangat penting agar ID tidak tertukar dengan ID laporan
+            ->orderBy('daily_reports.created_at', 'desc')
             ->get();
 
-        $users = User::where('id', '!=', 22)->get(); // Mengabaikan ID 22
         return view('manager.users', compact('users', 'divisis'));
     }
 
