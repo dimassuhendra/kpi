@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailyReport extends Model
 {
-    protected $fillable = ['user_id', 'tanggal', 'total_nilai_harian', 'status', 'catatan_manager'];
+    protected $fillable = ['user_id', 'tanggal', 'total_nilai_harian', 'status', 'catatan_manager', 'created_at', 'updated_at'];
 
     public function user()
     {
