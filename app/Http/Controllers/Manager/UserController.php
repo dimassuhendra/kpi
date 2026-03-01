@@ -25,6 +25,7 @@ class UserController extends Controller
             ->latest()
             ->get();
 
+        $users = User::where('id', '!=', 22)->get(); // Mengabaikan ID 22
         return view('manager.users', compact('users', 'divisis'));
     }
 
