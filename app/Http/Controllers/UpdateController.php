@@ -14,16 +14,14 @@ class UpdateController extends Controller
             [
                 'version' => '1.3.1',
                 'date' => '01 Maret 2026',
-                'title' => 'Technical Reporting & GPS Integration',
-                'description' => 'Peningkatan struktur pelaporan teknis, transparansi PIC, dan integrasi modul pemantauan GPS.',
+                'title' => 'Laporan Teknis & Pantauan GPS Baru',
+                'description' => 'Pembaruan cara melapor kegiatan teknik dan pemantauan kendaraan GPS agar lebih detail dan rapi.',
                 'changes' => [
-                    'Optimasi hierarki daftar pengguna berdasarkan jabatan (GM, Manager, Staff).',
-                    'Pemisahan kategori presisi: Monitoring (Network & GPS) masuk ke Technical Activities.',
-                    'Modul Input GPS baru dengan form kendala dan jumlah kendaraan.',
-                    'Sistem klasifikasi penyelesaian tugas: Mandiri (Solo) vs Bantuan (Assist) dengan nama PIC.',
-                    'Otomatisasi pencatatan monitoring GPS "ALL" untuk pemantauan seluruh kendaraan.',
-                    'Visualisasi Badge Manager baru: Ikon Mobil (GPS), Jam (Response Time), dan Jabat Tangan (Assist).',
-                    'Penyederhanaan tampilan General Activities dan pembersihan bug baris kosong pada laporan.'
+                    'Manager: Urutan daftar nama pengguna kini lebih rapi (GM > Manager > Staff).',
+                    'Manager: Badge ketika akan melakukan validasi laporan kini lebih informatif dan jelas.',
+                    'Staff  : Laporan Monitoring (Jaringan & GPS) kini otomatis masuk ke kategori khusus Technical TAC.',
+                    'Staff  : Menu baru untuk lapor activity GPS dengan form yang sudah disesuaikan.',
+                    'Staff  : Tampilan kegiatan umum lebih bersih dan perbaikan error baris kosong saat mengetik laporan.'
                 ],
                 'type' => 'Major'
             ],
