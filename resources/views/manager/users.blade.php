@@ -132,10 +132,19 @@
                                             </span>
                                         </div>
                                     @else
-                                        <span
-                                            class="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest italic">
-                                            No Activity
-                                        </span>
+                                        <div class="flex flex-col items-center opacity-50">
+                                            @if ($u->role === 'staff')
+                                                <i class="fas fa-user-slash text-slate-300 text-lg"></i>
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest italic">
+                                                    No Activity
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="px-4 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-100/50">
+                                                    Akun Manajemen</span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                                 <td class="pr-8 py-5 text-right">
