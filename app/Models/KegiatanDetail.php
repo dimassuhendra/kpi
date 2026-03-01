@@ -20,6 +20,10 @@ class KegiatanDetail extends Model
         'pic_name',
         'nilai_akhir'
     ];
+    
+    protected $casts = [
+        'value_raw' => 'float', // atau 'integer'
+    ];
 
     public function dailyReport()
     {
