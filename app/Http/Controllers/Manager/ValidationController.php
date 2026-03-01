@@ -139,8 +139,14 @@ class ValidationController extends Controller
                 $message .= "🛠 *Technical Activities:*\n";
                 $i = 1;
                 foreach ($cases as $case) {
-                    $proaktif = $case->temuan_sendiri ? " ⚡" : "";
-                    $message .= "{$i}. {$case->deskripsi_kegiatan} (*+{$case->nilai_akhir}*){$proaktif}\n";
+                    // Cek apakah data ini adalah kategori GPS
+                    if ($case->kategori === 'GPS') {
+                        // Jika GPS, tampilkan: Judul (Angka/ALL)
+                        $message .= "{$i}. {$case->deskripsi_kegiatan} ({$case->value_raw})\n";
+                    } else {
+                        // Jika Network (TAC), tampilkan judul saja sesuai permintaan
+                        $message .= "{$i}. {$case->deskripsi_kegiatan}\n";
+                    }
                     $i++;
                 }
                 $message .= "\n";
