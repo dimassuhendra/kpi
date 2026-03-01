@@ -101,14 +101,22 @@ class InputController extends Controller
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
-                        'tipe_kegiatan'      => 'case', // Ubah jadi case agar masuk Technical Activities
-                        // Jika monitoring, jangan hubungkan ke KPI 'Jumlah Case' agar tidak merusak perhitungan rata-rata
+                        'tipe_kegiatan'      => 'case',
                         'variabel_kpi_id'    => (!$isMonitoring && $vCount) ? $vCount->id : null,
                         'deskripsi_kegiatan' => $item['deskripsi'],
                         'value_raw'          => $isMonitoring ? 0 : ($item['respons'] ?? 0),
                         'temuan_sendiri'     => !$isMonitoring && isset($item['temuan_sendiri']) ? 1 : 0,
-                        'is_mandiri'         => 1, // Monitoring selalu mandiri
-                        'pic_name'           => null,
+
+                        // PERBAIKAN DI SINI:
+                        // Jika monitoring, set 1 (Mandiri). 
+                        // Jika BUKAN monitoring, ambil nilai dari input select 'is_mandiri'
+                        'is_mandiri'         => $isMonitoring ? 1 : ($item['is_mandiri'] ?? 1),
+
+                        // Jika monitoring, null. 
+                        // Jika BUKAN monitoring dan is_mandiri adalah 0 (Bantuan), ambil pic_name
+                        'pic_name'           => (!$isMonitoring && isset($item['is_mandiri']) && $item['is_mandiri'] == 0)
+                            ? ($item['pic_name'] ?? null)
+                            : null,
                     ]);
                 }
             }
@@ -120,18 +128,15 @@ class InputController extends Controller
 
                     $isMonitoring = (isset($item['is_monitoring']) && $item['is_monitoring'] == "1");
 
-                    $deskripsiGps = $item['nama_kegiatan'];
-                    if (!empty($item['jumlah_kendaraan'])) {
-                        $deskripsiGps .= " (Jumlah: " . $item['jumlah_kendaraan'] . " Kendaraan)";
-                    }
-
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
-                        'tipe_kegiatan'      => 'case', // Ubah jadi case agar masuk Technical Activities
+                        'tipe_kegiatan'      => 'case',
                         'variabel_kpi_id'    => (!$isMonitoring && $vCount) ? $vCount->id : null,
-                        'deskripsi_kegiatan' => $deskripsiGps,
-                        'value_raw'          => 0,
+                        'deskripsi_kegiatan' => $item['nama_kegiatan'],
+                        // LOGIKA BARU: Jika monitoring, isi 'ALL'. Jika bukan, isi angka dari input.
+                        'value_raw'          => $isMonitoring ? 'ALL' : ($item['jumlah_kendaraan'] ?? 0),
                         'is_mandiri'         => 1,
+                        'kategori'           => 'GPS',
                     ]);
                 }
             }
@@ -154,18 +159,33 @@ class InputController extends Controller
         // PROSES DIVISI INFRASTRUKTUR (ID: 2)
         // ---------------------------------------------------------
         else if ($user->divisi_id == 2) {
-            $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
+            // Ambil variabel KPI untuk Volume Pekerjaan Infra
+            $vInfra = VariabelKpi::where('divisi_id', 2)
+                ->where('nama_variabel', 'Volume Pekerjaan')
+                ->first();
 
             if ($request->has('infra_activity')) {
                 foreach ($request->infra_activity as $infra) {
+                    // Lewati jika nama kegiatan kosong
                     if (empty($infra['nama_kegiatan'])) continue;
+
+                    $kategori = $infra['kategori'] ?? 'Network';
+
+                    // LOGIKA PEMISAHAN:
+                    // Jika kategori 'Lainnya', masuk ke General Activities (activity)
+                    // Jika kategori selain 'Lainnya', masuk ke Technical Cases (case)
+                    $tipe = ($kategori == 'Lainnya') ? 'activity' : 'case';
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
-                        'tipe_kegiatan'      => 'activity',
-                        'kategori'           => $infra['kategori'] ?? 'Network',
-                        'deskripsi_kegiatan' => $infra['nama_kegiatan'] . ': ' . ($infra['deskripsi'] ?? '-'),
+                        'tipe_kegiatan'      => $tipe,
+                        'kategori'           => $kategori,
+                        // Simpan nama kegiatan dan deskripsi secara rapi
+                        'deskripsi_kegiatan' => $infra['nama_kegiatan'] . (isset($infra['deskripsi']) ? ': ' . $infra['deskripsi'] : ''),
                         'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
+                        // Nilai default untuk infra (biasanya volume dihitung per baris/entry)
+                        'value_raw'          => 0,
+                        'is_mandiri'         => 1,
                     ]);
                 }
             }
