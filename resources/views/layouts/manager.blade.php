@@ -559,7 +559,7 @@
         // ============================================
         // Logic JS untuk modul Pembaruan Sistem
         // ============================================
-        const SYSTEM_VERSION = "1.2.24"; // Pastikan ini berbeda dengan versi di localStorage Anda
+        const SYSTEM_VERSION = "1.3.1"; // Pastikan ini berbeda dengan versi di localStorage Anda
 
         function checkSystemUpdate() {
             const lastSeenVersion = localStorage.getItem('last_seen_version');

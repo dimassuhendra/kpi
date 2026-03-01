@@ -12,6 +12,22 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '1.3.1',
+                'date' => '01 Maret 2026',
+                'title' => 'Technical Reporting & GPS Integration',
+                'description' => 'Peningkatan struktur pelaporan teknis, transparansi PIC, dan integrasi modul pemantauan GPS.',
+                'changes' => [
+                    'Optimasi hierarki daftar pengguna berdasarkan jabatan (GM, Manager, Staff).',
+                    'Pemisahan kategori presisi: Monitoring (Network & GPS) masuk ke Technical Activities.',
+                    'Modul Input GPS baru dengan form kendala dan jumlah kendaraan.',
+                    'Sistem klasifikasi penyelesaian tugas: Mandiri (Solo) vs Bantuan (Assist) dengan nama PIC.',
+                    'Otomatisasi pencatatan monitoring GPS "ALL" untuk pemantauan seluruh kendaraan.',
+                    'Visualisasi Badge Manager baru: Ikon Mobil (GPS), Jam (Response Time), dan Jabat Tangan (Assist).',
+                    'Penyederhanaan tampilan General Activities dan pembersihan bug baris kosong pada laporan.'
+                ],
+                'type' => 'Major'
+            ],
+            [
                 'version' => '1.2.24',
                 'date' => '24 Februari 2026',
                 'title' => 'Ramadhan Theme & Prayer Times',
