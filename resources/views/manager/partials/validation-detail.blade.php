@@ -26,6 +26,7 @@
                                 $isInfra = $report->user->divisi_id == 2;
                                 // Cek kategori GPS dari database
                                 $isGps = $case->kategori == 'GPS';
+                                $isNetworkTac = $case->kategori == 'Network' && $report->user->divisi_id == 1;
                             @endphp
 
                             @if ($isInfra)
@@ -39,10 +40,9 @@
                                     class="text-[9px] text-emerald-600 font-bold uppercase bg-emerald-50 px-2 py-1 rounded flex items-center w-fit">
                                     <i class="fas fa-car mr-1"></i>
                                     {{ $case->value_raw == 0 ? 'ALL' : $case->value_raw }} Kendaraan
-                                </span>
-
-                                {{-- Tambahkan Label Monitoring jika perlu --}}
-                                @if ($case->value_raw === '0')
+                                </span>                                
+                            @elseif($isNetworkTac)
+                                @if ($case->value_raw == 0)
                                     <span
                                         class="text-[9px] text-slate-400 font-bold uppercase bg-slate-100 px-2 py-1 rounded">
                                         Monitoring Rutin

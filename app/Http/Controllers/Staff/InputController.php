@@ -111,6 +111,7 @@ class InputController extends Controller
                         // Jika monitoring, set 1 (Mandiri). 
                         // Jika BUKAN monitoring, ambil nilai dari input select 'is_mandiri'
                         'is_mandiri'         => $isMonitoring ? 1 : ($item['is_mandiri'] ?? 1),
+                        'kategori'           => 'Network',
 
                         // Jika monitoring, null. 
                         // Jika BUKAN monitoring dan is_mandiri adalah 0 (Bantuan), ambil pic_name
