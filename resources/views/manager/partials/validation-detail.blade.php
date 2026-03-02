@@ -42,7 +42,7 @@
                                 </span>
 
                                 {{-- Tambahkan Label Monitoring jika perlu --}}
-                                @if ($case->value_raw === 'ALL')
+                                @if ($case->value_raw === '0')
                                     <span
                                         class="text-[9px] text-slate-400 font-bold uppercase bg-slate-100 px-2 py-1 rounded">
                                         Monitoring Rutin
