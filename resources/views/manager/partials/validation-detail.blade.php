@@ -38,8 +38,7 @@
                                 <span
                                     class="text-[9px] text-emerald-600 font-bold uppercase bg-emerald-50 px-2 py-1 rounded flex items-center w-fit">
                                     <i class="fas fa-car mr-1"></i>
-                                    {{-- Jika value_raw berisi 'ALL', tampilkan 'ALL Kendaraan', jika angka tampilkan '10 Kendaraan' --}}
-                                    {{ $case->value_raw }} Kendaraan
+                                    {{ $case->value_raw == 0 ? 'ALL' : $case->value_raw }} Kendaraan
                                 </span>
 
                                 {{-- Tambahkan Label Monitoring jika perlu --}}
