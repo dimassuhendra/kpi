@@ -141,8 +141,7 @@ class ValidationController extends Controller
                 foreach ($cases as $case) {
                     // Cek apakah data ini adalah kategori GPS
                     if ($case->kategori === 'GPS') {
-                        // Jika GPS, tampilkan: Judul (Angka/ALL)
-                        $message .= "{$i}. {$case->deskripsi_kegiatan} ({$case->value_raw})\n";
+                        $message .= "{$i}. {$case->deskripsi_kegiatan} (" . ($case->value_raw == 0 ? 'ALL' : $case->value_raw) . ")\n";
                     } else {
                         // Jika Network (TAC), tampilkan judul saja sesuai permintaan
                         $message .= "{$i}. {$case->deskripsi_kegiatan}\n";
