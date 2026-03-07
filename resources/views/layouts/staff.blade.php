@@ -336,19 +336,43 @@
 
                 <div class="relative z-10 h-full p-6 lg:p-10 flex flex-col justify-between gap-8">
                     <div class="flex justify-between items-start">
-                        <div
-                            class="px-3 py-1.5 rounded-full bg-emerald-900/40 backdrop-blur-md border border-gold-500/30 text-white text-[10px] font-bold uppercase flex items-center gap-2">
-                            <i class="fas fa-clock text-gold-400 animate-pulse"></i>
-                            <span id="next-prayer">Memuat Jadwal...</span>
+                        <div class="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
+                            <div
+                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-emerald-900/40 backdrop-blur-md border border-gold-500/30 text-white flex items-center gap-2 w-fit">
+                                <i class="fas fa-calendar-check text-gold-400 text-[10px]"></i>
+                                <div class="flex flex-col leading-none">
+                                    <span
+                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Menuju
+                                        Idul Fitri</span>
+                                    <span id="eid-countdown"
+                                        class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">Memuat...</span>
+                                </div>
+                            </div>
+
+                            <div class="hidden lg:block w-[1px] h-4 bg-gold-500/20"></div>
+
+                            <div
+                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-emerald-900/40 backdrop-blur-md border border-gold-500/30 text-white flex items-center gap-2 w-fit">
+                                <i class="fas fa-clock text-gold-400 animate-pulse text-[10px]"></i>
+                                <div id="next-prayer" class="flex flex-col leading-none">
+                                    <span
+                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5 text-center lg:text-left">Memuat...</span>
+                                    <span
+                                        class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">Jadwal
+                                        Sholat</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="text-right text-white">
                             <div id="digital-clock"
-                                class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-gold-400">00:00:00
+                                class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-gold-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+                                00:00:00
                             </div>
                             <div id="current-date"
                                 class="text-[9px] font-black text-emerald-300 uppercase tracking-widest mt-1 opacity-80">
-                                Loading...</div>
+                                Loading...
+                            </div>
                         </div>
                     </div>
 
@@ -384,20 +408,47 @@
         // Digital Clock
         function updateTime() {
             const now = new Date();
-            if (document.getElementById('digital-clock')) {
-                document.getElementById('digital-clock').textContent = now.toLocaleTimeString('id-ID', {
-                    hour12: false
-                });
-                document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            }
+            document.getElementById('digital-clock').textContent = now.toLocaleTimeString('id-ID', {
+                hour12: false
+            });
+            document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Fungsi Countdown Idul Fitri
+        function updateEidCountdown() {
+            // Target 1 Syawal 1447 H (20 Maret 2026)
+            const eidTarget = new Date('March 20, 2026 00:00:00').getTime();
+            const now = new Date().getTime();
+            const distance = eidTarget - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const countdownEl = document.getElementById('eid-countdown');
+
+            if (!countdownEl) return;
+
+            if (distance < 0) {
+                if (days === -1 || days === 0) {
+                    countdownEl.innerHTML = "<span class='text-gold-400 animate-pulse'>Hari Raya</span>";
+                } else {
+                    countdownEl.innerText = "Syawal 1447H";
+                }
+            } else {
+                // Output: "13 Hari Lagi"
+                countdownEl.innerText = `${days} Hari Lagi`;
+            }
+        }
+
+        // Jalankan fungsi
+        updateEidCountdown();
+        // Update setiap 1 jam saja untuk efisiensi (tidak perlu per detik)
+        setInterval(updateEidCountdown, 3600000);
 
         // Stars Effect
         const canvas = document.getElementById('star-canvas');
@@ -512,10 +563,8 @@
                 // Tampilkan hasil
                 const statusText = found ? nextPrayer.name : `Imsak Besok`;
                 prayerElement.innerHTML = `
-                    <div class="flex flex-col leading-tight">
-                        <span class="text-gold-400">${statusText} ${nextPrayer.time}</span>
-                        <span class="text-[8px] opacity-80">${city}</span>
-                    </div>
+                    <span class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">${statusText} ${nextPrayer.time}</span>
+                    <span class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">${city}</span>
                 `;
 
             } catch (error) {
