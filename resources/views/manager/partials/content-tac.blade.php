@@ -11,6 +11,7 @@
                     'color' => 'rose',
                     'icon' => 'fa-clock',
                     'progress' => 35,
+                    'has_link' => true, // Tandai khusus untuk kartu ini
                 ],
                 [
                     'label' => 'Efficiency Rate',
@@ -19,6 +20,7 @@
                     'color' => 'emerald',
                     'icon' => 'fa-bolt',
                     'progress' => 75,
+                    'has_link' => false,
                 ],
                 [
                     'label' => 'Monthly Resolved',
@@ -27,6 +29,7 @@
                     'color' => 'sky',
                     'icon' => 'fa-check-double',
                     'progress' => 90,
+                    'has_link' => false,
                 ],
                 [
                     'label' => 'Staff Active Today',
@@ -35,31 +38,55 @@
                     'color' => 'amber',
                     'icon' => 'fa-users',
                     'progress' => 60,
+                    'has_link' => false,
                 ],
             ];
         @endphp
 
         @foreach ($cards as $card)
-            <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+            {{-- Card Container: Efek hover (shadow & translate) hanya aktif jika kartu memiliki link --}}
+            <div
+                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group 
+            {{ $card['has_link'] ? 'hover:shadow-xl hover:shadow-rose-500/10 hover:-translate-y-1 cursor-pointer' : '' }} 
+            transition-all duration-300">
+
+                {{-- Cek kondisi: Jika has_link true, maka munculkan tag <a> --}}
+                @if ($card['has_link'])
+                    <a href="{{ route('manager.approval.index') }}" class="absolute inset-0 z-20" title="Buka Approval">
+                    </a>
+                @endif
+
+                {{-- Decorative Circle --}}
                 <div
-                    class="absolute top-0 right-0 w-24 h-24 bg-{{ $card['color'] }}-500/5 rounded-bl-full translate-x-10 -translate-y-10">
+                    class="absolute top-0 right-0 w-24 h-24 bg-{{ $card['color'] }}-500/5 rounded-bl-full translate-x-10 -translate-y-10 transition-transform duration-500 {{ $card['has_link'] ? 'group-hover:scale-125 group-hover:bg-rose-500/10' : '' }} z-10">
                 </div>
-                <div class="flex items-center gap-3 mb-4">
+
+                {{-- Header --}}
+                <div class="flex items-center gap-3 mb-4 relative z-0">
                     <div
-                        class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-50 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs">
+                        class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-50 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs {{ $card['has_link'] ? 'group-hover:rotate-12' : '' }} transition-transform duration-300">
                         <i class="fas {{ $card['icon'] }}"></i>
                     </div>
                     <p class="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">{{ $card['label'] }}</p>
                 </div>
-                <div class="flex items-end gap-2">
-                    <h2 class="text-4xl font-black text-slate-800 leading-none tracking-tighter">{{ $card['value'] }}
+
+                {{-- Body --}}
+                <div class="flex items-end gap-2 relative z-0">
+                    <h2
+                        class="text-4xl font-black text-slate-800 leading-none tracking-tighter {{ $card['has_link'] ? 'group-hover:text-rose-600' : '' }} transition-colors duration-300">
+                        {{ $card['value'] }}
                     </h2>
                     <span
-                        class="text-[10px] font-bold text-{{ $card['color'] }}-500 mb-1 uppercase">{{ $card['unit'] }}</span>
+                        class="text-[10px] font-bold text-{{ $card['color'] }}-500 mb-1 uppercase tracking-wider">{{ $card['unit'] }}</span>
                 </div>
-                <div class="w-full h-1 bg-slate-50 mt-6 rounded-full overflow-hidden">
-                    <div class="h-full bg-{{ $card['color'] }}-500" style="width: {{ $card['progress'] }}%"></div>
+
+                {{-- Footer --}}
+                <div class="w-full h-1.5 bg-slate-50 mt-6 rounded-full overflow-hidden relative z-0">
+                    <div class="h-full bg-{{ $card['color'] }}-500 transition-all duration-700 ease-out"
+                        style="width: {{ $card['progress'] }}%">
+                    </div>
                 </div>
+
             </div>
         @endforeach
     </div>
@@ -517,7 +544,8 @@
         },
         options: donutOpt
     });
-    setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, (globalSummary.proaktif + globalSummary.penugasan), 'Temuan TAC');
+    setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, (globalSummary.proaktif + globalSummary.penugasan),
+        'Temuan TAC');
 
     new Chart(document.getElementById('donutMandiri'), {
         type: 'doughnut',
@@ -530,7 +558,8 @@
         },
         options: donutOpt
     });
-    setDonutLabel('donutMandiriLegend', globalSummary.mandiri, (globalSummary.mandiri + globalSummary.bantuan), 'Penyelesaian TAC');
+    setDonutLabel('donutMandiriLegend', globalSummary.mandiri, (globalSummary.mandiri + globalSummary.bantuan),
+        'Penyelesaian TAC');
 
     new Chart(document.getElementById('chartWorkloadMix'), {
         type: 'doughnut',
@@ -543,7 +572,7 @@
         },
         options: donutOpt
     });
-setDonutLabel('workloadLegend', globalWorkload.case, (globalWorkload.case + globalWorkload.activity), 'Case');
+    setDonutLabel('workloadLegend', globalWorkload.case, (globalWorkload.case+globalWorkload.activity), 'Case');
 
     // 3. Productivity Ratio
     new Chart(document.getElementById('chartStaffProductivity'), {
