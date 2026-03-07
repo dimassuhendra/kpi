@@ -580,7 +580,7 @@
         // ============================================
         // Logic JS untuk modul Pembaruan Sistem
         // ============================================
-        const SYSTEM_VERSION = "1.3.1";
+        const SYSTEM_VERSION = "1.3.7";
 
         function checkSystemUpdate() {
             const lastSeenVersion = localStorage.getItem('last_seen_version');

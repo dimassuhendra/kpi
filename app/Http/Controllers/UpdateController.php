@@ -12,6 +12,21 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '1.3.7',
+                'date' => '07 Maret 2026',
+                'title' => 'Alur Revisi Laporan & Optimasi Dashboard',
+                'description' => 'Peningkatan sistem validasi laporan untuk memudahkan koordinasi antara Staff dan Manager, serta pembaharuan navigasi dashboard.',
+                'changes' => [
+                    'Manager: Card "Pending Approval" kini interaktif dan bisa diklik langsung menuju halaman validasi.',
+                    'Staff  : Kemampuan mengedit kembali laporan yang ditolak (rejected) oleh manager.',
+                    'Staff  : Status laporan kini otomatis kembali ke "pending" setelah selesai direvisi.',
+                    'Staff  : Penambahan informasi alasan penolakan dari Manager langsung pada dashboard staff.',
+                    'System : Perbaikan responsivitas pada Widget Hero di berbagai ukuran layar.',
+                    'System : Penambahan fitur hitung mundur (countdown) menyambut hari raya Lebaran.'
+                ],
+                'type' => 'Minor'
+            ],
+            [
                 'version' => '1.3.1',
                 'date' => '01 Maret 2026',
                 'title' => 'Laporan Teknis & Pantauan GPS Baru',
