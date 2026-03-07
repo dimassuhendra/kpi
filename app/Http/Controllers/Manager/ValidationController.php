@@ -63,17 +63,18 @@ class ValidationController extends Controller
         $request->validate([
             'report_id' => 'required|exists:daily_reports,id',
             'status'    => 'required|in:approved,rejected',
-            'catatan'   => 'nullable|string'
+            'catatan_manager' => 'nullable|string' // Sesuaikan nama dengan input di Blade
         ]);
 
         $report = DailyReport::with(['user', 'details'])->findOrFail($request->report_id);
 
         $report->update([
-            'status'           => $request->status,
-            'catatan_manager'  => $request->catatan,
+            'status'          => $request->status,
+            'catatan_manager' => $request->catatan_manager, // Ambil dari input yang benar
+            'validated_at'    => now(),
         ]);
 
-        // LOGIKA NOTIFIKASI TELEGRAM
+        // Aktifkan kembali jika ingin mengirim telegram saat approve
         if ($request->status === 'approved') {
             $this->sendTelegramNotification($report);
         }

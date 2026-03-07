@@ -114,7 +114,7 @@
             <div class="w-full md:max-w-xs">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Manager's Note
                     (Optional)</label>
-                <input type="text" name="keterangan_manager" placeholder="Alasan reject atau apresiasi..."
+                <input type="text" name="catatan_manager" placeholder="Alasan reject atau apresiasi..."
                     class="w-full text-xs border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
             </div>
 
