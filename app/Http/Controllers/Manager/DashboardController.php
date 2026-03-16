@@ -131,6 +131,12 @@ class DashboardController extends Controller
             // ========================================================================
             // BENTENG FILTER UTAMA: Pisahkan Murni Network vs GPS
             // ========================================================================
+
+            $filteredDetails = $allDetailsTAC->filter(function ($item) {
+                $title = trim($item->deskripsi_kegiatan);
+                return !in_array($title, ['Monitoring GPS', 'Monitoring Network']);
+            });
+            
             $networkDetailsTAC = $allDetailsTAC->where('kategori', 'Network');
 
             // Sub-kategori untuk Network
