@@ -114,50 +114,79 @@ class UserController extends Controller
     public function exportPdf(Request $request)
     {
         $user = User::with('divisi')->findOrFail($request->user_id);
-        return $this->generateSinglePdf($user);
+
+        // Tentukan range tanggal (Bulan ini)
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
 
-        // Ambil data detail kegiatan user bulan ini
-        $allDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $start, $end) {
-            $q->where('user_id', $user->id)
-                ->whereBetween('tanggal', [$start, $end]);
-        })->get();
+        // 1. Ambil semua detail kegiatan user dalam periode ini
+        $allDetails = KegiatanDetail::with('dailyReport')
+            ->whereHas('dailyReport', function ($q) use ($user, $start, $end) {
+                $q->where('user_id', $user->id)
+                    ->whereBetween('tanggal', [$start, $end]);
+            })->get();
+
+        // 2. BENTENG FILTER: Buang laporan rutin (Monitoring) agar tidak merusak statistik
+        $filteredDetails = $allDetails->filter(function ($item) {
+            $desc = strtolower(trim($item->deskripsi_kegiatan));
+            $forbiddenWords = ['monitoring gps', 'monitoring network'];
+            foreach ($forbiddenWords as $word) {
+                if (str_contains($desc, $word)) {
+                    return false;
+                }
+            }
+            return true;
+        });
 
         $data = [
             'user' => $user,
-            'date' => date('d F Y'),
+            'date' => \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i') . ' WIB',
             'periode' => $start->format('F Y'),
-            'divisi_id' => $user->divisi_id
+            'divisi_id' => $user->divisi_id,
+            'reports' => $filteredDetails->sortByDesc(function ($item) {
+                return $item->dailyReport->tanggal;
+            }), // Kirim data untuk tabel rincian di bawah
         ];
 
         if ($user->divisi_id == 2) {
-            // --- LOGIKA KHUSUS INFRA --- [cite: 1]
-            // Hitung count per kategori: Network, CCTV, GPS, Lainnya 
+            // --- LOGIKA KHUSUS INFRA ---
             $infraStats = [
-                'Network' => $allDetails->where('kategori', 'Network')->count(),
-                'CCTV'    => $allDetails->where('kategori', 'CCTV')->count(),
-                'GPS'     => $allDetails->where('kategori', 'GPS')->count(),
-                'Lainnya' => $allDetails->where('kategori', 'Lainnya')->count(),
+                'Network' => $filteredDetails->where('kategori', 'Network')->count(),
+                'CCTV'    => $filteredDetails->where('kategori', 'CCTV')->count(),
+                'GPS'     => $filteredDetails->where('kategori', 'GPS')->count(),
+                'Lainnya' => $filteredDetails->where('kategori', 'Lainnya')->count(),
             ];
 
             $data['infraStats'] = $infraStats;
-            $data['total_case'] = array_sum($infraStats); // Total akumulasi [cite: 41]
+            $data['total_case'] = array_sum($infraStats);
 
         } else {
-            // --- LOGIKA KHUSUS TAC --- [cite: 71]
-            $caseDetails = $allDetails->where('tipe_kegiatan', 'case');
+            // --- LOGIKA KHUSUS TAC (Network & GPS dipisahkan) ---
+
+            // Karantina Data Network
+            $netDetails = $filteredDetails->where('kategori', 'Network');
+            $netCases = $netDetails->where('tipe_kegiatan', 'case');
+
+            // Karantina Data GPS (Sesuai kesepakatan: Menggunakan SUM)
+            $gpsCases = $filteredDetails->where('kategori', 'GPS')->where('tipe_kegiatan', 'case');
+
+            // Sanitasi value_raw untuk GPS (huruf jadi 0)
+            $gpsSum = $gpsCases->sum(function ($item) {
+                return is_numeric($item->value_raw) ? (float) $item->value_raw : 0;
+            });
 
             $data['tacStats'] = [
-                'total_case'     => $caseDetails->count(),
-                'total_activity' => $allDetails->where('tipe_kegiatan', 'activity')->count(),
-                'temuan_sendiri' => $caseDetails->where('temuan_sendiri', 1)->count(),
-                'mandiri_count'  => $caseDetails->where('is_mandiri', 1)->count(),
-                'avg_time'       => round($caseDetails->avg('value_raw') ?? 0, 1),
+                'net_count'      => $netCases->count(),
+                'total_activity' => $netDetails->where('tipe_kegiatan', 'activity')->count(),
+                'inisiatif_count' => $netCases->where('temuan_sendiri', 1)->count(),
+                'mandiri_count'  => $netCases->where('is_mandiri', 1)->count(),
+                'avg_time'       => round($netCases->avg('value_raw') ?? 0, 1), // Rata-rata waktu Network
+                'gps_count'      => $gpsSum, // Total Unit GPS (Hasil SUM)
             ];
         }
 
-        $pdf = Pdf::loadView('manager.exports.user-pdf', $data);
+        // Menggunakan ukuran A4 agar tabel rincian muat
+        $pdf = Pdf::loadView('manager.exports.user-pdf', $data)->setPaper('a4', 'portrait');
         return $pdf->stream("Performance_{$user->nama_lengkap}.pdf");
     }
 
