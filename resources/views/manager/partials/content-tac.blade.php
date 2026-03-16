@@ -273,6 +273,46 @@
             @endforeach
         </div>
 
+        {{-- BARIS 4: LAPORAN AKTIVITAS GPS --}}
+        <div class="mt-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {{-- 1. Chart Komparasi Beban Kerja (Network vs GPS) --}}
+                <div
+                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
+                    <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
+                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest"><i
+                                class="fas fa-chart-pie mr-2 text-sky-600"></i> Total Kasus: Network vs GPS</h4>
+                    </div>
+                    <div class="relative w-full h-40 mt-8">
+                        <canvas id="donutNetVsGps"></canvas>
+                        <div id="donutNetVsGpsLegend"
+                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-3 mt-4">
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-emerald-500"></span><span
+                                class="text-[7px] font-bold text-slate-400">NETWORK</span></div>
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-sky-500"></span><span
+                                class="text-[7px] font-bold text-slate-400">GPS</span></div>
+                    </div>
+                </div>
+
+                {{-- 2. Chart Peringkat Staff GPS (Makan 2 Kolom) --}}
+                <div
+                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm h-[320px] flex flex-col lg:col-span-2">
+                    <div class="w-full flex justify-between items-start mb-6">
+                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest"><i
+                                class="fas fa-trophy mr-2 text-sky-600"></i> Jumlah Laporan GPS per Staff</h4>
+                    </div>
+                    <div class="relative flex-1 w-full">
+                        <canvas id="barStaffGps"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -726,5 +766,92 @@
             }]
         },
         options: miniOpt
+    });
+
+    // ==========================================
+    // INITIALIZATION: GPS CHARTS
+    // ==========================================
+
+    // 1. Donut: Komparasi Network vs GPS
+    new Chart(document.getElementById('donutNetVsGps'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Network', 'GPS'],
+            datasets: [{
+                data: [globalSummary.network_count, globalSummary.gps_count],
+                backgroundColor: [colors.emerald, colors.sky],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            ...donutOpt,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.raw + ' Kasus';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    // Set teks di tengah Donut Chart (Menampilkan porsi/persentase GPS)
+    setDonutLabel('donutNetVsGpsLegend', globalSummary.gps_count, (globalSummary.network_count + globalSummary
+        .gps_count), 'Porsi GPS');
+
+    // 2. Bar: Peringkat Staff GPS
+    new Chart(document.getElementById('barStaffGps'), {
+        type: 'bar',
+        data: {
+            labels: staffLabels, // Nama-nama staff
+            datasets: [{
+                label: 'Laporan GPS',
+                data: rawStaffData.map(s => s.gps_count), // Mengambil data gps_count per staff
+                backgroundColor: colors.sky,
+                borderRadius: 6,
+                barThickness: 30, // Agar bar tidak terlalu lebar jika staff sedikit
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }, // Memaksa y-axis pakai angka bulat (tidak ada 0.5 laporan)
+                    grid: {
+                        color: '#f1f5f9'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 9
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.raw + ' Laporan GPS';
+                        }
+                    }
+                }
+            }
+        }
     });
 </script>
