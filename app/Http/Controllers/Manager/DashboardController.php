@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Manager;
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -34,7 +35,6 @@ class DashboardController extends Controller
                 $end = Carbon::yesterday()->endOfDay();
                 break;
             case 'weekly':
-                // SEKARANG: 7 Hari ke belakang dari hari ini
                 $start = Carbon::now()->subDays(6)->startOfDay();
                 $end = Carbon::now()->endOfDay();
                 break;
@@ -80,8 +80,9 @@ class DashboardController extends Controller
             ->whereYear('tanggal', $start->year)
             ->groupBy('date')->pluck('count', 'date');
 
+        // --- LOGIKA DIVISI 2 (INFRA) ---
         if ($selectedDivisi == '2') {
-            $allDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($start, $end) {
+            $allDetails = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
                 $q->whereBetween('tanggal', [$start, $end])
                     ->whereHas('user', fn($u) => $u->where('divisi_id', 2));
             })->get();
@@ -101,29 +102,58 @@ class DashboardController extends Controller
                 }
             }
 
-            $staffInfraData = User::where('divisi_id', 2)->where('role', 'staff')->get()->map(function ($u) use ($start, $end, $availableCategories) {
+            $staffInfraData = User::where('divisi_id', 2)->where('role', 'staff')->get()->map(function ($u) use ($allDetails, $availableCategories) {
                 $res = ['nama' => $u->nama_lengkap];
                 foreach ($availableCategories as $cat) {
-                    $res[$cat] = KegiatanDetail::where('kategori', $cat)
-                        ->whereHas('dailyReport', fn($q) => $q->where('user_id', $u->id)->whereBetween('tanggal', [$start, $end]))->count();
+                    $res[$cat] = $allDetails->where('kategori', $cat)->where('dailyReport.user_id', $u->id)->count();
                 }
                 return $res;
             });
+
             $leaderboard = User::where('role', 'staff')->where('divisi_id', 2)
                 ->withCount(['details as total_activity' => fn($q) => $q->whereHas('dailyReport', fn($qr) => $qr->whereBetween('tanggal', [$start, $end]))])
                 ->orderByDesc('total_activity')->take(5)->get();
+
+            // --- LOGIKA DIVISI 1 (TAC) ---
         } elseif ($selectedDivisi == '1') {
-            $allDetailsTAC = KegiatanDetail::whereHas('dailyReport', function ($q) use ($start, $end) {
+            $allDetailsTAC = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
                 $q->whereBetween('tanggal', [$start, $end])
                     ->whereHas('user', fn($u) => $u->where('divisi_id', 1));
             })->get();
 
+            // 1. Sanitasi Data: Paksa value_raw menjadi numerik
+            $allDetailsTAC->transform(function ($item) {
+                $item->value_raw = is_numeric($item->value_raw) ? (float) $item->value_raw : 0;
+                return $item;
+            });
+
+            // 2. Pisahkan Data Case berdasarkan Kategori dengan tegas
+            $caseNetwork = $allDetailsTAC->where('tipe_kegiatan', 'case')->where('kategori', 'Network');
+            $caseGPS = $allDetailsTAC->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
+
             $stats['resolved_month'] = $allDetailsTAC->where('tipe_kegiatan', 'case')->count();
-            $stats['avg_response_time'] = $allDetailsTAC->where('tipe_kegiatan', 'case')->avg('value_raw') ?? 0;
+
+            // PERBAIKAN 1: avg_response_time HANYA DIHITUNG DARI NETWORK
+            $stats['avg_response_time'] = $caseNetwork->avg('value_raw') ?? 0;
 
             $workloadMix = [
-                'case' => $allDetailsTAC->where('tipe_kegiatan', 'case')->count(),
+                'case' => $stats['resolved_month'],
                 'activity' => $allDetailsTAC->where('tipe_kegiatan', 'activity')->count()
+            ];
+
+            // Data Summary dengan pemisahan kategori
+            $summaryData = [
+                'total_case' => $stats['resolved_month'],
+                'avg_time' => round($stats['avg_response_time'], 2),
+                'network_count' => $caseNetwork->count(),
+                'network_avg'   => round($caseNetwork->avg('value_raw') ?? 0, 1),
+                'gps_count'     => $caseGPS->count(),
+                // 'gps_avg' tidak perlu karena GPS hanya butuh count, tapi jika frontend tetap butuh variabel ini, kirim 0 saja
+                'gps_avg'       => 0,
+                'mandiri' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
+                'bantuan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
+                'proaktif' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
+                'penugasan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
             ];
 
             $diffInDays = $start->diffInDays($end);
@@ -131,42 +161,37 @@ class DashboardController extends Controller
                 $dateObj = (clone $start)->addDays($i);
                 $dateStr = $dateObj->toDateString();
                 $trendLabels[] = $dateObj->format('d M');
-                $trendCases[] = $allDetailsTAC->where('tipe_kegiatan', 'case')->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr)->count();
-                $trendActivities[] = $allDetailsTAC->where('tipe_kegiatan', 'activity')->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr)->count();
+
+                $dayDetails = $allDetailsTAC->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
+
+                $trendCases[] = $dayDetails->where('tipe_kegiatan', 'case')->count();
+                $trendActivities[] = $dayDetails->where('tipe_kegiatan', 'activity')->count();
             }
 
-            $summaryData = [
-                'total_case' => $stats['resolved_month'],
-                'avg_time' => round($stats['avg_response_time'], 2),
+            // Mapping Data Staff 
+            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($allDetailsTAC, $start, $diffInDays) {
+                $uDetails = $allDetailsTAC->where('dailyReport.user_id', $u->id);
 
-                // Mandiri vs Bantuan (Hanya untuk tipe 'case')
-                'mandiri' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
-                'bantuan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
+                $uNetwork = $uDetails->where('tipe_kegiatan', 'case')->where('kategori', 'Network');
+                $uGPS = $uDetails->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
 
-                // Temuan vs Laporan (Hanya untuk tipe 'case')
-                'proaktif' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
-                'penugasan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
-            ];
-
-            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($start, $end, $diffInDays) {
-                $uDetails = KegiatanDetail::whereHas('dailyReport', fn($q) => $q->where('user_id', $u->id)->whereBetween('tanggal', [$start, $end]))->get();
-                $dailyHistory = ['cases' => [], 'activities' => []];
-                for ($i = 0; $i <= $diffInDays; $i++) {
-                    $dateStr = (clone $start)->addDays($i)->toDateString();
-                    $dailyHistory['cases'][] = $uDetails->where('tipe_kegiatan', 'case')->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr)->count();
-                    $dailyHistory['activities'][] = $uDetails->where('tipe_kegiatan', 'activity')->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr)->count();
-                }
                 return [
                     'nama' => $u->nama_lengkap,
                     'total_case' => $uDetails->where('tipe_kegiatan', 'case')->count(),
-                    'avg_time' => round($uDetails->where('tipe_kegiatan', 'case')->avg('value_raw') ?? 0, 1),
-                    'inisiatif_count' => $uDetails->where('temuan_sendiri', 1)->count(),
-                    'mandiri_count' => $uDetails->where('is_mandiri', 1)->count(),
-                    'penugasan_count' => $uDetails->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
-                    'bantuan_count' => $uDetails->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
-                    'cases' => $uDetails->where('tipe_kegiatan', 'case')->count(),
-                    'activities' => $uDetails->where('tipe_kegiatan', 'activity')->count(),
-                    'daily_history' => $dailyHistory
+
+                    // PERBAIKAN 2: avg_time HANYA dari $uNetwork, bukan $uDetails keseluruhan
+                    'avg_time' => round($uNetwork->avg('value_raw') ?? 0, 1),
+
+                    'net_count' => $uNetwork->count(),
+                    'net_avg' => round($uNetwork->avg('value_raw') ?? 0, 1),
+                    'gps_count' => $uGPS->count(),
+
+                    // PERBAIKAN 3: Hapus perhitungan avg_time untuk GPS agar tidak buang resource/salah kaprah
+                    'gps_avg' => 0,
+
+                    'inisiatif_count' => $uDetails->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
+                    'mandiri_count' => $uDetails->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
+                    'daily_history' => $this->getDailyHistory($uDetails, $start, $diffInDays)
                 ];
             });
             $leaderboard = $staffChartData->sortByDesc('total_case')->take(5);
@@ -202,5 +227,18 @@ class DashboardController extends Controller
             'trendActivities',
             'summaryData'
         ));
+    }
+
+    private function getDailyHistory($uDetails, $start, $diffInDays)
+    {
+        $history = ['cases' => [], 'activities' => []];
+        for ($i = 0; $i <= $diffInDays; $i++) {
+            $dateStr = (clone $start)->addDays($i)->toDateString();
+            $dayData = $uDetails->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
+
+            $history['cases'][] = $dayData->where('tipe_kegiatan', 'case')->count();
+            $history['activities'][] = $dayData->where('tipe_kegiatan', 'activity')->count();
+        }
+        return $history;
     }
 }

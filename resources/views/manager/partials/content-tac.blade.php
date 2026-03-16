@@ -439,7 +439,8 @@
             case 'donutInisiatif':
                 // Temuan (val1) vs Laporan (val2)
                 val1 = isAll ? dataSrc.proaktif : dataSrc.inisiatif_count;
-                val2 = isAll ? dataSrc.penugasan : (dataSrc.total_case - dataSrc.inisiatif_count);
+                // Gunakan Math.max untuk mencegah hasil minus jika ada anomali data
+                val2 = isAll ? dataSrc.penugasan : Math.max(0, dataSrc.total_case - val1);
                 label = 'Temuan TAC';
 
                 chart.data.datasets[0].data = [val1, val2];
@@ -449,7 +450,8 @@
             case 'donutMandiri':
                 // Mandiri (val1) vs Bantuan (val2)
                 val1 = isAll ? dataSrc.mandiri : dataSrc.mandiri_count;
-                val2 = isAll ? dataSrc.bantuan : (dataSrc.total_case - dataSrc.mandiri_count);
+                // Gunakan Math.max untuk mencegah hasil minus jika ada anomali data
+                val2 = isAll ? dataSrc.bantuan : Math.max(0, dataSrc.total_case - val1);
                 label = 'Penyelesaian TAC';
 
                 chart.data.datasets[0].data = [val1, val2];
@@ -459,7 +461,8 @@
             case 'chartWorkloadMix':
                 // Case (val1) vs Activity (val2)
                 val1 = isAll ? workloadSrc.case : dataSrc.total_case;
-                val2 = isAll ? workloadSrc.activity : dataSrc.activities;
+                // Karena dataSrc.activities mungkin undefined di mapping staff lama, gunakan fallback 0
+                val2 = isAll ? workloadSrc.activity : (dataSrc.activities || 0);
                 label = 'Case';
 
                 chart.data.datasets[0].data = [val1, val2];
