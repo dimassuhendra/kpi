@@ -115,7 +115,6 @@ class DashboardController extends Controller
                 ->orderByDesc('total_activity')->take(5)->get();
 
             // --- LOGIKA DIVISI 1 (TAC) ---
-            // --- LOGIKA DIVISI 1 (TAC) ---
         } elseif ($selectedDivisi == '1') {
             $allDetailsTAC = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
                 $q->whereBetween('tanggal', [$start, $end])
@@ -136,16 +135,17 @@ class DashboardController extends Controller
                 $title = trim($item->deskripsi_kegiatan);
                 return !in_array($title, ['Monitoring GPS', 'Monitoring Network']);
             });
-            
+
             $networkDetailsTAC = $allDetailsTAC->where('kategori', 'Network');
 
             // Sub-kategori untuk Network
+            $networkDetailsTAC = $filteredDetails->where('kategori', 'Network');
             $caseNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'case');
             $activityNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'activity');
 
             // GPS dipisah dan dikarantina (Hanya dihitung jika nanti diperlukan di view lain)
-            $caseGPS = $allDetailsTAC->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
-
+            $caseGPS = $filteredDetails->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
+            
             // 2. Terapkan data murni Network ke metrik utama Dashboard
             $stats['resolved_month'] = $caseNetwork->count();
             $stats['avg_response_time'] = $caseNetwork->avg('value_raw') ?? 0;
