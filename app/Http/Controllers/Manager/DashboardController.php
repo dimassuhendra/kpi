@@ -115,6 +115,7 @@ class DashboardController extends Controller
                 ->orderByDesc('total_activity')->take(5)->get();
 
             // --- LOGIKA DIVISI 1 (TAC) ---
+            // --- LOGIKA DIVISI 1 (TAC) ---
         } elseif ($selectedDivisi == '1') {
             $allDetailsTAC = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
                 $q->whereBetween('tanggal', [$start, $end])
@@ -127,71 +128,80 @@ class DashboardController extends Controller
                 return $item;
             });
 
-            // 2. Pisahkan Data Case berdasarkan Kategori dengan tegas
-            $caseNetwork = $allDetailsTAC->where('tipe_kegiatan', 'case')->where('kategori', 'Network');
+            // ========================================================================
+            // BENTENG FILTER UTAMA: Pisahkan Murni Network vs GPS
+            // ========================================================================
+            $networkDetailsTAC = $allDetailsTAC->where('kategori', 'Network');
+
+            // Sub-kategori untuk Network
+            $caseNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'case');
+            $activityNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'activity');
+
+            // GPS dipisah dan dikarantina (Hanya dihitung jika nanti diperlukan di view lain)
             $caseGPS = $allDetailsTAC->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
 
-            $stats['resolved_month'] = $allDetailsTAC->where('tipe_kegiatan', 'case')->count();
-
-            // PERBAIKAN 1: avg_response_time HANYA DIHITUNG DARI NETWORK
+            // 2. Terapkan data murni Network ke metrik utama Dashboard
+            $stats['resolved_month'] = $caseNetwork->count();
             $stats['avg_response_time'] = $caseNetwork->avg('value_raw') ?? 0;
 
             $workloadMix = [
-                'case' => $stats['resolved_month'],
-                'activity' => $allDetailsTAC->where('tipe_kegiatan', 'activity')->count()
+                'case' => $caseNetwork->count(),
+                'activity' => $activityNetwork->count()
             ];
 
-            // Data Summary dengan pemisahan kategori
+            // 3. Data Summary (Donut Chart & Threshold) khusus Network
             $summaryData = [
-                'total_case' => $stats['resolved_month'],
+                'total_case' => $caseNetwork->count(),
                 'avg_time' => round($stats['avg_response_time'], 2),
                 'network_count' => $caseNetwork->count(),
                 'network_avg'   => round($caseNetwork->avg('value_raw') ?? 0, 1),
                 'gps_count'     => $caseGPS->count(),
-                // 'gps_avg' tidak perlu karena GPS hanya butuh count, tapi jika frontend tetap butuh variabel ini, kirim 0 saja
                 'gps_avg'       => 0,
-                'mandiri' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
-                'bantuan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('is_mandiri', 0)->count(),
-                'proaktif' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
-                'penugasan' => $allDetailsTAC->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 0)->count(),
+                'mandiri' => $caseNetwork->where('is_mandiri', 1)->count(),
+                'bantuan' => $caseNetwork->where('is_mandiri', 0)->count(),
+                'proaktif' => $caseNetwork->where('temuan_sendiri', 1)->count(),
+                'penugasan' => $caseNetwork->where('temuan_sendiri', 0)->count(),
             ];
 
+            // 4. Trend Harian (Grafik Garis) khusus Network
             $diffInDays = $start->diffInDays($end);
             for ($i = 0; $i <= $diffInDays; $i++) {
                 $dateObj = (clone $start)->addDays($i);
                 $dateStr = $dateObj->toDateString();
                 $trendLabels[] = $dateObj->format('d M');
 
-                $dayDetails = $allDetailsTAC->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
+                // Filter data harian HANYA dari sumber Network
+                $dayDetails = $networkDetailsTAC->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
 
                 $trendCases[] = $dayDetails->where('tipe_kegiatan', 'case')->count();
                 $trendActivities[] = $dayDetails->where('tipe_kegiatan', 'activity')->count();
             }
 
-            // Mapping Data Staff 
-            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($allDetailsTAC, $start, $diffInDays) {
-                $uDetails = $allDetailsTAC->where('dailyReport.user_id', $u->id);
+            // 5. Mapping Data Staff (Mini Charts & Dropdown Staff) khusus Network
+            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($allDetailsTAC, $networkDetailsTAC, $start, $diffInDays) {
 
-                $uNetwork = $uDetails->where('tipe_kegiatan', 'case')->where('kategori', 'Network');
-                $uGPS = $uDetails->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
+                // Ambil data Network milik user ini saja
+                $uNetworkAll = $networkDetailsTAC->where('dailyReport.user_id', $u->id);
+                $uNetworkCase = $uNetworkAll->where('tipe_kegiatan', 'case');
+                $uNetworkActivity = $uNetworkAll->where('tipe_kegiatan', 'activity');
+
+                // Karantina GPS user ini
+                $uGPS = $allDetailsTAC->where('dailyReport.user_id', $u->id)->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
 
                 return [
                     'nama' => $u->nama_lengkap,
-                    'total_case' => $uDetails->where('tipe_kegiatan', 'case')->count(),
-
-                    // PERBAIKAN 2: avg_time HANYA dari $uNetwork, bukan $uDetails keseluruhan
-                    'avg_time' => round($uNetwork->avg('value_raw') ?? 0, 1),
-
-                    'net_count' => $uNetwork->count(),
-                    'net_avg' => round($uNetwork->avg('value_raw') ?? 0, 1),
+                    'total_case' => $uNetworkCase->count(),
+                    'avg_time' => round($uNetworkCase->avg('value_raw') ?? 0, 1),
+                    'net_count' => $uNetworkCase->count(),
+                    'net_avg' => round($uNetworkCase->avg('value_raw') ?? 0, 1),
                     'gps_count' => $uGPS->count(),
-
-                    // PERBAIKAN 3: Hapus perhitungan avg_time untuk GPS agar tidak buang resource/salah kaprah
                     'gps_avg' => 0,
+                    'inisiatif_count' => $uNetworkCase->where('temuan_sendiri', 1)->count(),
+                    'mandiri_count' => $uNetworkCase->where('is_mandiri', 1)->count(),
+                    'activities' => $uNetworkActivity->count(),
 
-                    'inisiatif_count' => $uDetails->where('tipe_kegiatan', 'case')->where('temuan_sendiri', 1)->count(),
-                    'mandiri_count' => $uDetails->where('tipe_kegiatan', 'case')->where('is_mandiri', 1)->count(),
-                    'daily_history' => $this->getDailyHistory($uDetails, $start, $diffInDays)
+                    // Pastikan grafik trend personal juga hanya membaca data Network
+                    'daily_history' => $this->getDailyHistory($uNetworkAll, $start, $diffInDays)
                 ];
             });
             $leaderboard = $staffChartData->sortByDesc('total_case')->take(5);
