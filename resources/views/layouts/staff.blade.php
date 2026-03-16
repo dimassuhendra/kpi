@@ -342,7 +342,7 @@
                                 <i class="fas fa-calendar-check text-gold-400 text-[10px]"></i>
                                 <div class="flex flex-col leading-none">
                                     <span
-                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Menuju
+                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Menuju Libur
                                         Idul Fitri</span>
                                     <span id="eid-countdown"
                                         class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">Memuat...</span>
