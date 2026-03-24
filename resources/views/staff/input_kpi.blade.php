@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <form action="{{ route('staff.kpi.store') }}" method="POST">
+        <form action="{{ route('staff.kpi.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             @if (auth()->user()->divisi_id == 1)
