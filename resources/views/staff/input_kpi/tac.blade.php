@@ -31,7 +31,8 @@
                     <div class="flex items-center justify-between mb-2">
                         <p class="font-bold text-slate-800 text-sm">Ada Laporan GPS Hari Ini?</p>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" x-model="ada_laporan_gps" class="sr-only peer">
+                            <input type="checkbox" name="ada_laporan_gps" value="1" x-model="ada_laporan_gps"
+                                class="sr-only peer">
                             <div
                                 class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500">
                             </div>
@@ -122,44 +123,77 @@
                             </template>
                         </div>
 
+                        {{-- BAGIAN METRIK & PENYELESAIAN --}}
                         <template x-if="!row.is_monitoring">
-                            <div class="lg:col-span-5 grid grid-cols-1 gap-3 border-r border-slate-200 pr-4">
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 bg-slate-50 rounded-xl border border-slate-100">
 
-                                <div class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-200">
-                                    <input type="checkbox" :name="'case_network[' + index + '][temuan_sendiri]'"
-                                        x-model="row.temuan_sendiri" @change="if(row.temuan_sendiri) row.respons = 0"
-                                        class="w-5 h-5 rounded text-amber-500 focus:ring-amber-500 border-slate-300">
-                                    <label class="text-xs font-bold text-slate-600">Deteksi Dini / Temuan
-                                        Sendiri</label>
-                                </div>
-
-                                <div x-show="!row.temuan_sendiri" class="grid grid-cols-3 gap-2 items-center mt-1">
-                                    <div class="col-span-1">
-                                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Respons
-                                            (Min)</label>
-                                        <input type="number" :name="'case_network[' + index + '][respons]'"
-                                            x-model="row.respons"
-                                            class="w-full border border-slate-200 rounded-lg px-3 py-2 outline-none">
+                                {{-- KIRI: Deteksi Dini & Waktu Respons --}}
+                                <div class="space-y-3">
+                                    <div
+                                        class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-200">
+                                        <input type="checkbox" :name="'case_network[' + index + '][temuan_sendiri]'"
+                                            x-model="row.temuan_sendiri"
+                                            @change="if(row.temuan_sendiri) row.waktu_respon_menit = 0"
+                                            class="w-5 h-5 rounded text-amber-500 focus:ring-amber-500 border-slate-300">
+                                        <label class="text-xs font-bold text-slate-600">Deteksi Dini / Temuan
+                                            Sendiri</label>
                                     </div>
-                                    <div class="col-span-2">
-                                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Bukti SS
-                                            Respon</label>
-                                        <input type="file" :name="'case_network[' + index + '][bukti_respon_time]'"
+
+                                    <div x-show="!row.temuan_sendiri" class="grid grid-cols-3 gap-2 items-center">
+                                        <div class="col-span-1">
+                                            <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Respons
+                                                (Min)</label>
+                                            <input type="number" :name="'case_network[' + index + '][waktu_respon_menit]'"
+                                                x-model="row.waktu_respon_menit"
+                                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Bukti SS
+                                                Respon</label>
+                                            <input type="file"
+                                                :name="'case_network[' + index + '][bukti_respon_time]'"
+                                                accept="image/*"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200">
+                                        </div>
+                                    </div>
+
+                                    <div x-show="row.temuan_sendiri">
+                                        <label class="text-[10px] uppercase text-rose-400 font-black ml-1">Bukti SS
+                                            Deteksi Dini</label>
+                                        <input type="file" :name="'case_network[' + index + '][bukti_deteksi_dini]'"
                                             accept="image/*"
-                                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200">
+                                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-600">
                                     </div>
                                 </div>
 
-                                <div x-show="row.temuan_sendiri" class="mt-1">
-                                    <label class="text-[10px] uppercase text-rose-400 font-black ml-1">Bukti SS Deteksi
-                                        Dini</label>
-                                    <input type="file" :name="'case_network[' + index + '][bukti_deteksi_dini]'"
-                                        accept="image/*"
-                                        class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-600">
+                                {{-- KANAN: Status Penyelesaian & Nama PIC --}}
+                                <div>
+                                    <div class="bg-white p-3 rounded-lg border border-slate-200 h-full flex flex-col">
+                                        <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Status
+                                            Penyelesaian</label>
+                                        <select :name="'case_network[' + index + '][is_mandiri]'"
+                                            x-model="row.is_mandiri"
+                                            class="w-full border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-amber-500 text-xs font-bold text-slate-700 mb-3">
+                                            <option value="1">Penyelesaian Mandiri</option>
+                                            <option value="0">Eskalasi / Bantuan Tim Lain</option>
+                                        </select>
+
+                                        <div x-show="row.is_mandiri == 0" x-transition>
+                                            <label
+                                                class="text-[10px] uppercase text-rose-400 font-black mb-1 block">Nama
+                                                PIC / Tim Bantuan</label>
+                                            <input type="text" :name="'case_network[' + index + '][pic_name]'"
+                                                x-model="row.pic_name" placeholder="Misal: Mas Danu (Infra)..."
+                                                class="w-full bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-500">
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
                         </template>
+                        {{-- END BAGIAN METRIK & PENYELESAIAN --}}
+
                     </div>
                 </div>
             </template>

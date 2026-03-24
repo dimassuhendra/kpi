@@ -13,12 +13,16 @@ class KegiatanDetail extends Model
         'variabel_kpi_id',
         'tipe_kegiatan',
         'kategori',
+        'nomor_tiket',
         'deskripsi_kegiatan',
         'value_raw',
+        'waktu_respon_menit',
         'temuan_sendiri',
         'is_mandiri',
         'pic_name',
-        'nilai_akhir'
+        'nilai_akhir',
+        'bukti_respon_time',
+        'bukti_deteksi_dini'
     ];
     
     protected $casts = [

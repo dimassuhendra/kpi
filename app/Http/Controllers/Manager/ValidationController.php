@@ -10,12 +10,11 @@ use Illuminate\Support\Facades\Log;
 use App\Models\DailyReport;
 use App\Models\User;
 
-
 class ValidationController extends Controller
 {
     public function validationIndex(Request $request)
     {
-        $pendingReports = DailyReport::with('user')
+        $pendingReports = DailyReport::with(['user.divisi', 'shift'])
             ->where('status', 'pending')
             ->latest('tanggal')
             ->get();
@@ -26,11 +25,13 @@ class ValidationController extends Controller
     public function validationShow($id)
     {
         try {
-            $report = DailyReport::with(['user', 'details.variabelKpi'])->findOrFail($id);
+            // PERUBAHAN: Tambahkan 'shift' ke dalam eager loading
+            $report = DailyReport::with(['user', 'details.variabelKpi', 'shift'])->findOrFail($id);
 
             $cases = $report->details->where('tipe_kegiatan', 'case');
             $activities = $report->details->where('tipe_kegiatan', 'activity');
 
+            // Kita buat file blade terpisah khusus untuk isi dari accordion
             return view('manager.partials.validation-detail', compact('report', 'cases', 'activities'));
         } catch (\Exception $e) {
             return response()->json([
@@ -41,40 +42,22 @@ class ValidationController extends Controller
         }
     }
 
-    public function validationUpdate(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'keterangan_manager' => 'nullable|string' // Opsional: alasan reject
-        ]);
-
-        $report = DailyReport::findOrFail($id);
-        $report->update([
-            'status' => $request->status,
-            'keterangan_manager' => $request->keterangan_manager,
-            'validated_at' => now(),
-        ]);
-
-        return redirect()->back()->with('success', 'Status laporan berhasil diperbarui.');
-    }
-
     public function validationStore(Request $request)
     {
         $request->validate([
             'report_id' => 'required|exists:daily_reports,id',
             'status'    => 'required|in:approved,rejected',
-            'catatan_manager' => 'nullable|string' // Sesuaikan nama dengan input di Blade
+            'catatan_manager' => 'nullable|string'
         ]);
 
-        $report = DailyReport::with(['user', 'details'])->findOrFail($request->report_id);
+        $report = DailyReport::with(['user', 'details', 'shift'])->findOrFail($request->report_id);
 
         $report->update([
             'status'          => $request->status,
-            'catatan_manager' => $request->catatan_manager, // Ambil dari input yang benar
+            'catatan_manager' => $request->catatan_manager,
             'validated_at'    => now(),
         ]);
 
-        // Aktifkan kembali jika ingin mengirim telegram saat approve
         if ($request->status === 'approved') {
             $this->sendTelegramNotification($report);
         }
@@ -93,20 +76,21 @@ class ValidationController extends Controller
         $message .= "━━━━━━━━━━━━━━━━━━\n";
         $message .= "👤 *Nama:* " . $report->user->nama_lengkap . "\n";
         $message .= "🏢 *Divisi:* " . $namaDivisi . "\n";
+
+        // PERUBAHAN: Tambahan info Shift di Telegram jika TAC
+        if ($report->shift) {
+            $message .= "⏰ *Shift:* " . $report->shift->nama_shift . "\n";
+        }
+
         $message .= "📅 *Tanggal:* " . $report->tanggal->format('d M Y') . "\n";
         $message .= "━━━━━━━━━━━━━━━━━━\n\n";
 
-        // LOGIKA PER DIVISI
         if (str_contains(strtolower($namaDivisi), 'infrastructure') || str_contains(strtolower($namaDivisi), 'infra')) {
-            /** * FORMAT INFRASTRUCTURE */
-
-            // 1. Filter data
             $mainWorks = $report->details->whereNotIn('kategori', ['Lainnya'])->whereNotNull('kategori');
             $otherWorks = $report->details->whereIn('kategori', ['Lainnya']);
 
             $counter = 1;
 
-            // 2. Tampilkan Kategori Utama (Network, GPS, CCTV)
             if ($mainWorks->isNotEmpty()) {
                 $message .= "📋 *Technical Activities:*\n";
                 foreach ($mainWorks as $detail) {
@@ -116,12 +100,10 @@ class ValidationController extends Controller
                 }
             }
 
-            // Tambahkan baris baru sebagai pemisah jika kedua grup data ada
             if ($mainWorks->isNotEmpty() && $otherWorks->isNotEmpty()) {
                 $message .= "\n";
             }
 
-            // 3. Tampilkan Kategori Lainnya
             if ($otherWorks->isNotEmpty()) {
                 $message .= "📂 *General Activities:*\n";
                 foreach ($otherWorks as $detail) {
@@ -130,29 +112,23 @@ class ValidationController extends Controller
                 }
             }
         } else {
-            /** * FORMAT TAC / UMUM 
-             * Memisahkan Technical Cases & General Activities
-             */
-
-            // 1. Technical Cases
             $cases = $report->details->where('tipe_kegiatan', 'case');
             if ($cases->isNotEmpty()) {
                 $message .= "🛠 *Technical Activities:*\n";
                 $i = 1;
                 foreach ($cases as $case) {
-                    // Cek apakah data ini adalah kategori GPS
                     if ($case->kategori === 'GPS') {
-                        $message .= "{$i}. {$case->deskripsi_kegiatan} (" . ($case->value_raw == 0 ? 'ALL' : $case->value_raw) . ")\n";
+                        $message .= "{$i}. {$case->deskripsi_kegiatan} (" . ($case->value_raw == '0' ? 'ALL' : $case->value_raw) . ")\n";
                     } else {
-                        // Jika Network (TAC), tampilkan judul saja sesuai permintaan
-                        $message .= "{$i}. {$case->deskripsi_kegiatan}\n";
+                        // Jika ada tiket, tampilkan di telegram
+                        $tiketInfo = $case->nomor_tiket ? " [{$case->nomor_tiket}]" : "";
+                        $message .= "{$i}. {$case->deskripsi_kegiatan}{$tiketInfo}\n";
                     }
                     $i++;
                 }
                 $message .= "\n";
             }
 
-            // 2. General Activities
             $activities = $report->details->where('tipe_kegiatan', 'activity');
             if ($activities->isNotEmpty()) {
                 $message .= "📝 *General Activities:*\n";
@@ -164,7 +140,6 @@ class ValidationController extends Controller
             }
         }
 
-        // Catatan Manager
         if ($report->catatan_manager) {
             $message .= "\n💬 *Manager Note:* _" . $report->catatan_manager . "_\n";
         }

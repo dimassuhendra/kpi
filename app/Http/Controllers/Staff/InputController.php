@@ -9,7 +9,7 @@ use App\Models\VariabelKpi;
 use App\Models\DailyReport;
 use App\Models\KegiatanDetail;
 use App\Models\Shift;
-use Carbon\Carbon; // Pastikan Carbon di-import untuk logika waktu
+use Carbon\Carbon;
 
 class InputController extends Controller
 {
@@ -48,7 +48,7 @@ class InputController extends Controller
                         $formattedRows['network'][] = [
                             'deskripsi' => $detail->deskripsi_kegiatan,
                             'nomor_tiket' => $detail->nomor_tiket,
-                            'respons' => $detail->waktu_respon_menit,
+                            'waktu_respon_menit' => $detail->waktu_respon_menit, // Diubah agar sesuai dengan x-model="row.waktu_respon_menit"
                             'temuan_sendiri' => (bool)$detail->temuan_sendiri,
                             'is_mandiri' => $detail->is_mandiri,
                             'pic_name' => $detail->pic_name,
@@ -69,8 +69,8 @@ class InputController extends Controller
             } else {
                 // Default awal jika tidak ada reject/laporan baru
                 $formattedRows['network'] = [
-                    ['deskripsi' => 'Monitoring Network', 'nomor_tiket' => '', 'is_monitoring' => true, 'is_default' => true],
-                    ['deskripsi' => '', 'nomor_tiket' => '', 'respons' => '', 'temuan_sendiri' => false, 'is_mandiri' => 1, 'pic_name' => '', 'is_monitoring' => false, 'is_default' => false]
+                    ['deskripsi' => 'Monitoring Network', 'nomor_tiket' => '', 'waktu_respon_menit' => '', 'temuan_sendiri' => false, 'is_mandiri' => 1, 'pic_name' => '', 'is_monitoring' => true, 'is_default' => true],
+                    ['deskripsi' => '', 'nomor_tiket' => '', 'waktu_respon_menit' => '', 'temuan_sendiri' => false, 'is_mandiri' => 1, 'pic_name' => '', 'is_monitoring' => false, 'is_default' => false]
                 ];
                 $formattedRows['gps'] = [
                     ['nama_kegiatan' => 'Monitoring GPS', 'jumlah_kendaraan' => '', 'is_monitoring' => true, 'is_default' => true],
@@ -106,8 +106,10 @@ class InputController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $hariIni = now()->toDateString();
-        $waktuSekarang = now();
+
+        // PAKSA ZONA WAKTU GMT+7 (Asia/Jakarta)
+        $waktuSekarang = Carbon::now('Asia/Jakarta');
+        $hariIni = $waktuSekarang->toDateString();
 
         // 1. Validasi Awal & Validasi File Gambar
         if ($user->divisi_id == 1) { // Validasi khusus TAC
@@ -116,39 +118,33 @@ class InputController extends Controller
                 'case_network.*.bukti_respon_time' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
                 'case_network.*.bukti_deteksi_dini' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
                 'bukti_report_gps' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-                // Validasi bukti dashboard DIHAPUS
             ]);
 
             if (!$request->has('case_network') && (!$request->has('case_gps') || empty(array_filter($request->case_gps, fn($item) => !empty($item['nama_kegiatan'])))) && !$request->has('activity')) {
                 return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
             }
-        } elseif ($user->divisi_id == 2) { // INFRA
+        } elseif ($user->divisi_id == 2) {
             if (!$request->has('infra_activity')) return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
-        } else { // BACKOFFICE
+        } else {
             if (!$request->has('bo_activity')) return back()->with('error', 'Mohon isi setidaknya satu kegiatan.');
         }
 
-        // --- LOGIKA PENGECEKAN KETEPATAN WAKTU DASHBOARD KPI (Otomatis) ---
+        // --- LOGIKA PENGECEKAN KETEPATAN WAKTU DASHBOARD KPI (GMT+7) ---
         $isDashboardOntime = 0;
         if ($user->divisi_id == 1 && $request->shift_id) {
             $shift = Shift::find($request->shift_id);
             if ($shift) {
-                $jamPulang = Carbon::createFromTimeString($shift->jam_pulang);
-                $jamMasuk = Carbon::createFromTimeString($shift->jam_masuk);
+                $jamPulang = Carbon::createFromTimeString($shift->jam_pulang, 'Asia/Jakarta');
+                $jamMasuk = Carbon::createFromTimeString($shift->jam_masuk, 'Asia/Jakarta');
 
-                // Cek jika Shift Malam (contoh: Masuk 20:00, Pulang 08:00)
                 if ($jamPulang->lt($jamMasuk)) {
-                    // Jika waktu submit lebih besar dari jam masuk (misal submit jam 22:00 malam),
-                    // berarti jam kepulangannya ada di keesokan harinya.
                     if ($waktuSekarang->copy()->format('H:i:s') >= $shift->jam_masuk) {
                         $jamPulang->addDay();
                     }
                 }
 
-                // Tambahkan toleransi 2 jam dari jam pulang
                 $batasMaksimal = $jamPulang->copy()->addHours(2);
 
-                // Jika submit sekarang <= batas maksimal, berarti On Time
                 if ($waktuSekarang->lte($batasMaksimal)) {
                     $isDashboardOntime = 1;
                 }
@@ -161,13 +157,12 @@ class InputController extends Controller
             ->where('tanggal', $hariIni)
             ->first();
 
-        // Mengelola Upload Bukti GPS (Hanya berlaku untuk TAC)
+        // Mengelola Upload Bukti GPS
         $pathBuktiGps = $report->bukti_report_gps ?? null;
 
         if ($request->has('ada_laporan_gps') && $request->hasFile('bukti_report_gps')) {
             $pathBuktiGps = $request->file('bukti_report_gps')->store('kpi_evidences/gps', 'public');
         } elseif (!$request->has('ada_laporan_gps')) {
-            // Jika toggle GPS dimatikan, kosongkan bukti gps
             $pathBuktiGps = null;
         }
 
@@ -180,9 +175,9 @@ class InputController extends Controller
                     'catatan_manager' => null,
                     'shift_id' => $request->shift_id ?? $report->shift_id,
                     'is_gps_ontime' => ($request->has('ada_laporan_gps') && $request->has('is_gps_ontime')) ? 1 : 0,
-                    'is_dashboard_ontime' => $isDashboardOntime, // Masukkan hasil pengecekan otomatis
+                    'is_dashboard_ontime' => $isDashboardOntime,
                     'bukti_report_gps' => $pathBuktiGps,
-                    'bukti_report_dashboard' => null, // Dikosongkan karena tidak perlu gambar lagi
+                    'bukti_report_dashboard' => null,
                 ]);
             }
         } else {
@@ -192,9 +187,9 @@ class InputController extends Controller
                 'status'  => 'pending',
                 'shift_id' => $request->shift_id,
                 'is_gps_ontime' => ($request->has('ada_laporan_gps') && $request->has('is_gps_ontime')) ? 1 : 0,
-                'is_dashboard_ontime' => $isDashboardOntime, // Masukkan hasil pengecekan otomatis
+                'is_dashboard_ontime' => $isDashboardOntime,
                 'bukti_report_gps' => $pathBuktiGps,
-                'bukti_report_dashboard' => null, // Dikosongkan
+                'bukti_report_dashboard' => null,
             ]);
         }
 
@@ -206,22 +201,19 @@ class InputController extends Controller
             if ($request->has('case_network')) {
                 foreach ($request->case_network as $index => $item) {
                     if (empty($item['deskripsi'])) continue;
-                    $isMonitoring = (isset($item['is_monitoring']) && $item['is_monitoring'] == "1");
 
-                    // Ambil status apakah ini deteksi dini (temuan sendiri)
+                    $isMonitoring = (isset($item['is_monitoring']) && $item['is_monitoring'] == "1");
                     $isTemuanSendiri = !$isMonitoring && isset($item['temuan_sendiri']) ? 1 : 0;
 
                     $pathRespon = null;
                     $pathDeteksi = null;
 
-                    // HANYA simpan bukti respon JIKA BUKAN deteksi dini
-                    if (!$isTemuanSendiri && $request->hasFile("case_network.{$index}.bukti_respon_time")) {
-                        $pathRespon = $request->file("case_network.{$index}.bukti_respon_time")->store('kpi_evidences/respon', 'public');
+                    if (!$isTemuanSendiri && isset($item['bukti_respon_time'])) {
+                        $pathRespon = $item['bukti_respon_time']->store('kpi_evidences/respon', 'public');
                     }
 
-                    // HANYA simpan bukti deteksi JIKA ITU deteksi dini
-                    if ($isTemuanSendiri && $request->hasFile("case_network.{$index}.bukti_deteksi_dini")) {
-                        $pathDeteksi = $request->file("case_network.{$index}.bukti_deteksi_dini")->store('kpi_evidences/deteksi', 'public');
+                    if ($isTemuanSendiri && isset($item['bukti_deteksi_dini'])) {
+                        $pathDeteksi = $item['bukti_deteksi_dini']->store('kpi_evidences/deteksi', 'public');
                     }
 
                     KegiatanDetail::create([
@@ -230,15 +222,16 @@ class InputController extends Controller
                         'variabel_kpi_id'    => (!$isMonitoring && $vCount) ? $vCount->id : null,
                         'kategori'           => 'Network',
                         'deskripsi_kegiatan' => $item['deskripsi'],
-                        'value_raw'          => '0',
                         'nomor_tiket'        => $isMonitoring ? null : ($item['nomor_tiket'] ?? null),
-                        // Kosongkan waktu respon (null) jika itu deteksi dini
-                        'waktu_respon_menit' => ($isMonitoring || $isTemuanSendiri) ? null : ($item['respons'] ?? 0),
                         'temuan_sendiri'     => $isTemuanSendiri,
                         'is_mandiri'         => $isMonitoring ? 1 : ($item['is_mandiri'] ?? 1),
                         'pic_name'           => (!$isMonitoring && isset($item['is_mandiri']) && $item['is_mandiri'] == 0) ? ($item['pic_name'] ?? null) : null,
                         'bukti_respon_time'  => $pathRespon,
                         'bukti_deteksi_dini' => $pathDeteksi,
+
+                        // KUNCI UTAMA LOGIKA PENYIMPANAN
+                        'value_raw'          => null, // Dikunci null agar tidak mengotori data network
+                        'waktu_respon_menit' => $isMonitoring ? null : ($isTemuanSendiri ? 0 : ($item['waktu_respon_menit'] ?? 0)), // Jika temuan sendiri pasti 0
                     ]);
                 }
             }
@@ -254,9 +247,12 @@ class InputController extends Controller
                         'tipe_kegiatan'      => 'case',
                         'variabel_kpi_id'    => (!$isMonitoring && $vCount) ? $vCount->id : null,
                         'deskripsi_kegiatan' => $item['nama_kegiatan'],
-                        'value_raw'          => $isMonitoring ? 'ALL' : ($item['jumlah_kendaraan'] ?? 0),
                         'is_mandiri'         => 1,
                         'kategori'           => 'GPS',
+
+                        // KUNCI UTAMA LOGIKA PENYIMPANAN
+                        'value_raw'          => $isMonitoring ? 'ALL' : ($item['jumlah_kendaraan'] ?? 0), // Hanya terisi jika itu GPS
+                        'waktu_respon_menit' => null, // Dikunci null karena GPS tidak ada hitungan menit waktu_respon_menit
                     ]);
                 }
             }
@@ -269,12 +265,12 @@ class InputController extends Controller
                         'daily_report_id'    => $report->id,
                         'tipe_kegiatan'      => 'activity',
                         'deskripsi_kegiatan' => $act['deskripsi'],
+                        'value_raw'          => null,
+                        'waktu_respon_menit' => null,
                     ]);
                 }
             }
-        }
-        // ... (Logika INFRA & BO tetap ada sesuai aslinya)
-        else if ($user->divisi_id == 2) {
+        } else if ($user->divisi_id == 2) {
             // LOGIKA INFRA
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
 
@@ -290,8 +286,9 @@ class InputController extends Controller
                         'kategori'           => $kategori,
                         'deskripsi_kegiatan' => $infra['nama_kegiatan'] . (isset($infra['deskripsi']) ? ': ' . $infra['deskripsi'] : ''),
                         'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
-                        'value_raw'          => 0,
                         'is_mandiri'         => 1,
+                        'value_raw'          => null,
+                        'waktu_respon_menit' => null,
                     ]);
                 }
             }
@@ -307,6 +304,8 @@ class InputController extends Controller
                         'tipe_kegiatan'      => 'activity',
                         'deskripsi_kegiatan' => $bo['judul'] . ': ' . ($bo['deskripsi'] ?? '-'),
                         'variabel_kpi_id'    => $vBo ? $vBo->id : null,
+                        'value_raw'          => null,
+                        'waktu_respon_menit' => null,
                     ]);
                 }
             }

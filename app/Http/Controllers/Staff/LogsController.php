@@ -13,7 +13,8 @@ class LogsController extends Controller
 {
     public function logs(Request $request)
     {
-        $query = DailyReport::with(['user.divisi', 'details']) // Pastikan user.divisi juga di-load
+        // PERBAIKAN: Tambahkan relasi 'shift' agar bisa ditampilkan
+        $query = DailyReport::with(['user.divisi', 'details', 'shift'])
             ->where('user_id', Auth::id());
 
         // Fitur Search (berdasarkan deskripsi di tabel detail)
@@ -33,7 +34,7 @@ class LogsController extends Controller
         return view('staff.logs', compact('logs'));
     }
 
-    // Logic Edit Per Case
+    // Logic Edit Per Case (Sederhana)
     public function updateCase(Request $request, $id)
     {
         $detail = KegiatanDetail::where('id', $id)
@@ -42,12 +43,48 @@ class LogsController extends Controller
                     ->whereIn('status', ['pending', 'rejected']);
             })->firstOrFail();
 
-        $detail->update([
-            'deskripsi_kegiatan' => $request->deskripsi,
-            'value_raw' => $request->respon
-        ]);
+        $user = Auth::user();
 
-        return back()->with('success', 'Detail case berhasil diperbarui!');
+        // Data dasar yang pasti diupdate semua divisi/kategori
+        $updateData = [
+            'deskripsi_kegiatan' => $request->deskripsi,
+        ];
+
+        if ($user->divisi_id == 1) { // TAC
+            if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network') {
+
+                $isTemuan = $request->has('temuan_sendiri');
+
+                // Update Field Teknis
+                $updateData['nomor_tiket'] = $request->nomor_tiket;
+                $updateData['temuan_sendiri'] = $isTemuan ? 1 : 0;
+                $updateData['is_mandiri'] = $request->is_mandiri ?? 1;
+                $updateData['pic_name'] = $request->is_mandiri == 0 ? $request->pic_name : null;
+
+                // Logika Image & Respon Time berdasarkan Temuan
+                if ($isTemuan) {
+                    $updateData['waktu_respon_menit'] = 0;
+                    // Jika ada upload bukti baru, timpa yang lama
+                    if ($request->hasFile('bukti_deteksi_dini')) {
+                        $updateData['bukti_deteksi_dini'] = $request->file('bukti_deteksi_dini')->store('kpi_evidences/deteksi', 'public');
+                    }
+                } else {
+                    $updateData['waktu_respon_menit'] = $request->waktu_respon_menit ?? 0;
+                    // Jika ada upload bukti baru, timpa yang lama
+                    if ($request->hasFile('bukti_respon_time')) {
+                        $updateData['bukti_respon_time'] = $request->file('bukti_respon_time')->store('kpi_evidences/respon', 'public');
+                    }
+                }
+            } elseif ($detail->kategori == 'GPS' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring gps') {
+                // Update Kuantitas untuk GPS
+                $updateData['value_raw'] = $request->value_raw;
+            }
+        }
+
+        // Simpan pembaruan ke Database
+        $detail->update($updateData);
+
+        return back()->with('success', 'Detail aktivitas berhasil diperbarui secara menyeluruh!');
     }
 
     // Dummy Export Excel (Contoh sederhana CSV)
@@ -67,7 +104,7 @@ class LogsController extends Controller
                 fputcsv($handle, [
                     $log->tanggal,
                     $d->deskripsi_kegiatan,
-                    $d->value_raw,
+                    $d->waktu_respon_menit,
                     $d->is_mandiri ? 'Mandiri' : 'Bantuan',
                     $d->temuan_sendiri ? 'Temuan' : 'Laporan'
                 ]);

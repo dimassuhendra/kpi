@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailyReport extends Model
 {
-    protected $fillable = ['user_id', 'tanggal', 'total_nilai_harian', 'status', 'catatan_manager', 'created_at', 'updated_at'];
-
+    protected $fillable = [
+        'user_id',
+        'tanggal',
+        'status',
+        'shift_id',              
+        'is_gps_ontime',         
+        'is_dashboard_ontime',
+        'bukti_report_gps',      
+        'bukti_report_dashboard',
+        'catatan_manager',
+        'validated_at'
+    ];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -24,6 +34,12 @@ class DailyReport extends Model
     {
         return $this->belongsTo(Divisi::class, 'divisi_id');
     }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class, 'shift_id');
+    }
+
     protected $casts = [
         'tanggal' => 'date',
     ];
