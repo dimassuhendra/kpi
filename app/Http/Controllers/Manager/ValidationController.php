@@ -9,17 +9,32 @@ use Illuminate\Support\Facades\Log;
 
 use App\Models\DailyReport;
 use App\Models\User;
+use App\Models\CustomerFeedback;
+use App\Models\TechnicalAssessment;
 
 class ValidationController extends Controller
 {
     public function validationIndex(Request $request)
     {
+        // 1. Ambil Antrean Laporan Harian
         $pendingReports = DailyReport::with(['user.divisi', 'shift'])
             ->where('status', 'pending')
             ->latest('tanggal')
             ->get();
 
-        return view('manager.validation', compact('pendingReports'));
+        // 2. Ambil Log Rating Pelanggan (50 data terbaru)
+        $feedbacks = CustomerFeedback::with('user')
+            ->latest('created_at')
+            ->limit(50)
+            ->get();
+
+        // 3. Ambil Log Nilai Asesmen Kuis (50 data terbaru)
+        $assessments = TechnicalAssessment::with('user')
+            ->latest('created_at')
+            ->limit(50)
+            ->get();
+
+        return view('manager.validation', compact('pendingReports', 'feedbacks', 'assessments'));
     }
 
     public function validationShow($id)

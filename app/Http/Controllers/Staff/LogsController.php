@@ -8,30 +8,36 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Models\DailyReport;
 use App\Models\KegiatanDetail;
+use App\Models\CustomerFeedback;
+use App\Models\TechnicalAssessment;
 
 class LogsController extends Controller
 {
     public function logs(Request $request)
     {
-        // PERBAIKAN: Tambahkan relasi 'shift' agar bisa ditampilkan
-        $query = DailyReport::with(['user.divisi', 'details', 'shift'])
-            ->where('user_id', Auth::id());
+        $userId = Auth::id();
 
-        // Fitur Search (berdasarkan deskripsi di tabel detail)
+        // 1. Ambil Laporan Harian (Kode Lama Anda)
+        $query = DailyReport::with(['user.divisi', 'details', 'shift'])
+            ->where('user_id', $userId);
+
         if ($request->has('search')) {
             $query->whereHas('details', function ($q) use ($request) {
                 $q->where('deskripsi_kegiatan', 'like', '%' . $request->search . '%');
             });
         }
 
-        // Fitur Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $logs = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
 
-        return view('staff.logs', compact('logs'));
+        // 2. Ambil Riwayat Rating & Kuis khusus user ini
+        $feedbacks = CustomerFeedback::where('user_id', $userId)->latest('created_at')->get();
+        $assessments = TechnicalAssessment::where('user_id', $userId)->latest('created_at')->get();
+
+        return view('staff.logs', compact('logs', 'feedbacks', 'assessments'));
     }
 
     // Logic Edit Per Case (Sederhana)

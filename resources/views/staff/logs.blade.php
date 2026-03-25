@@ -1,59 +1,72 @@
 @extends('layouts.staff')
 
 @section('content')
-    <div class="container mx-auto px-4 md:px-0" x-data="{ editModal: false, activeCase: {} }">
+    {{-- TAMBAHKAN activeTab: 'laporan' PADA X-DATA --}}
+    <div class="container mx-auto px-4 md:px-0" x-data="{ editModal: false, activeCase: {}, activeTab: 'laporan' }">
 
         {{-- Header Section --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-header font-bold text-slate-800">Log Aktivitas</h1>
-                <p class="text-slate-500 font-body text-xs md:text-sm">Rekam jejak dan detail pengerjaan laporan harian Anda.
-                </p>
+                <p class="text-slate-500 font-body text-xs md:text-sm">Rekam jejak dan riwayat input data Anda.</p>
             </div>
-        </div>
-
-        {{-- Filter Section --}}
-        <div class="bg-white p-5 mb-6 rounded-2xl border border-slate-200 shadow-sm">
-            <form action="{{ route('staff.kpi.logs') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
-                <div class="w-full md:flex-1">
-                    <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Cari Deskripsi</label>
-                    <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Cari keyword kegiatan..."
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
-                </div>
-                <div class="w-full md:w-48">
-                    <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Status Validasi</label>
-                    <select name="status"
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
-                        <option value="">Semua Status</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu</option>
-                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui
-                        </option>
-                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak</option>
-                    </select>
-                </div>
-                <div class="w-full md:w-auto flex gap-2">
-                    <button type="submit"
-                        class="flex-1 md:flex-none bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200">
-                        <i class="fas fa-filter mr-1"></i> Filter
-                    </button>
-                    <a href="{{ route('staff.kpi.logs') }}"
-                        class="flex-1 md:flex-none text-center bg-slate-200 text-slate-600 text-sm py-2 px-4 rounded-xl hover:bg-slate-300 transition font-bold">Reset</a>
-                </div>
-            </form>
+            
+            {{-- TAB SWITCHER --}}
+            @if(auth()->user()->divisi_id == 1)
+            <div class="bg-slate-200/50 p-1.5 rounded-2xl flex gap-2 w-full md:w-max border border-slate-200 shadow-inner">
+                <button type="button" @click="activeTab = 'laporan'" :class="activeTab === 'laporan' ? 'bg-white text-indigo-600 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-calendar-check mr-1"></i> Laporan
+                </button>
+                <button type="button" @click="activeTab = 'rating'" :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-star mr-1"></i> Rating
+                </button>
+                <button type="button" @click="activeTab = 'kuis'" :class="activeTab === 'kuis' ? 'bg-white text-emerald-500 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-award mr-1"></i> Kuis
+                </button>
+            </div>
+            @endif
         </div>
 
         {{-- Flash Message --}}
         @if (session('success'))
-            <div
-                class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
                 <i class="fas fa-check-circle mr-3 text-emerald-500"></i> {{ session('success') }}
             </div>
         @endif
 
-        {{-- Table Section --}}
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <table class="hidden md:table w-full text-left border-collapse">
+        {{-- ========================================== --}}
+        {{-- TAB 1: LOG LAPORAN HARIAN (KODE LAMA ANDA) --}}
+        {{-- ========================================== --}}
+        <div x-show="activeTab === 'laporan'" x-transition.opacity.duration.500ms>
+            
+            {{-- Filter Section (Biarkan sama persis) --}}
+            <div class="bg-white p-5 mb-6 rounded-2xl border border-slate-200 shadow-sm">
+                <form action="{{ route('staff.kpi.logs') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="w-full md:flex-1">
+                        <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Cari Deskripsi</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari keyword kegiatan..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+                    </div>
+                    <div class="w-full md:w-48">
+                        <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Status Validasi</label>
+                        <select name="status" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-auto flex gap-2">
+                        <button type="submit" class="flex-1 md:flex-none bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200">
+                            <i class="fas fa-filter mr-1"></i> Filter
+                        </button>
+                        <a href="{{ route('staff.kpi.logs') }}" class="flex-1 md:flex-none text-center bg-slate-200 text-slate-600 text-sm py-2 px-4 rounded-xl hover:bg-slate-300 transition font-bold">Reset</a>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Table Section (Desktop & Mobile persis kode lama) --}}
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+                <table class="hidden md:table w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
                         <th class="p-5">Tanggal Laporan</th>
@@ -343,15 +356,113 @@
                     <div class="p-10 text-center text-slate-400 italic text-sm">Data tidak ditemukan...</div>
                 @endforelse
             </div>
+            </div>
+
+            <div class="mt-6">
+                {{ $logs->links() }}
+            </div>
         </div>
 
-        {{-- Pagination --}}
-        <div class="mt-6">
-            {{ $logs->links() }}
+        {{-- ========================================== --}}
+        {{-- TAB 2: LOG RATING PELANGGAN                --}}
+        {{-- ========================================== --}}
+        @if(auth()->user()->divisi_id == 1)
+        <div x-show="activeTab === 'rating'" style="display: none;" x-transition.opacity.duration.500ms>
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                <th class="p-4 font-black">Detail Tiket</th>
+                                <th class="p-4 font-black text-center">Rating</th>
+                                <th class="p-4 font-black text-center">Waktu Survey</th>
+                                <th class="p-4 font-black text-center">Bukti</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @forelse($feedbacks as $fb)
+                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                    <td class="p-4">
+                                        <p class="font-bold text-slate-800">{{ $fb->nomor_tiket }}</p>
+                                        <p class="text-xs text-slate-500">{{ $fb->nama_pelanggan }}</p>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex justify-center gap-0.5 text-amber-400 text-xs">
+                                            @for($i=0; $i<$fb->rating; $i++) <i class="fas fa-star"></i> @endfor
+                                            @for($i=0; $i<(5-$fb->rating); $i++) <i class="far fa-star text-slate-300"></i> @endfor
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                                            {{ \Carbon\Carbon::parse($fb->tanggal_survey)->format('d M Y') }}
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $fb->bukti_survey) }}')" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
+                                            <i class="fas fa-image fa-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada data rating masuk.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        {{-- Edit Modal --}}
-        {{-- Edit Modal --}}
+        {{-- ========================================== --}}
+        {{-- TAB 3: LOG NILAI KUIS / ASESMEN            --}}
+        {{-- ========================================== --}}
+        <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms>
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                <th class="p-4 font-black text-center">Periode</th>
+                                <th class="p-4 font-black text-center">Skor Global</th>
+                                <th class="p-4 font-black text-center">Bukti</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @forelse($assessments as $quiz)
+                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                    <td class="p-4 text-center">
+                                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                                            {{ date('F', mktime(0, 0, 0, $quiz->periode_bulan, 1)) }} {{ $quiz->periode_tahun }}
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        @php
+                                            $percent = $quiz->jumlah_soal > 0 ? round(($quiz->jumlah_benar / $quiz->jumlah_soal) * 100) : 0;
+                                            $color = $percent >= 80 ? 'text-emerald-500' : ($percent >= 60 ? 'text-amber-500' : 'text-rose-500');
+                                        @endphp
+                                        <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
+                                            <i class="fas fa-image fa-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada data kuis masuk.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Modal Edit Case (KODE LAMA ANDA) --}}
         <div x-show="editModal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4"
             style="display: none;">
             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="editModal = false"></div>
@@ -474,10 +585,10 @@
                 </form>
             </div>
         </div>
-
+        
     </div>
 
-    {{-- MODAL PREVIEW GAMBAR --}}
+    {{-- MODAL PREVIEW GAMBAR (KODE LAMA ANDA) --}}
     <div id="imagePreviewModal"
         class="fixed inset-0 z-[100] hidden bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
         <div class="relative max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -496,7 +607,7 @@
         </div>
     </div>
 
-    <script>
+ <script>
         function openImageModal(imageUrl) {
             document.getElementById('modalImgContent').src = imageUrl;
             document.getElementById('imagePreviewModal').classList.remove('hidden');
@@ -515,4 +626,5 @@
             }
         });
     </script>
+
 @endsection

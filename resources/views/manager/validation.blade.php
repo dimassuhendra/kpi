@@ -1,87 +1,80 @@
 @extends('layouts.manager')
 
 @section('content')
-    <div class="max-w-5xl mx-auto space-y-6">
+    {{-- WRAPPER UTAMA DENGAN ALPINE.JS --}}
+    <div class="max-w-6xl mx-auto space-y-6 pb-20" x-data="{ activeTab: 'pending' }">
+
         {{-- Header Section --}}
-        <div class="flex justify-between items-end mb-8 ml-2">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 ml-2 gap-4">
             <div>
                 <h2 class="text-2xl font-header font-black text-slate-800 uppercase tracking-tight">
-                    Pending <span class="text-emerald-600">Validations</span>
+                    Monitoring <span class="text-emerald-600">& Validations</span>
                 </h2>
                 <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-                    Tinjau dan setujui laporan aktivitas harian staff
+                    Pusat persetujuan laporan dan log aktivitas
                 </p>
             </div>
-            <div class="text-right">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Queue</span>
-                <p class="text-2xl font-header font-black text-slate-800">{{ $pendingReports->count() }}</p>
+
+            {{-- TAB SWITCHER MANAGER --}}
+            <div
+                class="bg-slate-200/50 p-1.5 rounded-2xl flex flex-wrap gap-2 w-full md:w-max border border-slate-200 shadow-inner">
+                <button type="button" @click="activeTab = 'pending'"
+                    :class="activeTab === 'pending' ? 'bg-white text-emerald-600 shadow-md font-black' :
+                        'text-slate-500 font-bold hover:text-slate-700'"
+                    class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-clipboard-check mr-2"></i> Pending
+                    <span
+                        class="ml-2 bg-emerald-100 text-emerald-600 py-0.5 px-2 rounded-md">{{ $pendingReports->count() }}</span>
+                </button>
+                <button type="button" @click="activeTab = 'rating'"
+                    :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' :
+                        'text-slate-500 font-bold hover:text-slate-700'"
+                    class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-star mr-2"></i> Log Rating
+                </button>
+                <button type="button" @click="activeTab = 'kuis'"
+                    :class="activeTab === 'kuis' ? 'bg-white text-indigo-500 shadow-md font-black' :
+                        'text-slate-500 font-bold hover:text-slate-700'"
+                    class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                    <i class="fas fa-award mr-2"></i> Log Kuis
+                </button>
             </div>
         </div>
 
-        {{-- Accordion Container --}}
-        <div class="space-y-4">
+        {{-- ========================================== --}}
+        {{-- TAB 1: PENDING VALIDATIONS (KODE LAMA)     --}}
+        {{-- ========================================== --}}
+        <div x-show="activeTab === 'pending'" x-transition.opacity.duration.500ms class="space-y-4">
             @forelse($pendingReports as $rp)
+                {{-- PASTE KODE ACCORDION VALIDATION ANDA SEBELUMNYA DI SINI --}}
                 <div class="info-card overflow-hidden transition-all duration-300 border-l-4 border-l-slate-200 bg-white shadow-sm rounded-xl"
                     id="wrapper-{{ $rp->id }}">
-
-                    {{-- Header Accordion (Clickable) --}}
                     <div onclick="toggleAccordion({{ $rp->id }})"
                         class="p-5 cursor-pointer flex items-center justify-between hover:bg-slate-50/80 transition-colors">
-
+                        {{-- (Isi Accordion Header biarkan sama persis seperti kode Anda) --}}
                         <div class="flex items-start sm:items-center gap-5">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-emerald-100 flex-shrink-0 flex items-center justify-center text-emerald-700 font-black text-lg">
                                 {{ strtoupper(substr($rp->user->nama_lengkap, 0, 1)) }}
                             </div>
-
                             <div>
                                 <div class="flex items-center gap-2">
                                     <h3 class="font-header font-black text-slate-800 uppercase tracking-tight">
-                                        {{ $rp->user->nama_lengkap }}
-                                    </h3>
+                                        {{ $rp->user->nama_lengkap }}</h3>
                                     <span
-                                        class="hidden sm:inline-block text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase font-bold tracking-widest">
-                                        {{ $rp->user->divisi->nama_divisi ?? 'Divisi' }}
-                                    </span>
+                                        class="hidden sm:inline-block text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase font-bold tracking-widest">{{ $rp->user->divisi->nama_divisi ?? 'Divisi' }}</span>
                                 </div>
-
                                 <div
                                     class="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                    <span class="flex items-center"><i class="far fa-calendar-alt mr-1 text-slate-300"></i>
-                                        {{ \Carbon\Carbon::parse($rp->tanggal)->format('d M Y') }}</span>
+                                    <span class="flex items-center"><i
+                                            class="far fa-calendar-alt mr-1 text-slate-300"></i>{{ \Carbon\Carbon::parse($rp->tanggal)->format('d M Y') }}</span>
                                     @if ($rp->shift)
                                         <span class="flex items-center"><i
-                                                class="fas fa-user-clock mr-1 text-slate-300"></i>
-                                            {{ $rp->shift->nama_shift }}</span>
+                                                class="fas fa-user-clock mr-1 text-slate-300"></i>{{ $rp->shift->nama_shift }}</span>
                                     @endif
                                 </div>
-
-                                @if ($rp->user->divisi_id == 1)
-                                    <div class="flex flex-wrap gap-2 mt-2">
-                                        @if ($rp->is_gps_ontime)
-                                            <span
-                                                class="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1"><i
-                                                    class="fas fa-map-marker-alt"></i> Report GPS Sesuai Jadwal</span>
-                                        @else
-                                            <span
-                                                class="text-[9px] bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1"><i
-                                                    class="fas fa-map-marker-alt"></i> Report GPS Terlambat/Tidak Ada</span>
-                                        @endif
-
-                                        @if ($rp->is_dashboard_ontime)
-                                            <span
-                                                class="text-[9px] bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1"><i
-                                                    class="fas fa-chart-line"></i> Report Dashboard Sesuai Jadwal</span>
-                                        @else
-                                            <span
-                                                class="text-[9px] bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1"><i
-                                                    class="fas fa-chart-line"></i> Report Dashboard Terlambat</span>
-                                        @endif
-                                    </div>
-                                @endif
                             </div>
                         </div>
-
                         <div class="flex items-center gap-6 flex-shrink-0">
                             <div class="text-right hidden md:block">
                                 <span
@@ -95,8 +88,6 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- Content Accordion --}}
                     <div id="content-{{ $rp->id }}"
                         class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out bg-slate-50/50">
                         <div class="p-6 border-t border-slate-100" id="detail-{{ $rp->id }}">
@@ -123,13 +114,158 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- ========================================== --}}
+        {{-- TAB 2: LOG RATING PELANGGAN                --}}
+        {{-- ========================================== --}}
+        <div x-show="activeTab === 'rating'" style="display: none;" x-transition.opacity.duration.500ms>
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                <th class="p-4 font-black">Staff / TAC</th>
+                                <th class="p-4 font-black">Detail Tiket</th>
+                                <th class="p-4 font-black text-center">Rating</th>
+                                <th class="p-4 font-black text-center">Waktu Survey</th>
+                                <th class="p-4 font-black text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @forelse($feedbacks as $fb)
+                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                    <td class="p-4">
+                                        <p class="font-bold text-slate-700">{{ $fb->user->nama_lengkap }}</p>
+                                    </td>
+                                    <td class="p-4">
+                                        <p class="font-bold text-slate-800">{{ $fb->nomor_tiket }}</p>
+                                        <p class="text-xs text-slate-500">{{ $fb->nama_pelanggan }}</p>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex justify-center gap-0.5 text-amber-400 text-xs">
+                                            @for ($i = 0; $i < $fb->rating; $i++)
+                                                <i class="fas fa-star"></i>
+                                            @endfor
+                                            @for ($i = 0; $i < 5 - $fb->rating; $i++)
+                                                <i class="far fa-star text-slate-300"></i>
+                                            @endfor
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                                            {{ \Carbon\Carbon::parse($fb->tanggal_survey)->format('d M Y') }}
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <button type="button"
+                                            onclick="openImageModal('{{ asset('storage/' . $fb->bukti_survey) }}')"
+                                            class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition tooltip"
+                                            title="Lihat Bukti SS">
+                                            <i class="fas fa-image fa-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-400 text-sm italic">Belum ada data
+                                        rating masuk.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================== --}}
+        {{-- TAB 3: LOG NILAI KUIS / ASESMEN            --}}
+        {{-- ========================================== --}}
+        <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms>
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                <th class="p-4 font-black">Staff / TAC</th>
+                                <th class="p-4 font-black text-center">Periode</th>
+                                <th class="p-4 font-black text-center">Skor Global</th>
+                                <th class="p-4 font-black">Detail Pemahaman</th>
+                                <th class="p-4 font-black text-center">Bukti SS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @forelse($assessments as $quiz)
+                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                    <td class="p-4">
+                                        <p class="font-bold text-slate-700">{{ $quiz->user->nama_lengkap }}</p>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span
+                                            class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
+                                            {{ date('F', mktime(0, 0, 0, $quiz->periode_bulan, 1)) }}
+                                            {{ $quiz->periode_tahun }}
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        @php
+                                            $percent =
+                                                $quiz->jumlah_soal > 0
+                                                    ? round(($quiz->jumlah_benar / $quiz->jumlah_soal) * 100)
+                                                    : 0;
+                                            $color =
+                                                $percent >= 80
+                                                    ? 'text-emerald-500'
+                                                    : ($percent >= 60
+                                                        ? 'text-amber-500'
+                                                        : 'text-rose-500');
+                                        @endphp
+                                        <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar
+                                            {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex flex-wrap gap-2 text-[10px] font-bold">
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">NW:
+                                                {{ $quiz->pemahaman_network ?? 0 }}</span>
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">HW:
+                                                {{ $quiz->pemahaman_hardware ?? 0 }}</span>
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">SW:
+                                                {{ $quiz->pemahaman_software ?? 0 }}</span>
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">CCTV:
+                                                {{ $quiz->pemahaman_cctv ?? 0 }}</span>
+                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">GPS:
+                                                {{ $quiz->pemahaman_gps ?? 0 }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <button type="button"
+                                            onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')"
+                                            class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition tooltip"
+                                            title="Lihat Bukti Kuis">
+                                            <i class="fas fa-image fa-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-400 text-sm italic">Belum ada
+                                        data kuis masuk.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    {{-- MODAL PREVIEW GAMBAR --}}
+    {{-- MODAL PREVIEW GAMBAR (KODE LAMA ANDA) --}}
     <div id="imagePreviewModal"
         class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
         <div class="relative max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            {{-- Header Modal --}}
             <div class="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
                 <h3 class="font-bold text-slate-700 uppercase tracking-widest text-xs"><i
                         class="fas fa-image text-indigo-500 mr-2"></i> Preview Bukti</h3>
@@ -138,7 +274,6 @@
                     <i class="fas fa-times fa-lg"></i>
                 </button>
             </div>
-            {{-- Body Modal (Menampilkan Gambar) --}}
             <div class="p-4 flex justify-center items-center bg-slate-800/5 min-h-[50vh]">
                 <img id="modalImgContent" src="" alt="Bukti Lampiran"
                     class="max-h-[70vh] w-auto object-contain rounded-lg shadow-sm">
@@ -146,8 +281,10 @@
         </div>
     </div>
 
+    {{-- SCRIPT ACCORDION & MODAL (KODE LAMA ANDA) --}}
     <script>
         function toggleAccordion(id) {
+            // (Isi fungsi toggleAccordion biarkan sama persis seperti kode Anda)
             const content = document.getElementById('content-' + id);
             const icon = document.getElementById('icon-' + id);
             const wrapper = document.getElementById('wrapper-' + id);
@@ -163,7 +300,6 @@
 
                 if (detailContainer.getAttribute('data-loaded') !== 'true') {
                     content.style.maxHeight = "200px";
-
                     fetch(`/manager/validation/${id}`)
                         .then(res => {
                             if (!res.ok) throw new Error('Gagal memuat data');
@@ -196,11 +332,10 @@
         function closeImageModal() {
             document.getElementById('imagePreviewModal').classList.add('hidden');
             setTimeout(() => {
-                document.getElementById('modalImgContent').src = ''; // Clear src after animation
+                document.getElementById('modalImgContent').src = '';
             }, 300);
         }
 
-        // Tutup modal jika user klik di luar gambar (area background hitam)
         document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeImageModal();
