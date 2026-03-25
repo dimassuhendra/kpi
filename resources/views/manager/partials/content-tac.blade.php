@@ -1,857 +1,837 @@
-<div class="max-w-7xl mx-auto space-y-10 pb-10">
-
-    {{-- A. STATS CARDS (Tetap dipertahankan sebagai header ringkasan) --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        @php
-            $cards = [
-                [
-                    'label' => 'Pending Approval',
-                    'value' => $stats['pending'],
-                    'unit' => 'Reports',
-                    'color' => 'rose',
-                    'icon' => 'fa-clock',
-                    'progress' => 35,
-                    'has_link' => true, // Tandai khusus untuk kartu ini
-                ],
-                [
-                    'label' => 'Efficiency Rate',
-                    'value' => number_format($stats['avg_response_time'], 1),
-                    'unit' => 'Min/Case',
-                    'color' => 'emerald',
-                    'icon' => 'fa-bolt',
-                    'progress' => 75,
-                    'has_link' => false,
-                ],
-                [
-                    'label' => 'Monthly Resolved',
-                    'value' => $stats['resolved_month'],
-                    'unit' => 'Tickets',
-                    'color' => 'sky',
-                    'icon' => 'fa-check-double',
-                    'progress' => 90,
-                    'has_link' => false,
-                ],
-                [
-                    'label' => 'Staff Active Today',
-                    'value' => $stats['active_today'],
-                    'unit' => 'Members',
-                    'color' => 'amber',
-                    'icon' => 'fa-users',
-                    'progress' => 60,
-                    'has_link' => false,
-                ],
-            ];
-        @endphp
-
-        @foreach ($cards as $card)
-            {{-- Card Container: Efek hover (shadow & translate) hanya aktif jika kartu memiliki link --}}
-            <div
-                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group 
-            {{ $card['has_link'] ? 'hover:shadow-xl hover:shadow-rose-500/10 hover:-translate-y-1 cursor-pointer' : '' }} 
-            transition-all duration-300">
-
-                {{-- Cek kondisi: Jika has_link true, maka munculkan tag <a> --}}
-                @if ($card['has_link'])
-                    <a href="{{ route('manager.approval.index') }}" class="absolute inset-0 z-20" title="Buka Approval">
-                    </a>
-                @endif
-
-                {{-- Decorative Circle --}}
-                <div
-                    class="absolute top-0 right-0 w-24 h-24 bg-{{ $card['color'] }}-500/5 rounded-bl-full translate-x-10 -translate-y-10 transition-transform duration-500 {{ $card['has_link'] ? 'group-hover:scale-125 group-hover:bg-rose-500/10' : '' }} z-10">
-                </div>
-
-                {{-- Header --}}
-                <div class="flex items-center gap-3 mb-4 relative z-0">
-                    <div
-                        class="w-8 h-8 rounded-xl bg-{{ $card['color'] }}-50 flex items-center justify-center text-{{ $card['color'] }}-500 text-xs {{ $card['has_link'] ? 'group-hover:rotate-12' : '' }} transition-transform duration-300">
-                        <i class="fas {{ $card['icon'] }}"></i>
-                    </div>
-                    <p class="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">{{ $card['label'] }}</p>
-                </div>
-
-                {{-- Body --}}
-                <div class="flex items-end gap-2 relative z-0">
-                    <h2
-                        class="text-4xl font-black text-slate-800 leading-none tracking-tighter {{ $card['has_link'] ? 'group-hover:text-rose-600' : '' }} transition-colors duration-300">
-                        {{ $card['value'] }}
-                    </h2>
-                    <span
-                        class="text-[10px] font-bold text-{{ $card['color'] }}-500 mb-1 uppercase tracking-wider">{{ $card['unit'] }}</span>
-                </div>
-
-                {{-- Footer --}}
-                <div class="w-full h-1.5 bg-slate-50 mt-6 rounded-full overflow-hidden relative z-0">
-                    <div class="h-full bg-{{ $card['color'] }}-500 transition-all duration-700 ease-out"
-                        style="width: {{ $card['progress'] }}%">
-                    </div>
-                </div>
-
-            </div>
-        @endforeach
+{{-- SECTION: TAC ANALYTICS --}}
+<div class="mb-10 space-y-6">
+    <div class="flex items-center gap-2 mb-4">
+        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest border-l-4 border-amber-500 pl-3">
+            TAC <span class="text-amber-500">Analytics</span>
+        </h2>
     </div>
 
-    {{-- B. PERFORMANCE METRICS --}}
-    <div class="space-y-8">
-
-        {{-- BARIS 1: 4 KOLOM (DONUTS & THRESHOLD) --}}
-        {{-- BARIS 1: 4 KOLOM (DONUTS & THRESHOLD) --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {{-- Donut 1: Temuan vs Laporan --}}
-            <div
-                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
-                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
-                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Temuan vs Laporan</h4>
-                    <select onchange="updateDynamicChart('donutInisiatif', this.value)"
-                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                        <option value="all">ALL</option>
-                        @foreach ($staffChartData as $index => $staff)
-                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="relative w-full h-40 mt-8">
-                    <canvas id="donutInisiatif"></canvas>
-                    <div id="donutInisiatifLegend"
-                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    </div>
-                </div>
-                <div class="flex justify-center gap-3 mt-4">
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">TEMUAN</span></div>
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">LAPORAN</span></div>
-                </div>
-            </div>
-
-            {{-- Donut 2: Mandiri vs Bantuan --}}
-            <div
-                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
-                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
-                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Mandiri vs Bantuan</h4>
-                    <select onchange="updateDynamicChart('donutMandiri', this.value)"
-                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                        <option value="all">ALL</option>
-                        @foreach ($staffChartData as $index => $staff)
-                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="relative w-full h-40 mt-8">
-                    <canvas id="donutMandiri"></canvas>
-                    <div id="donutMandiriLegend"
-                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"></div>
-                </div>
-                <div class="flex justify-center gap-3 mt-4">
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">MANDIRI</span></div>
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-200"></span><span
-                            class="text-[7px] font-bold text-slate-400">BANTUAN</span></div>
-                </div>
-            </div>
-
-            {{-- Donut 3: Workload Mix --}}
-            <div
-                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
-                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
-                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Workload Mix</h4>
-                    <select onchange="updateDynamicChart('chartWorkloadMix', this.value)"
-                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                        <option value="all">ALL</option>
-                        @foreach ($staffChartData as $index => $staff)
-                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="relative w-full h-40 mt-8">
-                    <canvas id="chartWorkloadMix"></canvas>
-                    <div id="workloadLegend"
-                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"></div>
-                </div>
-                <div class="flex justify-center gap-3 mt-4">
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">CASE</span></div>
-                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span
-                            class="text-[7px] font-bold text-slate-400">ACTIVITY</span></div>
-                </div>
-            </div>
-
-            {{-- Bar 4: Avg Response Limit --}}
-            <div
-                class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
-                <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                    <h4 class="text-[8px] font-black uppercase text-slate-500 tracking-widest"><i
-                            class="fas fa-chart-pie mr-2 text-emerald-600"></i> Response Limit</h4>
-                    <select onchange="updateDynamicChart('barResponseThreshold', this.value)"
-                        class="text-[8px] font-bold border-none bg-slate-50 rounded-md p-1 focus:ring-0">
-                        <option value="all">ALL</option>
-                        @foreach ($staffChartData as $index => $staff)
-                            <option value="{{ $index }}">{{ explode(' ', $staff['nama'])[0] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="w-full px-4 mt-12">
-                    <p class="text-[8px] text-rose-400 font-bold text-center mb-2 uppercase italic">Target: < 15
-                            Menit</p>
-                            <div style="height:100px;"><canvas id="barResponseThreshold"></canvas></div>
-                </div>
-            </div>
+    {{-- ROW 1: RASIO PENANGANAN (2 Kolom) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div x-data="chartTacDonutTemuan()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Deteksi Dini vs
+                Laporan Gangguan</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
         </div>
-
-        {{-- BARIS 2: 1 KOLOM (DAILY TREND FULL WIDTH) --}}
-        <div class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-            <div class="mb-8 flex flex-wrap justify-between items-center gap-4">
-                <div>
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        <i class="fas fa-chart-line mr-2 text-emerald-600"></i> Daily Activity Trend
-                    </h3>
-                    <p class="text-[9px] text-slate-400 mt-1 italic">Grafik beban kerja harian tim & kustomisasi
-                        tanggal.</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-3">
-                    <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                        <input type="date" id="start_date_input"
-                            class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
-                        <span class="text-slate-400 text-[9px]">-</span>
-                        <input type="date" id="end_date_input"
-                            class="text-[9px] font-bold bg-transparent border-none focus:ring-0 p-1">
-                        <button onclick="changeFilter('custom', this)"
-                            class="filter-btn p-1.5 hover:bg-emerald-500 hover:text-white rounded-lg transition">
-                            <i class="fas fa-search text-[9px]"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
-                        <button onclick="changeFilter('today', this)"
-                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">TODAY</button>
-                        <button onclick="changeFilter('weekly', this)"
-                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg hover:text-emerald-600 transition">WEEKLY</button>
-                        <button onclick="changeFilter('monthly', this)"
-                            class="filter-btn px-3 py-1.5 text-[9px] font-bold rounded-lg bg-emerald-500 text-white shadow-sm transition">MONTHLY</button>
-                    </div>
-
-                    <select id="staffSelector" onchange="updateDynamicChart('chartDailyTrend', this.value)"
-                        class="text-[9px] font-bold border-none bg-slate-50 rounded-lg focus:ring-0 cursor-pointer px-3 py-2">
-                        <option value="all">ALL TEAM</option>
-                        @foreach ($staffChartData as $index => $staff)
-                            <option value="{{ $index }}">{{ strtoupper($staff['nama']) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div style="height:350px;">
-                <canvas id="chartDailyTrend"></canvas>
-            </div>
+        <div x-data="chartTacDonutMandiri()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Penyelesaian
+                Mandiri vs Eskalasi</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
         </div>
+    </div>
 
-        {{-- BARIS 3: 4 KOLOM (MINI CARDS) --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            @php
-                $miniCharts = [
-                    ['title' => 'Total Cases', 'id' => 'chartCountCase', 'desc' => 'Akumulasi case teknis.'],
-                    ['title' => 'Avg Response', 'id' => 'chartAvgTime', 'desc' => 'Rata-rata respon (Menit).'],
-                    ['title' => 'Temuan TAC', 'id' => 'chartInisiatif', 'desc' => 'Jumlah temuan mandiri.'],
-                    ['title' => 'Penyelesaian TAC', 'id' => 'chartMandiri', 'desc' => 'Case tanpa bantuan tim infra.'],
-                ];
-            @endphp
-            @foreach ($miniCharts as $mc)
-                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm group">
-                    <div class="text-left mb-4">
-                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-widest"><i
-                                class="fas fa-chart-bar mr-2 text-emerald-600"></i> {{ $mc['title'] }}
-                        </p>
-                        <p class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">{{ $mc['desc'] }}
-                        </p>
-                    </div>
-                    <div style="height:150px;"><canvas id="{{ $mc['id'] }}"></canvas></div>
-                </div>
-            @endforeach
+    {{-- ROW 2: DISTRIBUSI & SLA (3 Kolom) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div x-data="chartTacDonutCaseAct()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Case vs General
+                Activity</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
         </div>
-
-        {{-- BARIS 4: LAPORAN AKTIVITAS GPS --}}
-        <div class="mt-12">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {{-- 1. Chart Komparasi Beban Kerja (Network vs GPS) --}}
-                <div
-                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center relative h-[320px]">
-                    <div class="w-full flex justify-between items-start absolute top-6 px-6 z-10">
-                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest"><i
-                                class="fas fa-chart-pie mr-2 text-sky-600"></i> Total Kasus: Network vs GPS</h4>
-                    </div>
-                    <div class="relative w-full h-40 mt-8">
-                        <canvas id="donutNetVsGps"></canvas>
-                        <div id="donutNetVsGpsLegend"
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        </div>
-                    </div>
-                    <div class="flex justify-center gap-3 mt-4">
-                        <div class="flex items-center gap-1"><span
-                                class="w-2 h-2 rounded-full bg-emerald-500"></span><span
-                                class="text-[7px] font-bold text-slate-400">NETWORK</span></div>
-                        <div class="flex items-center gap-1"><span
-                                class="w-2 h-2 rounded-full bg-sky-500"></span><span
-                                class="text-[7px] font-bold text-slate-400">GPS</span></div>
-                    </div>
-                </div>
-
-                {{-- 2. Chart Peringkat Staff GPS (Makan 2 Kolom) --}}
-                <div
-                    class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm h-[320px] flex flex-col lg:col-span-2">
-                    <div class="w-full flex justify-between items-start mb-6">
-                        <h4 class="text-[9px] font-black uppercase text-slate-500 tracking-widest"><i
-                                class="fas fa-trophy mr-2 text-sky-600"></i> Jumlah Laporan GPS per Staff</h4>
-                    </div>
-                    <div class="relative flex-1 w-full">
-                        <canvas id="barStaffGps"></canvas>
-                    </div>
-                </div>
-            </div>
+        <div x-data="chartTacDonutNetGps()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Case Network vs
+                GPS</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
         </div>
+        <div x-data="chartTacGaugeTime()"
+            class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-slate-50/50"></div>
+            <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 text-center relative z-10">
+                Rata-rata Waktu Respon</h3>
+            <div x-ref="chart" class="relative z-10 -mt-4"></div>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest relative z-10 -mt-6">Batas Maksimal:
+                15 Menit</p>
+        </div>
+    </div>
 
+    {{-- ROW 3: KINERJA INDIVIDU (3 Kolom) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div x-data="chartTacBarTotal()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Case per Staff</h3>
+            <div x-ref="chart"></div>
+        </div>
+        <div x-data="chartTacBarAvg()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Rata-rata Respon (Menit)
+            </h3>
+            <div x-ref="chart"></div>
+        </div>
+        <div x-data="chartTacBarGrouped()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Mandiri & Temuan per Staff
+            </h3>
+            <div x-ref="chart"></div>
+        </div>
+    </div>
+
+    {{-- ROW 4: TREN HARIAN (2 Kolom) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div x-data="chartTacTrendCaseAct()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tren Activity vs Case Harian
+            </h3>
+            <div x-ref="chart"></div>
+        </div>
+        <div x-data="chartTacTrendGps()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Volume Kendaraan GPS Harian
+            </h3>
+            <div x-ref="chart"></div>
+        </div>
+    </div>
+
+    {{-- ROW 5: KEPATUHAN & EVALUASI (Dipindah dari Executive) --}}
+    <div class="flex items-center gap-2 mb-4 mt-8">
+        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest border-l-4 border-indigo-500 pl-3">
+            Compliance & <span class="text-indigo-500">Evaluation</span>
+        </h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div x-data="chartCompliance('Dashboard')" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Kepatuhan
+                Dashboard KPI</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
+        </div>
+        <div x-data="chartCompliance('GPS')" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Kepatuhan Report
+                GPS</h3>
+            <div x-ref="chart" class="flex justify-center"></div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1">
+        <div x-data="chartCustomerFeedback()" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Customer Feedback (Volume vs
+                Rating)</h3>
+            <div x-ref="chart"></div>
+        </div>
     </div>
 </div>
 
-{{-- SCRIPTS --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
-
 <script>
-    Chart.register(window['chartjs-plugin-annotation']);
+    document.addEventListener('alpine:init', () => {
+        // Fungsi pembantu untuk membuat opsi Donut yang rapi
+        const createDonutOptions = (series, labels, colors) => ({
+            series: series,
+            chart: {
+                type: 'donut',
+                height: 260,
+                fontFamily: 'inherit'
+            },
+            labels: labels,
+            colors: colors,
+            stroke: {
+                width: 2,
+                colors: ['#fff']
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                fontSize: '10px',
+                                color: '#94a3b8',
+                                offsetY: -5
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '18px',
+                                fontWeight: 800,
+                                color: '#334155',
+                                offsetY: 5,
+                                // === PERBAIKAN DI SINI ===
+                                formatter: function(val, w) {
+                                    // 1. Ambil nilai asli (pastikan berupa angka)
+                                    let numericVal = parseFloat(val) || 0;
 
-    const colors = {
-        emerald: '#10b981',
-        amber: '#f59e0b',
-        sky: '#0ea5e9',
-        indigo: '#6366f1',
-        rose: '#f43f5e',
-        slate: '#f1f5f9'
-    };
+                                    // 2. Hitung total keseluruhan data dari globals
+                                    let total = w.globals.seriesTotals.reduce((a, b) => {
+                                        return a + b
+                                    }, 0);
 
-    // Store Original Data for "ALL TEAM" reset
-    const rawStaffData = @json($staffChartData);
-    const globalSummary = @json($summaryData);
-    const globalWorkload = @json($workloadMix);
-    const globalTrend = {
-        cases: @json($trendCases),
-        activities: @json($trendActivities),
-        labels: @json($trendLabels)
-    };
-    let masterStaffData = @json($staffChartData);
-    let masterTrendLabels = @json($trendLabels);
-    let masterTrendCases = @json($trendCases);
-    let masterTrendActivities = @json($trendActivities);
+                                    // 3. Kalkulasi persentase manual
+                                    let percent = total > 0 ? (numericVal / total) * 100 : 0;
 
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-    Chart.defaults.font.weight = '700';
-    Chart.defaults.plugins.legend.display = false;
-
-
-    async function changeFilter(type, element = null) {
-        // UI: Update tombol aktif
-        if (element && element.tagName === 'BUTTON') {
-            const parent = element.closest('.flex');
-            if (parent) {
-                parent.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-sm');
-                });
-                element.classList.add('bg-emerald-500', 'text-white', 'shadow-sm');
-            }
-        }
-
-        // Ambil input tanggal
-        const startDate = document.getElementById('start_date_input').value;
-        const endDate = document.getElementById('end_date_input').value;
-        const divisiId = new URLSearchParams(window.location.search).get('divisi_id') || '1';
-
-        // Susun URL
-        let url = `?divisi_id=${divisiId}&filter=${type}`;
-        if (type === 'custom') {
-            if (!startDate || !endDate) return alert('Pilih rentang tanggal dulu bos!');
-            url += `&start_date=${startDate}&end_date=${endDate}`;
-        }
-
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await response.json();
-
-            // Update data master & UI (Gunakan fungsi updateDashboardUI yang sudah dibuat sebelumnya)
-            masterStaffData = data.staffChartData;
-            masterTrendLabels = data.trend.labels;
-            masterTrendCases = data.trend.cases;
-            masterTrendActivities = data.trend.activities;
-
-            document.getElementById('staffSelector').value = 'all';
-            updateDashboardUI(data);
-        } catch (error) {
-            console.error("Gagal update data:", error);
-        }
-    }
-
-    // Logika Filter Per Staff (Dropdown)
-    function updateDynamicChart(chartId, value) {
-        const chart = Chart.getChart(chartId);
-        if (!chart) return;
-
-        let dCases = (value === 'all') ? masterTrendCases : masterStaffData[value].daily_history.cases;
-        let dActs = (value === 'all') ? masterTrendActivities : masterStaffData[value].daily_history.activities;
-
-        chart.data.datasets[0].data = dCases;
-        chart.data.datasets[1].data = dActs;
-        chart.update();
-    }
-
-    // Fungsi Update Semua Visual Dashboard
-    function updateDashboardUI(data) {
-        // 1. Update Chart Utama (Trend)
-        updateChart('chartDailyTrend', [data.trend.cases, data.trend.activities], data.trend.labels);
-
-        // 4. Update Angka Statistik (H2)
-        const stats = document.querySelectorAll('h2.text-4xl');
-        if (stats.length >= 4) {
-            stats[0].innerText = data.stats.pending;
-            stats[1].innerText = parseFloat(data.stats.avg_response_time).toFixed(1);
-            stats[2].innerText = data.stats.resolved_month;
-            stats[3].innerText = data.stats.active_today;
-        }
-    }
-
-    function updateChart(id, datasets, labels = null) {
-        const chart = Chart.getChart(id);
-        if (!chart) return;
-        if (labels) chart.data.labels = labels;
-        datasets.forEach((d, i) => {
-            if (chart.data.datasets[i]) chart.data.datasets[i].data = d;
-        });
-        chart.update();
-    }
-
-    // --- HELPER FUNCTIONS ---
-    function setDonutLabel(id, value, total, label) {
-        // Pastikan total adalah angka valid dan lebih dari 0
-        const percent = (total > 0) ? Math.round((value / total) * 100) : 0;
-
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = `
-            <span class="text-2xl font-black text-slate-800 leading-none">${percent}%</span>
-            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">${label}</span>
-        `;
-        }
-    }
-
-    function exportChart(chartId, filename) {
-        const canvas = document.getElementById(chartId);
-        const link = document.createElement('a');
-        link.download = `${filename}-${new Date().toISOString().slice(0,10)}.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
-        link.click();
-    }
-
-    function updateDynamicChart(chartId, index) {
-        const chart = Chart.getChart(chartId);
-        if (!chart) return;
-
-        let val1, val2, total, label;
-
-        // 1. Ambil Sumber Data berdasarkan pilihan (Global vs Staff)
-        const isAll = (index === 'all');
-        const dataSrc = isAll ? globalSummary : masterStaffData[index];
-        const workloadSrc = isAll ? globalWorkload : masterStaffData[index];
-
-        // 2. Logika Update berdasarkan Chart ID
-        switch (chartId) {
-            case 'chartDailyTrend':
-                const trendSrc = isAll ? globalTrend : masterStaffData[index].daily_history;
-                chart.data.datasets[0].data = trendSrc.cases;
-                chart.data.datasets[1].data = trendSrc.activities;
-                break;
-
-            case 'donutInisiatif':
-                // Temuan (val1) vs Laporan (val2)
-                val1 = isAll ? dataSrc.proaktif : dataSrc.inisiatif_count;
-                // Gunakan Math.max untuk mencegah hasil minus jika ada anomali data
-                val2 = isAll ? dataSrc.penugasan : Math.max(0, dataSrc.total_case - val1);
-                label = 'Temuan TAC';
-
-                chart.data.datasets[0].data = [val1, val2];
-                setDonutLabel('donutInisiatifLegend', val1, (val1 + val2), label);
-                break;
-
-            case 'donutMandiri':
-                // Mandiri (val1) vs Bantuan (val2)
-                val1 = isAll ? dataSrc.mandiri : dataSrc.mandiri_count;
-                // Gunakan Math.max untuk mencegah hasil minus jika ada anomali data
-                val2 = isAll ? dataSrc.bantuan : Math.max(0, dataSrc.total_case - val1);
-                label = 'Penyelesaian TAC';
-
-                chart.data.datasets[0].data = [val1, val2];
-                setDonutLabel('donutMandiriLegend', val1, (val1 + val2), label);
-                break;
-
-            case 'chartWorkloadMix':
-                // Case (val1) vs Activity (val2)
-                val1 = isAll ? workloadSrc.case : dataSrc.total_case;
-                // Karena dataSrc.activities mungkin undefined di mapping staff lama, gunakan fallback 0
-                val2 = isAll ? workloadSrc.activity : (dataSrc.activities || 0);
-                label = 'Case';
-
-                chart.data.datasets[0].data = [val1, val2];
-                setDonutLabel('workloadLegend', val1, (val1 + val2), label);
-                break;
-
-            case 'barResponseThreshold':
-                const avg = isAll ? dataSrc.avg_time : dataSrc.avg_time;
-                chart.data.datasets[0].data = [avg];
-                chart.data.datasets[0].backgroundColor = avg > 15 ? colors.rose : colors.emerald;
-                break;
-        }
-
-        chart.update();
-    }
-
-    // --- INITIALIZATION ---
-
-    // 1. Daily Trend
-    new Chart(document.getElementById('chartDailyTrend'), {
-        type: 'line',
-        data: {
-            labels: globalTrend.labels,
-            datasets: [{
-                    label: 'Cases',
-                    data: globalTrend.cases,
-                    borderColor: colors.emerald,
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(16, 185, 129, 0.05)'
-                },
-                {
-                    label: 'Activities',
-                    data: globalTrend.activities,
-                    borderColor: colors.amber,
-                    borderDash: [5, 5],
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true, // Mulai dari angka 0
-                    ticks: {
-                        // Memaksa angka menjadi bulat (menghilangkan desimal)
-                        stepSize: 1,
-                        callback: function(value) {
-                            if (value % 1 === 0) {
-                                return value;
+                                    // 4. Kembalikan format: "Nilai (Persentase%)"
+                                    return numericVal + " (" + percent.toFixed(1) + "%)";
+                                }
+                            },
+                            total: {
+                                show: true,
+                                showAlways: false,
+                                label: 'Total',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: '#64748b',
+                                formatter: function(w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => {
+                                        return a + b
+                                    }, 0);
+                                }
                             }
                         }
                     }
                 }
             },
-            // Tambahan agar tooltip tidak muncul desimal jika datanya bulat
-            plugins: {
-                legend: {
-                    display: true
-                }
-            }
-        }
-    });
-
-    // 2. Donuts
-    const donutOpt = {
-        cutout: '82%',
-        responsive: true,
-        maintainAspectRatio: false
-    };
-
-    new Chart(document.getElementById('donutInisiatif'), {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [globalSummary.proaktif, globalSummary.penugasan],
-                backgroundColor: [colors.amber, colors.emerald],
-                borderWidth: 0
-            }]
-        },
-        options: donutOpt
-    });
-    setDonutLabel('donutInisiatifLegend', globalSummary.proaktif, (globalSummary.proaktif + globalSummary.penugasan),
-        'Temuan TAC');
-
-    new Chart(document.getElementById('donutMandiri'), {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [globalSummary.mandiri, globalSummary.bantuan],
-                backgroundColor: [colors.emerald, colors.slate],
-                borderWidth: 0
-            }]
-        },
-        options: donutOpt
-    });
-    setDonutLabel('donutMandiriLegend', globalSummary.mandiri, (globalSummary.mandiri + globalSummary.bantuan),
-        'Penyelesaian TAC');
-
-    new Chart(document.getElementById('chartWorkloadMix'), {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [globalWorkload.case, globalWorkload.activity],
-                backgroundColor: [colors.sky, colors.amber],
-                borderWidth: 0
-            }]
-        },
-        options: donutOpt
-    });
-    setDonutLabel('workloadLegend', globalWorkload.case, (globalWorkload.case+globalWorkload.activity), 'Case');
-
-    // 3. Productivity Ratio
-    new Chart(document.getElementById('chartStaffProductivity'), {
-        type: 'bar',
-        data: {
-            labels: rawStaffData.map(s => s.nama_lengkap),
-            datasets: [{
-                    label: 'Technical',
-                    data: rawStaffData.map(s => s.total_case),
-                    backgroundColor: colors.sky,
-                    borderRadius: 6
-                },
-                {
-                    label: 'General',
-                    data: rawStaffData.map(s => s.activities),
-                    backgroundColor: colors.amber,
-                    borderRadius: 6
-                },
-                {
-                    label: 'Self-Inisiatif',
-                    data: rawStaffData.map(s => s.inisiatif_count),
-                    backgroundColor: colors.emerald,
-                    borderRadius: 6
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    stacked: true
-                },
-                y: {
-                    stacked: true
-                }
-            }
-        }
-    });
-
-    // 4. Threshold
-    new Chart(document.getElementById('barResponseThreshold'), {
-        type: 'bar',
-        data: {
-            labels: ['Avg'],
-            datasets: [{
-                data: [globalSummary.avg_time],
-                backgroundColor: globalSummary.avg_time > 15 ? colors.rose : colors.emerald,
-                borderRadius: 20
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    max: 30,
-                    display: false
-                },
-                y: {
-                    display: false
-                }
+            dataLabels: {
+                enabled: false // Matikan label yang melayang di luar potongan
             },
-            plugins: {
-                annotation: {
-                    annotations: {
-                        line1: {
-                            type: 'line',
-                            xMin: 15,
-                            xMax: 15,
-                            borderColor: colors.rose,
-                            borderDash: [4, 4],
-                            borderWidth: 2
-                        }
-                    }
-                }
+            legend: {
+                position: 'bottom',
+                fontSize: '11px',
+                fontWeight: 700
             }
-        }
-    });
+        });
 
-    // 5. Mini Charts
-    const miniOpt = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: {
-                ticks: {
-                    size: 8
-                }
+        // --- ROW 1: DONUT CHARTS ---
+        Alpine.data('chartTacDonutTemuan', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
             },
-            y: {
-                ticks: {
-                    size: 8
-                },
-                grid: {
-                    color: '#f1f5f9'
-                }
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, createDonutOptions(data.tac
+                    .temuan_vs_laporan, ['Deteksi Dini', 'Laporan (Tiket)'], ['#f59e0b',
+                        '#3b82f6'
+                    ]));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) this.chart.updateSeries(data.tac.temuan_vs_laporan);
             }
-        }
-    };
-    const staffLabels = rawStaffData.map(s => s.nama.split(' ')[0]);
+        }));
 
-    new Chart(document.getElementById('chartCountCase'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: rawStaffData.map(s => s.total_case),
-                backgroundColor: colors.sky,
-                borderRadius: 4
-            }]
-        },
-        options: miniOpt
-    });
-    new Chart(document.getElementById('chartAvgTime'), {
-        type: 'line',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: rawStaffData.map(s => s.avg_time),
-                borderColor: colors.amber,
-                tension: 0.4
-            }]
-        },
-        options: miniOpt
-    });
-    new Chart(document.getElementById('chartInisiatif'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: rawStaffData.map(s => s.inisiatif_count),
-                backgroundColor: colors.emerald,
-                borderRadius: 4
-            }]
-        },
-        options: miniOpt
-    });
-    new Chart(document.getElementById('chartMandiri'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels,
-            datasets: [{
-                data: rawStaffData.map(s => s.mandiri_count),
-                backgroundColor: colors.indigo,
-                borderRadius: 4
-            }]
-        },
-        options: miniOpt
-    });
-
-    // ==========================================
-    // INITIALIZATION: GPS CHARTS
-    // ==========================================
-
-    // 1. Donut: Komparasi Network vs GPS
-    new Chart(document.getElementById('donutNetVsGps'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Network', 'GPS'],
-            datasets: [{
-                data: [globalSummary.network_count, globalSummary.gps_count],
-                backgroundColor: [colors.emerald, colors.sky],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            ...donutOpt,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.raw + ' Kasus';
-                        }
-                    }
-                }
+        Alpine.data('chartTacDonutMandiri', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, createDonutOptions(data.tac
+                    .mandiri_vs_eskalasi, ['Diselesaikan Mandiri', 'Eskalasi / Bantuan'], [
+                        '#10b981', '#f43f5e'
+                    ]));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) this.chart.updateSeries(data.tac.mandiri_vs_eskalasi);
             }
-        }
-    });
-    // Set teks di tengah Donut Chart (Menampilkan porsi/persentase GPS)
-    setDonutLabel('donutNetVsGpsLegend', globalSummary.gps_count, (globalSummary.network_count + globalSummary
-        .gps_count), 'Porsi GPS');
+        }));
 
-    // 2. Bar: Peringkat Staff GPS
-    new Chart(document.getElementById('barStaffGps'), {
-        type: 'bar',
-        data: {
-            labels: staffLabels, // Nama-nama staff
-            datasets: [{
-                label: 'Laporan GPS',
-                data: rawStaffData.map(s => s.gps_count), // Mengambil data gps_count per staff
-                backgroundColor: colors.sky,
-                borderRadius: 6,
-                barThickness: 30, // Agar bar tidak terlalu lebar jika staff sedikit
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }, // Memaksa y-axis pakai angka bulat (tidak ada 0.5 laporan)
-                    grid: {
-                        color: '#f1f5f9'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
+        // --- ROW 2: DONUT & GAUGE CHARTS ---
+        Alpine.data('chartTacDonutCaseAct', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, createDonutOptions(data.tac
+                    .case_vs_activity, ['Case (Gangguan)', 'General Activity'], ['#ef4444',
+                        '#94a3b8'
+                    ]));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) this.chart.updateSeries(data.tac.case_vs_activity);
+            }
+        }));
+
+        Alpine.data('chartTacDonutNetGps', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, createDonutOptions(data.tac
+                    .network_vs_gps, ['Network', 'GPS'], ['#8b5cf6', '#14b8a6']));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) this.chart.updateSeries(data.tac.network_vs_gps);
+            }
+        }));
+
+        // GAUGE CHART (SLA Waktu Respon)
+        Alpine.data('chartTacGaugeTime', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            getOptions(data) {
+                let val = data.tac.avg_response_time || 0;
+                let percent = Math.min((val / 30) * 100,
+                    100); // 30 Menit dianggap 100% penuh lingkaran
+                let color = val <= 10 ? '#10b981' : (val <= 15 ? '#f59e0b' :
+                    '#ef4444'); // Hijau <10, Kuning <=15, Merah >15
+
+                return {
+                    series: [percent],
+                    chart: {
+                        type: 'radialBar',
+                        height: 280,
+                        fontFamily: 'inherit'
                     },
-                    ticks: {
-                        font: {
-                            size: 9
+                    colors: [color],
+                    plotOptions: {
+                        radialBar: {
+                            startAngle: -135,
+                            endAngle: 135,
+                            hollow: {
+                                size: '60%'
+                            },
+                            track: {
+                                background: '#f1f5f9',
+                                strokeWidth: '100%'
+                            },
+                            dataLabels: {
+                                name: {
+                                    show: true,
+                                    fontSize: '10px',
+                                    color: '#64748b',
+                                    offsetY: 20
+                                },
+                                value: {
+                                    formatter: function() {
+                                        return val + " Menit";
+                                    },
+                                    fontSize: '24px',
+                                    fontWeight: 900,
+                                    color: color,
+                                    offsetY: -10
+                                }
+                            }
                         }
+                    },
+                    labels: [val <= 10 ? 'Sangat Baik' : (val <= 15 ? 'Batas Wajar' :
+                        'Kritis (Lewat Batas)')]
+                };
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (!data.tac) return;
+                this.chart.updateOptions(this.getOptions(data));
+            }
+        }));
+
+        // --- ROW 3: STAFF KINERJA BARS ---
+        const createBarOptions = (seriesName, seriesData, categories, color) => ({
+            series: [{
+                name: seriesName,
+                data: seriesData
+            }],
+            chart: {
+                type: 'bar',
+                height: 260,
+                fontFamily: 'inherit',
+                toolbar: {
+                    show: false
+                }
+            },
+            colors: [color],
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '40%',
+                    distributed: true
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '10px'
+                }
+            },
+            xaxis: {
+                categories: categories,
+                labels: {
+                    style: {
+                        fontSize: '9px',
+                        fontWeight: 700
                     }
                 }
             },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.raw + ' Laporan GPS';
+            legend: {
+                show: false
+            }
+        });
+
+        Alpine.data('chartTacBarTotal', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, createBarOptions('Total Case', data
+                    .tac.staff_total_case, data.staff_labels, '#3b82f6'));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) {
+                    this.chart.updateSeries([{
+                        data: data.tac.staff_total_case
+                    }]);
+                    this.chart.updateOptions({
+                        xaxis: {
+                            categories: data.staff_labels
                         }
-                    }
+                    });
                 }
             }
-        }
+        }));
+
+        Alpine.data('chartTacBarAvg', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            render(data) {
+                if (!data.tac) return;
+                // Kita beri warna dinamis untuk respon: jika staf > 15 merah, dsb.
+                let options = createBarOptions('Rata-rata Respon', data.tac.staff_avg_response, data
+                    .staff_labels, '#f59e0b');
+                options.plotOptions.bar.colors = {
+                    ranges: [{
+                        from: 0,
+                        to: 10,
+                        color: '#10b981'
+                    }, {
+                        from: 10.1,
+                        to: 15,
+                        color: '#f59e0b'
+                    }, {
+                        from: 15.1,
+                        to: 1000,
+                        color: '#ef4444'
+                    }]
+                };
+                options.dataLabels.formatter = function(val) {
+                    return val + "m";
+                }; // Tambah m (menit)
+                this.chart = new ApexCharts(this.$refs.chart, options);
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) {
+                    this.chart.updateSeries([{
+                        data: data.tac.staff_avg_response
+                    }]);
+                    this.chart.updateOptions({
+                        xaxis: {
+                            categories: data.staff_labels
+                        }
+                    });
+                }
+            }
+        }));
+
+        // GROUPED BAR
+        Alpine.data('chartTacBarGrouped', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            getOptions(data) {
+                return {
+                    series: [{
+                            name: 'Selesai Mandiri',
+                            data: data.tac.staff_mandiri
+                        },
+                        {
+                            name: 'Deteksi Dini',
+                            data: data.tac.staff_temuan
+                        }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        height: 260,
+                        fontFamily: 'inherit',
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#10b981', '#f59e0b'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '50%',
+                            borderRadius: 2
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    xaxis: {
+                        categories: data.staff_labels,
+                        labels: {
+                            style: {
+                                fontSize: '9px',
+                                fontWeight: 700
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        fontSize: '10px',
+                        fontWeight: 700
+                    }
+                }
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) {
+                    this.chart.updateSeries([{
+                        data: data.tac.staff_mandiri
+                    }, {
+                        data: data.tac.staff_temuan
+                    }]);
+                    this.chart.updateOptions({
+                        xaxis: {
+                            categories: data.staff_labels
+                        }
+                    });
+                }
+            }
+        }));
+
+        // --- ROW 4: TREND CHARTS ---
+        Alpine.data('chartTacTrendCaseAct', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            getOptions(data) {
+                return {
+                    series: [{
+                            name: 'Case (Gangguan)',
+                            data: data.tac.trend_case || []
+                        },
+                        {
+                            name: 'General Activity',
+                            data: data.tac.trend_activity || []
+                        }
+                    ],
+                    chart: {
+                        type: 'line',
+                        height: 300,
+                        fontFamily: 'inherit',
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#ef4444', '#94a3b8'],
+                    stroke: {
+                        curve: 'smooth',
+                        width: 3
+                    },
+                    markers: {
+                        size: 4
+                    },
+                    xaxis: {
+                        categories: data.trend_labels,
+                        labels: {
+                            style: {
+                                fontSize: '9px',
+                                fontWeight: 700
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        fontSize: '11px',
+                        fontWeight: 700
+                    }
+                }
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) {
+                    this.chart.updateSeries([{
+                        data: data.tac.trend_case
+                    }, {
+                        data: data.tac.trend_activity
+                    }]);
+                    this.chart.updateOptions({
+                        xaxis: {
+                            categories: data.trend_labels
+                        }
+                    });
+                }
+            }
+        }));
+
+        Alpine.data('chartTacTrendGps', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', e => this.render(e.detail));
+                window.addEventListener('update-charts', e => this.update(e.detail));
+            },
+            getOptions(data) {
+                return {
+                    series: [{
+                        name: 'Volume Kendaraan GPS',
+                        data: data.tac.trend_qty_gps || []
+                    }],
+                    chart: {
+                        type: 'area',
+                        height: 300,
+                        fontFamily: 'inherit',
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    colors: ['#14b8a6'],
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.1,
+                            stops: [0, 90, 100]
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    xaxis: {
+                        categories: data.trend_labels,
+                        labels: {
+                            style: {
+                                fontSize: '9px',
+                                fontWeight: 700
+                            }
+                        }
+                    },
+                }
+            },
+            render(data) {
+                if (!data.tac) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (data.tac) {
+                    this.chart.updateSeries([{
+                        data: data.tac.trend_qty_gps
+                    }]);
+                    this.chart.updateOptions({
+                        xaxis: {
+                            categories: data.trend_labels
+                        }
+                    });
+                }
+            }
+        }));
+
+        // --- CHARTS KEPATUHAN & EVALUASI (Pindahan) ---
+        Alpine.data('chartCompliance', (type) => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', (e) => this.render(e.detail));
+                window.addEventListener('update-charts', (e) => this.update(e.detail));
+            },
+            getOptions(data) {
+                const compData = type === 'Dashboard' ? data.compliance.dashboard : data.compliance
+                    .gps;
+                return {
+                    series: [compData.ontime, compData.late],
+                    chart: {
+                        type: 'donut',
+                        height: 260,
+                        fontFamily: 'inherit'
+                    },
+                    labels: ['Tepat Waktu', 'Terlambat'],
+                    colors: ['#10b981', '#f43f5e'],
+
+                    // === PERBAIKAN PLOT OPTIONS DI SINI ===
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '65%',
+                                labels: {
+                                    show: true,
+                                    name: {
+                                        show: true, // Ubah jadi true agar label "Tepat Waktu/Terlambat" muncul saat di-hover
+                                        fontSize: '10px',
+                                        color: '#94a3b8',
+                                        offsetY: -5
+                                    },
+                                    value: {
+                                        show: true,
+                                        fontSize: '20px',
+                                        fontWeight: 800,
+                                        offsetY: 5,
+                                        // Rumus Kalkulasi Persentase Manual
+                                        formatter: function(val, w) {
+                                            let numericVal = parseFloat(val) || 0;
+                                            let total = w.globals.seriesTotals.reduce((a,
+                                                b) => {
+                                                return a + b
+                                            }, 0);
+                                            let percent = total > 0 ? (numericVal / total) *
+                                                100 : 0;
+                                            return numericVal + " (" + percent.toFixed(1) +
+                                                "%)";
+                                        }
+                                    },
+                                    total: {
+                                        show: true,
+                                        showAlways: false,
+                                        label: 'Total',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        color: '#64748b',
+                                        formatter: function(w) {
+                                            return w.globals.seriesTotals.reduce((a, b) => {
+                                                return a + b
+                                            }, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    legend: {
+                        position: 'bottom',
+                        fontSize: '11px',
+                        fontWeight: 700
+                    }
+                };
+            },
+            render(data) {
+                if (!data.compliance) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (!data.compliance) return;
+                const compData = type === 'Dashboard' ? data.compliance.dashboard : data.compliance
+                    .gps;
+                this.chart.updateSeries([compData.ontime, compData.late]);
+            }
+        }));
+
+        Alpine.data('chartCustomerFeedback', () => ({
+            chart: null,
+            init() {
+                window.addEventListener('render-charts', (e) => this.render(e.detail));
+                window.addEventListener('update-charts', (e) => this.update(e.detail));
+            },
+            getOptions(data) {
+                const feedback = data.evaluation.feedback;
+                return {
+                    series: [{
+                            name: 'Total Survey',
+                            type: 'column',
+                            data: feedback.map(f => f.total_survey)
+                        },
+                        {
+                            name: 'Rata-rata Rating',
+                            type: 'line',
+                            data: feedback.map(f => parseFloat(f.avg_rating).toFixed(1))
+                        }
+                    ],
+                    chart: {
+                        height: 280,
+                        type: 'line',
+                        fontFamily: 'inherit',
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    stroke: {
+                        width: [0, 4]
+                    },
+                    colors: ['#e2e8f0', '#8b5cf6'],
+                    labels: feedback.map(f => f.date),
+                    xaxis: {
+                        type: 'datetime',
+                        labels: {
+                            style: {
+                                fontSize: '10px',
+                                fontWeight: 700
+                            }
+                        }
+                    },
+                    yaxis: [{
+                            title: {
+                                text: 'Jumlah',
+                                style: {
+                                    fontSize: '9px',
+                                    fontWeight: 700
+                                }
+                            }
+                        },
+                        {
+                            opposite: true,
+                            min: 0,
+                            max: 5,
+                            title: {
+                                text: 'Rating',
+                                style: {
+                                    fontSize: '9px',
+                                    fontWeight: 700
+                                }
+                            }
+                        }
+                    ],
+                    legend: {
+                        position: 'top',
+                        fontSize: '11px',
+                        fontWeight: 700
+                    }
+                };
+            },
+            render(data) {
+                if (!data.evaluation) return;
+                this.chart = new ApexCharts(this.$refs.chart, this.getOptions(data));
+                this.chart.render();
+            },
+            update(data) {
+                if (!data.evaluation) return;
+                const feedback = data.evaluation.feedback;
+                this.chart.updateSeries([{
+                        data: feedback.map(f => f.total_survey)
+                    },
+                    {
+                        data: feedback.map(f => parseFloat(f.avg_rating).toFixed(1))
+                    }
+                ]);
+                this.chart.updateOptions({
+                    labels: feedback.map(f => f.date)
+                });
+            }
+        }));
     });
 </script>

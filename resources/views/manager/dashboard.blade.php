@@ -1,167 +1,212 @@
 @extends('layouts.manager')
 
 @section('content')
-    {{-- 1. SCOPE TUNGGAL: Inisialisasi activeTab sesuai $selectedDivisi dari Server --}}
-    <div x-data="{
-        activeTab: '{{ $selectedDivisi == '2' ? 'infra' : 'tac' }}'
-    }" class="space-y-10">
+    {{-- Inisialisasi Alpine.js Component --}}
+    <div x-data="dashboardManager()" class="space-y-8 relative pb-10">
 
-        {{-- HEADER & FILTER SECTION --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {{-- LOADER OVERLAY (Muncul saat AJAX Fetching) --}}
+        <div x-show="isLoading" x-cloak
+            class="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/60 backdrop-blur-sm rounded-3xl transition-opacity">
+            <div class="bg-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-100">
+                <i class="fas fa-circle-notch fa-spin text-amber-500 text-2xl"></i>
+                <span class="text-sm font-bold text-slate-700 tracking-wider uppercase">Menyinkronkan Data...</span>
+            </div>
+        </div>
+
+        {{-- 1. HEADER & DIVISION SWITCHER --}}
+        <div
+            class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div>
-                <h1 class="text-3xl font-header font-bold text-[var(--text-main)] tracking-tight uppercase">
-                    Mission <span class="text-[var(--primary)] italic">Control</span>
+                <h1 class="text-3xl font-header font-black text-slate-800 tracking-tight uppercase">
+                    Mission <span class="text-amber-500 italic">Control</span>
                 </h1>
-                <p class="text-[var(--text-muted)] text-sm italic">
-                    Monitoring performa divisi: <span class="text-[var(--primary)] font-bold uppercase"
-                        x-text="activeTab"></span>
+                <p class="text-slate-500 text-xs tracking-widest font-bold uppercase mt-1">
+                    Monitoring Performa:
+                    <span class="text-indigo-600">
+                        @if ($selectedDivisi == '1')
+                            TAC
+                        @elseif($selectedDivisi == '2')
+                            INFRASTRUCTURE
+                        @else
+                            BACKOFFICE
+                        @endif
+                    </span>
                 </p>
             </div>
 
-            {{-- BUTTON SWITCHER --}}
-            <div
-                class="flex items-center gap-1 bg-[var(--bg-main)]/40 p-1 rounded-3xl border border-[var(--text-muted)]/10 shadow-inner">
-
-                {{-- <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => 'all']) }}'"
-                    :class="activeTab === 'all' ? 'bg-[var(--primary)] text-white shadow-lg' :
-                        'text-[var(--text-muted)] hover:text-[var(--text-main)]'"
-                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300">
-                    All Division
-                </button> --}}
-
-                {{-- Button TAC --}}
+            {{-- BUTTON SWITCHER DIVISI (Reload Halaman untuk reset context staff) --}}
+            <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '1']) }}'"
-                    :class="activeTab === 'tac' ? 'bg-[var(--primary)] text-white shadow-lg' :
-                        'text-[var(--text-muted)] hover:text-[var(--text-main)]'"
-                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300">
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '1' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200' }}">
                     TAC
                 </button>
-
-                {{-- Button Infrastructure --}}
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '2']) }}'"
-                    :class="activeTab === 'infra' ? 'bg-[var(--primary)] text-white shadow-lg' :
-                        'text-[var(--text-muted)] hover:text-[var(--text-main)]'"
-                    class="px-6 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300">
-                    Infrastructure
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200' }}">
+                    Infra
                 </button>
             </div>
         </div>
 
-        {{-- 2. CONTENT WRAPPER --}}
-        <div class="relative min-h-[400px]">
-            {{-- Section: ALL --}}
-            <div x-show="activeTab === 'all'" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                x-cloak>
-                @if ($selectedDivisi == 'all')
-                    @include('manager.partials.content-all')
-                @endif
+        {{-- 2. FILTER SECTION (AJAX - TANPA RELOAD) --}}
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+            {{-- Filter Staff --}}
+            <div class="w-full md:w-64">
+                <label class="text-slate-400 text-[10px] uppercase mb-2 block font-bold tracking-widest"><i
+                        class="fas fa-user-tie mr-1"></i> Filter Staff</label>
+                <select x-model="filterUser"
+                    class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 font-bold outline-none focus:border-amber-500 transition-colors">
+                    <option value="all">Semua Staff</option>
+                    @foreach ($allStaffs as $staff)
+                        <option value="{{ $staff->id }}">{{ $staff->nama_lengkap }}</option>
+                    @endforeach
+                </select>
             </div>
 
-            {{-- Section: TAC --}}
-            <div x-show="activeTab === 'tac'" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                x-cloak>
-                @if ($selectedDivisi == '1')
-                    @include('manager.partials.content-tac')
-                @endif
+            {{-- Filter Waktu --}}
+            <div class="w-full md:w-64">
+                <label class="text-slate-400 text-[10px] uppercase mb-2 block font-bold tracking-widest"><i
+                        class="fas fa-calendar-alt mr-1"></i> Rentang Waktu</label>
+                <select x-model="filterTime"
+                    class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 font-bold outline-none focus:border-amber-500 transition-colors">
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="weekly">7 Hari Terakhir</option>
+                    <option value="monthly">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal</option>
+                </select>
             </div>
 
-            {{-- Section: INFRA --}}
-            <div x-show="activeTab === 'infra'" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                x-cloak>
-                @if ($selectedDivisi == '2')
-                    @include('manager.partials.content-infra')
-                @endif
+            {{-- Custom Date Picker (Muncul jika pilih Custom) --}}
+            <div x-show="filterTime === 'custom'" x-cloak class="w-full md:flex-1 flex gap-2 items-end transition-all">
+                <div class="flex-1">
+                    <label class="text-slate-400 text-[9px] uppercase mb-1 block font-bold">Mulai</label>
+                    <input type="date" x-model="startDate"
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-500">
+                </div>
+                <div class="flex-1">
+                    <label class="text-slate-400 text-[9px] uppercase mb-1 block font-bold">Sampai</label>
+                    <input type="date" x-model="endDate"
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-500">
+                </div>
+                <button @click="applyCustomDate()"
+                    class="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-700 transition">
+                    Terapkan
+                </button>
             </div>
         </div>
+
+        {{-- 3. CONTENT WRAPPER (Data Injector) --}}
+        <div class="space-y-8">
+            {{-- Executive Summary (Selalu Muncul) --}}
+            @include('manager.partials.content-executive')
+
+            {{-- Konten Dinamis Berdasarkan Divisi --}}
+            @if ($selectedDivisi == '1')
+                @include('manager.partials.content-tac')
+            @elseif ($selectedDivisi == '2')
+                @include('manager.partials.content-infra')
+            @endif
+        </div>
     </div>
+
+    {{-- CDN ApexCharts (Wajib ditambahkan jika belum ada di layout) --}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dashboardManager', () => ({
+                activeDivisi: '{{ $selectedDivisi }}',
+                filterTime: 'monthly', // Default Bulan Ini
+                filterUser: 'all',
+                startDate: '',
+                endDate: '',
+                isLoading: false,
+                chartData: @json($chartData), // Inisialisasi data dari Load Halaman Pertama
+
+                init() {
+                    // Pantau perubahan Dropdown (Kecuali Custom Date yang butuh tombol terapkan)
+                    this.$watch('filterTime', value => {
+                        if (value !== 'custom') this.fetchData();
+                    });
+                    this.$watch('filterUser', () => this.fetchData());
+
+                    // Render Chart Pertama Kali
+                    this.$nextTick(() => {
+                        window.dispatchEvent(new CustomEvent('render-charts', {
+                            detail: this.chartData
+                        }));
+                    });
+                },
+
+                fetchData() {
+                    this.isLoading = true;
+
+                    // Buat Parameter URL
+                    let url = new URL('{{ route('manager.dashboard') }}', window.location.origin);
+                    url.searchParams.append('divisi_id', this.activeDivisi);
+                    url.searchParams.append('filter', this.filterTime);
+                    url.searchParams.append('user_id', this.filterUser);
+
+                    if (this.filterTime === 'custom') {
+                        if (!this.startDate || !this.endDate) {
+                            this.isLoading = false;
+                            return; // Jangan fetch jika tanggal kosong
+                        }
+                        url.searchParams.append('start_date', this.startDate);
+                        url.searchParams.append('end_date', this.endDate);
+                    }
+
+                    // AJAX Fetch
+                    fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.status === 'success') {
+                                this.chartData = res.data;
+                                // Pancarkan event agar script di partials-blade merender ulang datanya
+                                window.dispatchEvent(new CustomEvent('update-charts', {
+                                    detail: res.data
+                                }));
+                            }
+                        })
+                        .catch(err => console.error("Gagal menarik data:", err))
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
+
+                applyCustomDate() {
+                    if (this.startDate && this.endDate) {
+                        this.fetchData();
+                    } else {
+                        alert("Pilih tanggal mulai dan sampai terlebih dahulu.");
+                    }
+                }
+            }));
+        });
+
+        // Catatan: Fungsi exportToPdf perlu disesuaikan karena kita pindah dari Chart.js ke ApexCharts.
+        // ApexCharts menggunakan metode `chart.dataURI()` untuk convert ke base64.
+        // Ini akan kita implementasikan di dalam script chart masing-masing partials jika diperlukan.
+    </script>
 
     <style>
         [x-cloak] {
             display: none !important;
         }
 
-        /* Tambahan agar saat ganti tab transisinya smooth */
-        .relative>div {
-            width: 100%;
+        /* Custom Styling untuk Select Dropdown agar lebih rapi */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position-x: 95%;
+            background-position-y: 50%;
         }
     </style>
-
-    <script>
-        function exportToPdf() {
-            // 1. Identifikasi Divisi yang aktif (mengambil data dari Alpine.js jika memungkinkan)
-            // Atau kita bisa gunakan variabel PHP yang dikirim ke view
-            const selectedDivisi = '{{ $selectedDivisi }}';
-
-            // 2. Cari canvas yang sedang tampil (Chart.js)
-            // Kita cari canvas di dalam section yang tidak tersembunyi
-            const activeCanvas = document.querySelector('canvas');
-
-            if (!activeCanvas) {
-                alert("Grafik analisa tidak ditemukan. Pastikan chart sudah muncul di layar.");
-                return;
-            }
-
-            try {
-                // 3. Konversi Chart ke Base64 Image
-                // Penting: Pastikan di opsi Chart.js Anda, animation: false atau tunggu render selesai
-                const chartBase64 = activeCanvas.toDataURL('image/png');
-
-                // 4. Buat Form secara dinamis
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/manager/export-pdf'; // Pastikan route ini sesuai di web.php
-                form.target = '_blank'; // Membuka PDF di tab baru agar dashboard tidak tertutup
-
-                // CSRF Token (Wajib di Laravel)
-                const inputToken = document.createElement('input');
-                inputToken.type = 'hidden';
-                inputToken.name = '_token';
-                inputToken.value = '{{ csrf_token() }}';
-                form.appendChild(inputToken);
-
-                // Data Gambar Chart
-                const inputChart = document.createElement('input');
-                inputChart.type = 'hidden';
-                inputChart.name = 'chart_base64';
-                inputChart.value = chartBase64;
-                form.appendChild(inputChart);
-
-                // Data Divisi
-                const inputDivisi = document.createElement('input');
-                inputDivisi.type = 'hidden';
-                inputDivisi.name = 'divisi_id';
-                inputDivisi.value = selectedDivisi;
-                form.appendChild(inputDivisi);
-
-                // Data Filter (Opsional: ambil dari URL/Request saat ini)
-                const urlParams = new URLSearchParams(window.location.search);
-                const params = ['filter', 'start_date', 'end_date'];
-                params.forEach(param => {
-                    if (urlParams.has(param)) {
-                        let input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = param;
-                        input.value = urlParams.get(param);
-                        form.appendChild(input);
-                    }
-                });
-
-                // 5. Eksekusi
-                document.body.appendChild(form);
-                form.submit();
-
-                // Hapus form dari dokumen setelah beberapa saat agar tidak menumpuk
-                setTimeout(() => {
-                    document.body.removeChild(form);
-                }, 100);
-
-            } catch (error) {
-                console.error("Gagal mengekspor PDF:", error);
-                alert("Terjadi kesalahan saat memproses gambar chart.");
-            }
-        }
-    </script>
 @endsection

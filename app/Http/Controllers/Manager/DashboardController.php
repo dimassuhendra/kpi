@@ -6,12 +6,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 use App\Models\DailyReport;
 use App\Models\User;
 use App\Models\Divisi;
 use App\Models\KegiatanDetail;
+// Pastikan Anda memiliki model ini (sesuai struktur DB sebelumnya)
+use App\Models\CustomerFeedback;
+use App\Models\TechnicalAssessment;
 
 class DashboardController extends Controller
 {
@@ -20,7 +22,7 @@ class DashboardController extends Controller
         $selectedDivisi = $request->get('divisi_id', '1');
         $divisis = Divisi::all();
 
-        // Logika Filter Tanggal
+        // 1. LOGIKA FILTER TANGGAL
         $filter = $request->get('filter', 'monthly');
         $startDateInput = $request->get('start_date');
         $endDateInput = $request->get('end_date');
@@ -48,213 +50,267 @@ class DashboardController extends Controller
                 break;
         }
 
-        // Variabel Default
-        $infraWorkload = collect();
-        $staffInfraData = collect();
-        $availableCategories = [];
-        $staffChartData = collect();
-        $workloadMix = ['case' => 0, 'activity' => 0];
-        $trendLabels = [];
-        $trendCases = [];
-        $trendActivities = [];
-        $leaderboard = collect();
-        $infraTrendData = [];
-        $staffWorkloadDist = collect();
-        $summaryData = [
-            'total_case' => 0,
-            'avg_time' => 0,
-            'mandiri' => 0,
-            'bantuan' => 0,
-            'proaktif' => 0,
-            'penugasan' => 0
-        ];
+        // 2. LOGIKA FILTER STAFF
+        $selectedUserId = $request->get('user_id', 'all');
 
-        $stats = [
-            'pending' => DailyReport::where('status', 'pending')->count(),
-            'active_today' => DailyReport::whereDate('tanggal', today())->distinct('user_id')->count('user_id'),
-            'resolved_month' => 0,
-            'avg_response_time' => 0,
-        ];
+        $staffQuery = User::where('divisi_id', $selectedDivisi)->where('role', 'staff');
+        if ($selectedUserId !== 'all') {
+            $staffQuery->where('id', $selectedUserId);
+        }
+        $staffs = $staffQuery->get();
+        $staffIds = $staffs->pluck('id')->toArray();
 
-        $heatmapData = DailyReport::select(DB::raw('DATE(tanggal) as date'), DB::raw('count(*) as count'))
-            ->whereYear('tanggal', $start->year)
-            ->groupBy('date')->pluck('count', 'date');
+        // 3. AMBIL DATA UTAMA (Berdasarkan filter divisi, tanggal, dan staf)
+        $reports = DailyReport::with('details')
+            ->whereIn('user_id', $staffIds)
+            ->whereBetween('tanggal', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->get();
 
-        // --- LOGIKA DIVISI 2 (INFRA) ---
-        if ($selectedDivisi == '2') {
-            $allDetails = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
-                $q->whereBetween('tanggal', [$start, $end])
-                    ->whereHas('user', fn($u) => $u->where('divisi_id', 2));
-            })->get();
-
-            $infraWorkload = $allDetails->whereNotNull('kategori')->groupBy('kategori')->map->count();
-            $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
-
-            $diffInDays = $start->diffInDays($end);
-            for ($i = 0; $i <= $diffInDays; $i++) {
-                $dateObj = (clone $start)->addDays($i);
-                $trendLabels[] = $dateObj->format('d M');
-                foreach ($availableCategories as $cat) {
-                    $infraTrendData[$cat][] = $allDetails->filter(
-                        fn($detail) =>
-                        $detail->kategori === $cat && Carbon::parse($detail->dailyReport->tanggal)->isSameDay($dateObj)
-                    )->count();
-                }
+        $allDetails = collect();
+        foreach ($reports as $report) {
+            foreach ($report->details as $detail) {
+                // Sisipkan tanggal report ke detail agar mudah ditrending
+                $detail->tanggal_report = $report->tanggal;
+                $allDetails->push($detail);
             }
-
-            $staffInfraData = User::where('divisi_id', 2)->where('role', 'staff')->get()->map(function ($u) use ($allDetails, $availableCategories) {
-                $res = ['nama' => $u->nama_lengkap];
-                foreach ($availableCategories as $cat) {
-                    $res[$cat] = $allDetails->where('kategori', $cat)->where('dailyReport.user_id', $u->id)->count();
-                }
-                return $res;
-            });
-
-            $leaderboard = User::where('role', 'staff')->where('divisi_id', 2)
-                ->withCount(['details as total_activity' => fn($q) => $q->whereHas('dailyReport', fn($qr) => $qr->whereBetween('tanggal', [$start, $end]))])
-                ->orderByDesc('total_activity')->take(5)->get();
-
-            // --- LOGIKA DIVISI 1 (TAC) ---
-        } elseif ($selectedDivisi == '1') {
-            $allDetailsTAC = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($start, $end) {
-                $q->whereBetween('tanggal', [$start, $end])
-                    ->whereHas('user', fn($u) => $u->where('divisi_id', 1));
-            })->get();
-
-            // 1. Sanitasi Data: Paksa value_raw menjadi numerik
-            $allDetailsTAC->transform(function ($item) {
-                $item->value_raw = is_numeric($item->value_raw) ? (float) $item->value_raw : 0;
-                return $item;
-            });
-
-            // ========================================================================
-            // BENTENG FILTER UTAMA: Pisahkan Murni Network vs GPS
-            // ========================================================================
-
-            $filteredDetails = $allDetailsTAC->filter(function ($item) {
-                $title = trim($item->deskripsi_kegiatan);
-                return !in_array($title, ['Monitoring GPS', 'Monitoring Network']);
-            });
-
-            $networkDetailsTAC = $allDetailsTAC->where('kategori', 'Network');
-
-            // Sub-kategori untuk Network
-            $networkDetailsTAC = $filteredDetails->where('kategori', 'Network');
-            $caseNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'case');
-            $activityNetwork = $networkDetailsTAC->where('tipe_kegiatan', 'activity');
-
-            // GPS dipisah dan dikarantina (Hanya dihitung jika nanti diperlukan di view lain)
-            $caseGPS = $filteredDetails->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
-            
-            // 2. Terapkan data murni Network ke metrik utama Dashboard
-            $stats['resolved_month'] = $caseNetwork->count();
-            $stats['avg_response_time'] = $caseNetwork->avg('value_raw') ?? 0;
-
-            $workloadMix = [
-                'case' => $caseNetwork->count(),
-                'activity' => $activityNetwork->count()
-            ];
-
-            // 3. Data Summary (Donut Chart & Threshold) khusus Network
-            $summaryData = [
-                'total_case' => $caseNetwork->count(),
-                'avg_time' => round($stats['avg_response_time'], 2),
-                'network_count' => $caseNetwork->count(),
-                'network_avg'   => round($caseNetwork->avg('value_raw') ?? 0, 1),
-                'gps_count'     => $caseGPS->sum('value_raw'),
-                'gps_avg'       => 0,
-                'mandiri' => $caseNetwork->where('is_mandiri', 1)->count(),
-                'bantuan' => $caseNetwork->where('is_mandiri', 0)->count(),
-                'proaktif' => $caseNetwork->where('temuan_sendiri', 1)->count(),
-                'penugasan' => $caseNetwork->where('temuan_sendiri', 0)->count(),
-            ];
-
-            // 4. Trend Harian (Grafik Garis) khusus Network
-            $diffInDays = $start->diffInDays($end);
-            for ($i = 0; $i <= $diffInDays; $i++) {
-                $dateObj = (clone $start)->addDays($i);
-                $dateStr = $dateObj->toDateString();
-                $trendLabels[] = $dateObj->format('d M');
-
-                // Filter data harian HANYA dari sumber Network
-                $dayDetails = $networkDetailsTAC->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
-
-                $trendCases[] = $dayDetails->where('tipe_kegiatan', 'case')->count();
-                $trendActivities[] = $dayDetails->where('tipe_kegiatan', 'activity')->count();
-            }
-
-            // 5. Mapping Data Staff (Mini Charts & Dropdown Staff) khusus Network
-            $staffChartData = User::where('divisi_id', 1)->where('role', 'staff')->get()->map(function ($u) use ($allDetailsTAC, $networkDetailsTAC, $start, $diffInDays) {
-
-                // Ambil data Network milik user ini saja
-                $uNetworkAll = $networkDetailsTAC->where('dailyReport.user_id', $u->id);
-                $uNetworkCase = $uNetworkAll->where('tipe_kegiatan', 'case');
-                $uNetworkActivity = $uNetworkAll->where('tipe_kegiatan', 'activity');
-
-                // Karantina GPS user ini
-                $uGPS = $allDetailsTAC->where('dailyReport.user_id', $u->id)->where('tipe_kegiatan', 'case')->where('kategori', 'GPS');
-
-                return [
-                    'nama' => $u->nama_lengkap,
-                    'total_case' => $uNetworkCase->count(),
-                    'avg_time' => round($uNetworkCase->avg('value_raw') ?? 0, 1),
-                    'net_count' => $uNetworkCase->count(),
-                    'net_avg' => round($uNetworkCase->avg('value_raw') ?? 0, 1),
-                    'gps_count' => $uGPS->sum('value_raw'),
-                    'gps_avg' => 0,
-                    'inisiatif_count' => $uNetworkCase->where('temuan_sendiri', 1)->count(),
-                    'mandiri_count' => $uNetworkCase->where('is_mandiri', 1)->count(),
-                    'activities' => $uNetworkActivity->count(),
-
-                    // Pastikan grafik trend personal juga hanya membaca data Network
-                    'daily_history' => $this->getDailyHistory($uNetworkAll, $start, $diffInDays)
-                ];
-            });
-            $leaderboard = $staffChartData->sortByDesc('total_case')->take(5);
         }
 
+        // Label Hari untuk Trend Line/Area Chart
+        $trendLabels = [];
+        $diffInDays = $start->diffInDays($end);
+        for ($i = 0; $i <= $diffInDays; $i++) {
+            $trendLabels[] = (clone $start)->addDays($i)->format('Y-m-d');
+        }
+
+        // ========================================================================
+        // A. METRIK EKSEKUTIF (Semua Divisi - Compliance & Evaluation)
+        // ========================================================================
+        $compliance = [
+            'dashboard' => [
+                'ontime' => $reports->where('is_dashboard_ontime', 1)->count(),
+                'late' => $reports->where('is_dashboard_ontime', 0)->count()
+            ],
+            'gps' => [
+                'ontime' => $reports->where('is_gps_ontime', 1)->count(),
+                'late' => $reports->where('is_gps_ontime', 0)->count()
+            ]
+        ];
+
+        // Simulasi/Ambil Evaluasi Teknis Rata-rata Tim (Radar Chart)
+        $assessments = TechnicalAssessment::whereIn('user_id', $staffIds)->get();
+        $evaluation = [
+            'technical' => [
+                'network' => $assessments->avg('pemahaman_network') ?? 0,
+                'hardware' => $assessments->avg('pemahaman_hardware') ?? 0,
+                'software' => $assessments->avg('pemahaman_software') ?? 0,
+                'cctv' => $assessments->avg('pemahaman_cctv') ?? 0,
+                'gps' => $assessments->avg('pemahaman_gps') ?? 0,
+            ],
+            // PERBAIKAN: Menggunakan tanggal_survey, COUNT(*) untuk total survey, dan AVG(rating)
+            'feedback' => CustomerFeedback::selectRaw('DATE(tanggal_survey) as date, COUNT(*) as total_survey, AVG(rating) as avg_rating')
+                ->whereIn('user_id', $staffIds)
+                ->whereBetween('tanggal_survey', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->groupBy('date')
+                ->orderBy('date', 'asc') // Urutkan dari tanggal terlama agar chart rapi
+                ->get()
+        ];
+
+        // ========================================================================
+        // WADAH CHART DATA
+        // ========================================================================
+        $chartData = [
+            'compliance' => $compliance,
+            'evaluation' => $evaluation,
+            'trend_labels' => array_map(fn($d) => Carbon::parse($d)->format('d M'), $trendLabels),
+            'staff_labels' => $staffs->pluck('nama_lengkap')->toArray(),
+            'tac' => [],
+            'infra' => [],
+            'bo' => []
+        ];
+
+        // ========================================================================
+        // B. LOGIKA DIVISI 1 (TAC)
+        // ========================================================================
+        if ($selectedDivisi == '1') {
+            $networkCases = $allDetails->where('kategori', 'Network')->where('tipe_kegiatan', 'case')
+                ->filter(fn($d) => strtolower($d->deskripsi_kegiatan) !== 'monitoring network');
+            $gpsCases = $allDetails->where('kategori', 'GPS')->where('tipe_kegiatan', 'case')
+                ->filter(fn($d) => strtolower($d->deskripsi_kegiatan) !== 'monitoring gps');
+
+            // 1. Baris 1: Overview
+            $chartData['tac']['temuan_vs_laporan'] = [
+                $networkCases->where('temuan_sendiri', 1)->count(), // Temuan
+                $networkCases->where('temuan_sendiri', 0)->count()  // Laporan
+            ];
+            $chartData['tac']['mandiri_vs_eskalasi'] = [
+                $networkCases->where('is_mandiri', 1)->count(), // Mandiri
+                $networkCases->where('is_mandiri', 0)->count()  // Eskalasi
+            ];
+
+            // 2. Baris 2: Rasio & Limit Waktu
+            $chartData['tac']['case_vs_activity'] = [
+                $allDetails->where('tipe_kegiatan', 'case')->count(),
+                $allDetails->where('tipe_kegiatan', 'activity')->count()
+            ];
+            $chartData['tac']['network_vs_gps'] = [
+                $networkCases->count(),
+                $gpsCases->count()
+            ];
+
+            // Gauge Chart Limit Waktu (Ambil kasus yang BUKAN temuan sendiri karena temuan waktu responnya 0)
+            $avgTime = $networkCases->where('temuan_sendiri', 0)->avg('waktu_respon_menit') ?? 0;
+            $chartData['tac']['avg_response_time'] = round($avgTime, 1);
+
+            // 3. Baris 3: Kinerja Individu (Leaderboard Staff)
+            $barTotalCase = [];
+            $barAvgResponse = [];
+            $barMandiri = [];
+            $barTemuan = [];
+
+            foreach ($staffs as $st) {
+                $stNetCases = $networkCases->where('dailyReport.user_id', $st->id);
+                $stGpsCases = $gpsCases->where('dailyReport.user_id', $st->id);
+
+                $barTotalCase[] = $stNetCases->count() + $stGpsCases->count();
+                $barAvgResponse[] = round($stNetCases->where('temuan_sendiri', 0)->avg('waktu_respon_menit') ?? 0, 1);
+                $barMandiri[] = $stNetCases->where('is_mandiri', 1)->count();
+                $barTemuan[] = $stNetCases->where('temuan_sendiri', 1)->count();
+            }
+
+            $chartData['tac']['staff_total_case'] = $barTotalCase;
+            $chartData['tac']['staff_avg_response'] = $barAvgResponse;
+            $chartData['tac']['staff_mandiri'] = $barMandiri;
+            $chartData['tac']['staff_temuan'] = $barTemuan;
+
+            // 4. Baris 4: Tren Harian (Line & Area)
+            $trendActivity = [];
+            $trendCase = [];
+            $trendQtyGps = [];
+
+            foreach ($trendLabels as $date) {
+                // PERBAIKAN: Gunakan Carbon::parse agar format waktunya benar-benar match Y-m-d
+                $dayDetails = $allDetails->filter(function ($d) use ($date) {
+                    return \Carbon\Carbon::parse($d->tanggal_report)->format('Y-m-d') === $date;
+                });
+
+                $trendActivity[] = $dayDetails->where('tipe_kegiatan', 'activity')->count();
+                $trendCase[] = $dayDetails->where('tipe_kegiatan', 'case')->count();
+
+                // Area Chart GPS
+                $gpsToday = $dayDetails->where('kategori', 'GPS')->where('tipe_kegiatan', 'case');
+                $qty = 0;
+                foreach ($gpsToday as $g) {
+                    $qty += is_numeric($g->value_raw) ? (int)$g->value_raw : 0;
+                }
+                $trendQtyGps[] = $qty;
+            }
+
+            $chartData['tac']['trend_activity'] = $trendActivity;
+            $chartData['tac']['trend_case'] = $trendCase;
+            $chartData['tac']['trend_qty_gps'] = $trendQtyGps;
+        }
+
+        // ========================================================================
+        // C. LOGIKA DIVISI 2 (INFRA)
+        // ========================================================================
+        elseif ($selectedDivisi == '2') {
+            $categories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
+            $chartData['infra']['categories'] = $categories;
+
+            // 1. Donut Chart (Distribusi Kategori)
+            $donutInfra = [];
+            foreach ($categories as $cat) {
+                $donutInfra[] = $allDetails->where('kategori', $cat)->count();
+            }
+            $chartData['infra']['donut_kategori'] = $donutInfra;
+
+            // 2. Stacked Bar Chart (Distribusi Kategori per Staf)
+            $stackedData = [];
+            foreach ($categories as $cat) {
+                $dataStaff = [];
+                foreach ($staffs as $st) {
+                    $dataStaff[] = $allDetails->where('dailyReport.user_id', $st->id)->where('kategori', $cat)->count();
+                }
+                $stackedData[] = [
+                    'name' => $cat,
+                    'data' => $dataStaff
+                ];
+            }
+            $chartData['infra']['stacked_staff'] = $stackedData;
+
+            // 3. Line Chart (Tren Harian Kategori)
+            $trendInfra = [];
+            foreach ($categories as $cat) {
+                $dataHari = [];
+                foreach ($trendLabels as $date) {
+                    // PERBAIKAN: Gunakan Carbon::parse() untuk memastikan format tanggal sama persis
+                    $count = $allDetails->filter(function ($d) use ($date, $cat) {
+                        return \Carbon\Carbon::parse($d->tanggal_report)->format('Y-m-d') === $date
+                            && $d->kategori === $cat;
+                    })->count();
+
+                    $dataHari[] = $count;
+                }
+                $trendInfra[] = [
+                    'name' => $cat,
+                    'data' => $dataHari
+                ];
+            }
+            $chartData['infra']['trend_kategori'] = $trendInfra;
+        }
+
+        // ========================================================================
+        // D. LOGIKA DIVISI 3 (BACKOFFICE)
+        // ========================================================================
+        elseif ($selectedDivisi == '3') {
+            // Asumsi Backoffice menggunakan format "Kategori Pekerjaan: Deskripsi" di deskripsi_kegiatannya
+            // Kita akan mengekstrak kata pertama sebelum titik dua ":" sebagai "Tipe Pekerjaan"
+            $boTypes = [];
+            foreach ($allDetails as $d) {
+                $parts = explode(':', $d->deskripsi_kegiatan);
+                $type = trim($parts[0]);
+                if (!isset($boTypes[$type])) {
+                    $boTypes[$type] = 0;
+                }
+                $boTypes[$type]++;
+            }
+
+            // 1. Donut Tipe Pekerjaan
+            $chartData['bo']['donut_labels'] = array_keys($boTypes);
+            $chartData['bo']['donut_series'] = array_values($boTypes);
+
+            // 2. Bar Chart Total Volume per Staf
+            $barVolume = [];
+            foreach ($staffs as $st) {
+                $barVolume[] = $allDetails->where('dailyReport.user_id', $st->id)->count();
+            }
+            $chartData['bo']['staff_volume'] = $barVolume;
+
+            // 3. Line Chart Tren Produktivitas Harian
+            $trendVolume = [];
+            foreach ($trendLabels as $date) {
+                $trendVolume[] = $allDetails->where('tanggal_report', $date)->count();
+            }
+            $chartData['bo']['trend_volume'] = $trendVolume;
+        }
+
+        // ========================================================================
+        // KEMBALIKAN RESPONSE JSON ATAU VIEW
+        // ========================================================================
         if ($request->ajax()) {
             return response()->json([
-                'stats' => $stats,
-                'summaryData' => $summaryData,
-                'workloadMix' => $workloadMix,
-                'trend' => ['labels' => $trendLabels, 'cases' => $trendCases, 'activities' => $trendActivities],
-                'staffChartData' => $staffChartData,
-                'infraTrendData' => $infraTrendData,
-                'infraWorkload' => $infraWorkload
+                'status' => 'success',
+                'data' => $chartData
             ]);
         }
 
+        // Jika bukan AJAX, kirim staf untuk dropdown filter dan data awal untuk load chart
+        $allStaffs = User::where('divisi_id', $selectedDivisi)->where('role', 'staff')->get();
         return view('manager.dashboard', compact(
-            'stats',
             'divisis',
             'selectedDivisi',
-            'heatmapData',
-            'infraWorkload',
-            'infraTrendData',
-            'staffWorkloadDist',
-            'trendLabels',
-            'staffInfraData',
-            'availableCategories',
-            'staffChartData',
-            'workloadMix',
-            'leaderboard',
-            'trendCases',
-            'trendActivities',
-            'summaryData'
+            'allStaffs',
+            'chartData'
         ));
-    }
-
-    private function getDailyHistory($uDetails, $start, $diffInDays)
-    {
-        $history = ['cases' => [], 'activities' => []];
-        for ($i = 0; $i <= $diffInDays; $i++) {
-            $dateStr = (clone $start)->addDays($i)->toDateString();
-            $dayData = $uDetails->filter(fn($d) => Carbon::parse($d->dailyReport->tanggal)->toDateString() == $dateStr);
-
-            $history['cases'][] = $dayData->where('tipe_kegiatan', 'case')->count();
-            $history['activities'][] = $dayData->where('tipe_kegiatan', 'activity')->count();
-        }
-        return $history;
     }
 }
