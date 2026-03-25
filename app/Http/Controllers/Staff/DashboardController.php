@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\DailyReport;
+use App\Models\KegiatanDetail;
 
 class DashboardController extends Controller
 {
@@ -15,145 +15,148 @@ class DashboardController extends Controller
         $user = Auth::user();
         $now = Carbon::now();
 
-        // --- DATA UMUM ---
-        $dailyCount = DB::table('kegiatan_detail')
-            ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-            ->where('daily_reports.user_id', $user->id)
-            ->whereDate('daily_reports.tanggal', $now->toDateString())
-            ->count();
+        // --- 1. METRIK GLOBAL (Semua Divisi) ---
+        // Menggunakan Eloquent agar lebih bersih dan seragam
+        $dailyCount = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $now) {
+            $q->where('user_id', $user->id)->whereDate('tanggal', $now->toDateString());
+        })->count();
 
-        $trendData = DB::table('daily_reports')
-            ->leftJoin('kegiatan_detail', 'daily_reports.id', '=', 'kegiatan_detail.daily_report_id')
-            ->where('daily_reports.user_id', $user->id)
-            ->where('daily_reports.tanggal', '>=', $now->copy()->subDays(6)->toDateString())
-            ->selectRaw('daily_reports.tanggal, count(kegiatan_detail.id) as total')
-            ->groupBy('daily_reports.tanggal')
-            ->orderBy('daily_reports.tanggal', 'ASC')
-            ->get();
+        $weeklyCount = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $now) {
+            $q->where('user_id', $user->id)->whereBetween('tanggal', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+        })->count();
 
-        // Inisialisasi variabel agar tidak error di blade
-        $infraWorkload = [];
-        $staffInfraData = [];
-        $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
-        $autonomyData = collect();
-        $sourceData = collect();
-        $weeklyCount = 0;
-        $monthlyCount = 0;
-        $lastReportDate = [];
+        $monthlyCount = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $now) {
+            $q->where('user_id', $user->id)->whereMonth('tanggal', $now->month)->whereYear('tanggal', $now->year);
+        })->count();
+
+        $chartData = [];
         $yesterdayActivities = [];
+        $lastReportDate = null;
 
-        // --- LOGIKA DATA BERDASARKAN ID DIVISI ---
-        if ($user->divisi_id == 2) {
-            // Tentukan bulan dan tahun saat ini
-            $currentMonth = $now->month;
-            $currentYear = $now->year;
+        // --- 2. LOGIKA DIVISI 1 (TAC) ---
+        if ($user->divisi_id == 1) {
+            // Ambil data bulan ini untuk rasio
+            $monthlyDetails = KegiatanDetail::with('dailyReport')->whereHas('dailyReport', function ($q) use ($user, $now) {
+                $q->where('user_id', $user->id)->whereMonth('tanggal', $now->month);
+            })->get();
 
-            $availableCategories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
+            $cases = $monthlyDetails->where('tipe_kegiatan', 'case');
 
-            // 1. Workload Distribution (HANYA BULAN INI)
-            $infraWorkload = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereMonth('daily_reports.tanggal', $currentMonth) // Filter Bulan
-                ->whereYear('daily_reports.tanggal', $currentYear)   // Filter Tahun
-                ->selectRaw('kategori, count(*) as total')
-                ->groupBy('kategori')
-                ->pluck('total', 'kategori')->toArray();
+            $chartData['tac'] = [
+                'temuan_vs_laporan' => [
+                    $cases->where('temuan_sendiri', 1)->count(),
+                    $cases->where('temuan_sendiri', 0)->count()
+                ],
+                'mandiri_vs_eskalasi' => [
+                    $cases->where('is_mandiri', 1)->count(),
+                    $cases->where('is_mandiri', 0)->count()
+                ],
+                'case_vs_activity' => [
+                    $cases->count(),
+                    $monthlyDetails->where('tipe_kegiatan', 'activity')->count()
+                ],
+                'avg_response_time' => round($cases->where('temuan_sendiri', 0)->avg('waktu_respon_menit') ?? 0, 1),
+            ];
 
-            // 2. Staff Technical Focus (HANYA BULAN INI)
-            $staffInfraData = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereMonth('daily_reports.tanggal', $currentMonth) // Filter Bulan
-                ->whereYear('daily_reports.tanggal', $currentYear)   // Filter Tahun
-                ->selectRaw('daily_reports.tanggal as tgl, kategori, count(*) as total')
-                ->groupBy('daily_reports.tanggal', 'kategori')
-                ->orderBy('daily_reports.tanggal', 'ASC') // Urutkan dari tanggal awal bulan
-                ->get()
-                ->groupBy('tgl')
-                ->map(function ($items, $date) use ($availableCategories) {
-                    $res = ['nama' => date('d M', strtotime($date))];
-                    foreach ($availableCategories as $cat) {
-                        $res[$cat] = $items->where('kategori', $cat)->first()->total ?? 0;
-                    }
-                    return $res;
-                })->values();
-        } elseif ($user->divisi_id == 1) {
-            // DIVISI TAC (Default)
-            $weeklyCount = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereBetween('daily_reports.tanggal', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()])
-                ->count();
+            // Tren 7 Hari Terakhir
+            $trendLabels = [];
+            $trendCases = [];
+            $trendActivities = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = $now->copy()->subDays($i);
+                $trendLabels[] = $date->format('d M');
 
-            $monthlyCount = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereMonth('daily_reports.tanggal', $now->month)
-                ->count();
+                $dayDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $date) {
+                    $q->where('user_id', $user->id)->whereDate('tanggal', $date->toDateString());
+                })->get();
 
-            $autonomyData = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->selectRaw('is_mandiri, count(*) as total')
-                ->groupBy('is_mandiri')->get();
+                $trendCases[] = $dayDetails->where('tipe_kegiatan', 'case')->count();
+                $trendActivities[] = $dayDetails->where('tipe_kegiatan', 'activity')->count();
+            }
 
-            $sourceData = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->selectRaw('temuan_sendiri, count(*) as total')
-                ->groupBy('temuan_sendiri')->get();
+            $chartData['tac']['trend_labels'] = $trendLabels;
+            $chartData['tac']['trend_cases'] = $trendCases;
+            $chartData['tac']['trend_activities'] = $trendActivities;
+        }
 
-        } elseif ($user->divisi_id == 4) {
-            // ==========================================
-            // LOGIKA BACKOFFICE (SEDERHANA)
-            // ==========================================
+        // --- 3. LOGIKA DIVISI 2 (INFRASTRUKTUR) ---
+        elseif ($user->divisi_id == 2) {
+            $categories = ['Network', 'CCTV', 'GPS', 'Lainnya'];
+            $monthlyDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $now) {
+                $q->where('user_id', $user->id)->whereMonth('tanggal', $now->month);
+            })->get();
 
-            // 1. Hitung total aktivitas minggu ini & bulan ini
-            $weeklyCount = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereBetween('daily_reports.tanggal', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()])
-                ->count();
+            $donut = [];
+            foreach ($categories as $cat) {
+                $donut[] = $monthlyDetails->where('kategori', $cat)->count();
+            }
+            $chartData['infra']['categories'] = $categories;
+            $chartData['infra']['donut_kategori'] = $donut;
 
-            $monthlyCount = DB::table('kegiatan_detail')
-                ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                ->where('daily_reports.user_id', $user->id)
-                ->whereMonth('daily_reports.tanggal', $now->month)
-                ->count();
+            // Tren 7 Hari Terakhir per Kategori
+            $trendLabels = [];
+            $trendData = [];
+            foreach ($categories as $cat) {
+                $trendData[$cat] = [];
+            }
 
-            // 2. Ambil Daftar Pekerjaan Kemarin (Last Working Day)
-            // Kita cari tanggal laporan terakhir sebelum hari ini
-            $lastReportDate = DB::table('daily_reports')
-                ->where('user_id', $user->id)
-                ->where('tanggal', '<', $now->toDateString())
+            for ($i = 6; $i >= 0; $i--) {
+                $date = $now->copy()->subDays($i);
+                $trendLabels[] = $date->format('d M');
+
+                $dayDetails = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $date) {
+                    $q->where('user_id', $user->id)->whereDate('tanggal', $date->toDateString());
+                })->get();
+
+                foreach ($categories as $cat) {
+                    $trendData[$cat][] = $dayDetails->where('kategori', $cat)->count();
+                }
+            }
+
+            $formattedTrend = [];
+            foreach ($categories as $cat) {
+                $formattedTrend[] = ['name' => $cat, 'data' => $trendData[$cat]];
+            }
+
+            $chartData['infra']['trend_labels'] = $trendLabels;
+            $chartData['infra']['trend_kategori'] = $formattedTrend;
+        }
+
+        // --- 4. LOGIKA DIVISI BACKOFFICE (ID 4 / 3 sesuai db) ---
+        else {
+            // Ambil tanggal kerja terakhir (sebelum hari ini)
+            $lastReportDate = DailyReport::where('user_id', $user->id)
+                ->whereDate('tanggal', '<', $now->toDateString())
                 ->orderBy('tanggal', 'DESC')
                 ->value('tanggal');
 
-            $yesterdayActivities = [];
             if ($lastReportDate) {
-                $yesterdayActivities = DB::table('kegiatan_detail')
-                    ->join('daily_reports', 'kegiatan_detail.daily_report_id', '=', 'daily_reports.id')
-                    ->where('daily_reports.user_id', $user->id)
-                    ->where('daily_reports.tanggal', $lastReportDate)
-                    ->select('kegiatan_detail.*', 'daily_reports.tanggal')
-                    ->get();
+                $yesterdayActivities = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $lastReportDate) {
+                    $q->where('user_id', $user->id)->whereDate('tanggal', $lastReportDate);
+                })->get();
             }
+
+            // Tren Volume Pekerjaan 7 Hari Terakhir
+            $trendLabels = [];
+            $trendVolume = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = $now->copy()->subDays($i);
+                $trendLabels[] = $date->format('d M');
+                $trendVolume[] = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $date) {
+                    $q->where('user_id', $user->id)->whereDate('tanggal', $date->toDateString());
+                })->count();
+            }
+            $chartData['bo']['trend_labels'] = $trendLabels;
+            $chartData['bo']['trend_volume'] = $trendVolume;
         }
 
-        // Kirim ke SATU file blade yang sama
         return view('staff.dashboard', compact(
             'dailyCount',
-            'trendData',
-            'infraWorkload',
-            'staffInfraData',
-            'availableCategories',
             'weeklyCount',
             'monthlyCount',
-            'autonomyData',
-            'sourceData',
-            'lastReportDate',
-            'yesterdayActivities'
+            'chartData',
+            'yesterdayActivities',
+            'lastReportDate'
         ));
     }
 }
