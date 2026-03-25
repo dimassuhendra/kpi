@@ -55,6 +55,7 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/preview', [ReportController::class, 'preview'])->name('reports.preview');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+    Route::post('/export-pdf', [ReportController::class, 'exportPdf'])->name('export.pdf');
     Route::delete('/reports/destroy-range', [ReportController::class, 'destroyRange'])->name('reports.destroy');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');

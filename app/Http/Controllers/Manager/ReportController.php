@@ -6,16 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\DailyReport;
 use App\Exports\KpiExport;
+use App\Models\KegiatanDetail;
+
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Mengambil staff dikelompokkan berdasarkan divisi agar mudah dipilih di dropdown
-        $staffs = User::where('role', 'staff')->with('divisi')->get();
-        return view('manager.reports', compact('staffs'));
+        // Tetapkan default tanggal jika tidak ada filter
+        $startDate = $request->get('start_date', date('Y-m-01'));
+        $endDate = $request->get('end_date', date('Y-m-d'));
+
+        // Ambil staff beserta relasi divisi
+        $staffs = User::where('role', 'staff')
+            ->with('divisi')
+            ->withCount(['dailyReports' => function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal', [$startDate, $endDate])->where('status', 'approved');
+            }])
+            ->get()
+            ->groupBy('divisi.nama_divisi');
+
+        return view('manager.reports', compact('staffs', 'startDate', 'endDate'));
     }
 
     public function export(Request $request)
@@ -42,6 +57,87 @@ class ReportController extends Controller
         $fileName = 'KPI_Analisa_' . $staffName . '_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(new KpiExport($filters), $fileName);
+    }
+
+    /**
+     * Fungsi Export PDF untuk satu User (Laporan Bulanan)
+     */
+    public function exportPdf(Request $request)
+    {
+        $user = User::with('divisi')->findOrFail($request->user_id);
+
+        // Ambil tanggal dari request, jika tidak ada baru gunakan bulan ini
+        $start = $request->has('start_date') ? \Carbon\Carbon::parse($request->start_date) : now()->startOfMonth();
+        $end = $request->has('end_date') ? \Carbon\Carbon::parse($request->end_date) : now()->endOfMonth();
+
+        // 1. Ambil semua detail kegiatan user dalam periode ini
+        $allDetails = KegiatanDetail::with('dailyReport')
+            ->whereHas('dailyReport', function ($q) use ($user, $start, $end) {
+                $q->where('user_id', $user->id)
+                    ->whereBetween('tanggal', [$start, $end]);
+            })->get();
+
+        // 2. BENTENG FILTER: Buang laporan rutin (Monitoring) agar tidak merusak statistik
+        $filteredDetails = $allDetails->filter(function ($item) {
+            $desc = strtolower(trim($item->deskripsi_kegiatan));
+            $forbiddenWords = ['monitoring gps', 'monitoring network'];
+            foreach ($forbiddenWords as $word) {
+                if (str_contains($desc, $word)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        $data = [
+            'user' => $user,
+            'date' => \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i') . ' WIB',
+            'periode' => $start->format('F Y'),
+            'divisi_id' => $user->divisi_id,
+            'reports' => $filteredDetails->sortByDesc(function ($item) {
+                return $item->dailyReport->tanggal;
+            }), // Kirim data untuk tabel rincian di bawah
+        ];
+
+        if ($user->divisi_id == 2) {
+            // --- LOGIKA KHUSUS INFRA ---
+            $infraStats = [
+                'Network' => $filteredDetails->where('kategori', 'Network')->count(),
+                'CCTV'    => $filteredDetails->where('kategori', 'CCTV')->count(),
+                'GPS'     => $filteredDetails->where('kategori', 'GPS')->count(),
+                'Lainnya' => $filteredDetails->where('kategori', 'Lainnya')->count(),
+            ];
+
+            $data['infraStats'] = $infraStats;
+            $data['total_case'] = array_sum($infraStats);
+        } else {
+            // --- LOGIKA KHUSUS TAC (Network & GPS dipisahkan) ---
+
+            // Karantina Data Network
+            $netDetails = $filteredDetails->where('kategori', 'Network');
+            $netCases = $netDetails->where('tipe_kegiatan', 'case');
+
+            // Karantina Data GPS (Sesuai kesepakatan: Menggunakan SUM)
+            $gpsCases = $filteredDetails->where('kategori', 'GPS')->where('tipe_kegiatan', 'case');
+
+            // Sanitasi value_raw untuk GPS (huruf jadi 0)
+            $gpsSum = $gpsCases->sum(function ($item) {
+                return is_numeric($item->value_raw) ? (float) $item->value_raw : 0;
+            });
+
+            $data['tacStats'] = [
+                'net_count'      => $netCases->count(),
+                'total_activity' => $netDetails->where('tipe_kegiatan', 'activity')->count(),
+                'inisiatif_count' => $netCases->where('temuan_sendiri', 1)->count(),
+                'mandiri_count'  => $netCases->where('is_mandiri', 1)->count(),
+                'avg_time'       => round($netCases->avg('value_raw') ?? 0, 1), // Rata-rata waktu Network
+                'gps_count'      => $gpsSum, // Total Unit GPS (Hasil SUM)
+            ];
+        }
+
+        // Menggunakan ukuran A4 agar tabel rincian muat
+        $pdf = Pdf::loadView('manager.exports.user-pdf', $data)->setPaper('a4', 'portrait');
+        return $pdf->stream("Performance_{$user->nama_lengkap}.pdf");
     }
 
     public function preview(Request $request)
