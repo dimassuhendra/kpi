@@ -29,7 +29,7 @@
                     </ol>
                 </nav>
                 <h1 class="text-3xl font-black tracking-tight text-slate-800 uppercase">
-                    User <span class="text-emerald-600">Management</span>
+                    User <span class="text-primary">Management</span>
                 </h1>
                 <p class="text-sm font-medium text-slate-500 mt-1">
                     Total <span class="text-slate-800 font-bold">{{ $users->count() }}</span> staff terdaftar dalam sistem.
@@ -55,7 +55,7 @@
                 </button>
 
                 <button onclick="openUserModal('create')"
-                    class="group flex-1 lg:flex-none px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center justify-center gap-3">
+                    class="group flex-1 lg:flex-none px-5 py-3.5 bg-primary hover:bg-accent text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] active:scale-95 flex items-center justify-center gap-3">
                     <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
                         <i class="fas fa-plus"></i>
                     </div>

@@ -21,18 +21,10 @@
             theme: {
                 extend: {
                     colors: {
-                        emerald: {
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#064e3b',
-                            900: '#064e3b',
-                        },
-                        gold: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706'
-                        }
+                        primary: '#0065cf',
+                        secondary: '#2f8de4',
+                        accent: '#7fb5f0',
+                        background: '#EBF4F6',
                     },
                     fontFamily: {
                         header: ['"Plus Jakarta Sans"', 'sans-serif'],
@@ -45,8 +37,8 @@
 
     <style>
         :root {
-            --primary: #059669;
-            --bg-body: #f0fdf4;
+            --primary: #0065cf;
+            --bg-body: #EBF4F6;
         }
 
         body {
@@ -54,13 +46,12 @@
             background-color: var(--bg-body);
             color: #1e293b;
             overflow-x: hidden;
-            background-image: url("https://www.transparenttextures.com/patterns/islamic-art.png");
         }
 
         .nav-glass {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
-            border-bottom: 3px solid #fbbf24;
+            border-bottom: 2px solid rgba(0, 101, 207, 0.1);
         }
 
         .nav-link {
@@ -84,7 +75,7 @@
                 left: 0;
                 width: 100%;
                 height: 4px;
-                background: linear-gradient(to right, #059669, #fbbf24);
+                background: var(--primary);
                 border-radius: 50px 50px 0 0;
             }
         }
@@ -92,15 +83,16 @@
         .hero-container {
             position: relative;
             height: auto;
-            min-height: 220px;
+            min-height: 200px;
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.25);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            box-shadow: 0 20px 40px -15px rgba(0, 101, 207, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .hero-image {
-            background: url("https://images.unsplash.com/photo-1564121211835-e88c852648ab?q=80&w=2070&auto=format&fit=crop") no-repeat center center;
+            /* Gambar bertema teknologi/kantor yang lebih netral */
+            background: url("https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop") no-repeat center center;
             background-size: cover;
             position: absolute;
             inset: 0;
@@ -109,99 +101,12 @@
         .hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(2, 6, 23, 0.7) 100%);
-        }
-
-        .mosque-bg {
-            position: fixed;
-            bottom: -30px;
-            right: -30px;
-            font-size: 220px;
-            color: rgba(5, 150, 105, 0.06);
-            pointer-events: none;
-            z-index: 0;
-            animation: mosqueFloat 8s ease-in-out infinite;
-        }
-
-        @keyframes mosqueFloat {
-
-            0%,
-            100% {
-                transform: translateY(0) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-15px) rotate(2deg);
-            }
-        }
-
-        @keyframes swing {
-
-            0%,
-            100% {
-                transform: rotate(-6deg);
-            }
-
-            50% {
-                transform: rotate(6deg);
-            }
-        }
-
-        .ornament-body {
-            width: 40px;
-            height: 40px;
-            background: #064e3b;
-            border-radius: 10px;
-            border: 2px solid #fbbf24;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fbbf24;
-            font-size: 18px;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
-        }
-
-        .ornament-side {
-            position: fixed;
-            top: 0;
-            z-index: 70;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            pointer-events: none;
-        }
-
-        #star-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
+            background: linear-gradient(135deg, rgba(0, 101, 207, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
         }
     </style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased" x-data="{ mobileMenu: false }">
-
-    <canvas id="star-canvas"></canvas>
-
-    <div class="ornament-side left-8 hidden xl:flex">
-        <div class="animate-[swing_4s_ease-in-out_infinite] origin-top">
-            <div class="w-0.5 h-24 bg-emerald-700 mx-auto"></div>
-            <div class="ornament-body"><i class="fas fa-moon"></i></div>
-        </div>
-    </div>
-
-    <div class="ornament-side right-8 hidden xl:flex">
-        <div class="animate-[swing_3s_ease-in-out_infinite] origin-top">
-            <div class="w-0.5 h-32 bg-gold-500 mx-auto"></div>
-            <div class="ornament-body"><i class="fas fa-star"></i></div>
-        </div>
-    </div>
-
-    <div class="mosque-bg"><i class="fas fa-mosque"></i></div>
 
     <nav class="nav-glass sticky top-0 z-[60] w-full">
         <div class="max-w-[1440px] mx-auto px-4 lg:px-10">
@@ -209,11 +114,11 @@
                 <div class="flex items-center gap-4 lg:gap-12">
                     <a href="#" class="flex items-center group">
                         <div
-                            class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg border border-gold-400 group-hover:scale-110 transition-transform">
-                            <i class="fas fa-kaaba text-gold-400 text-lg"></i>
+                            class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                            <img src="{{ asset('img/logo-new.png') }}" alt="Logo" class="w-7 h-7 object-contain">
                         </div>
                         <span class="ml-3 font-header font-black text-lg tracking-tighter text-slate-800 uppercase">
-                            MyBolo<span class="text-emerald-600">Staff</span>
+                            MyBolo<span class="text-primary">Staff</span>
                         </span>
                     </a>
 
@@ -236,15 +141,15 @@
                             class="nav-link {{ request()->routeIs('updates.index') ? 'active' : '' }} uppercase flex items-center gap-1">
                             Pembaruan
                             <span id="update-badge-staff"
-                                class="hidden h-2 w-2 rounded-full bg-gold-500 animate-ping">BARU</span>
+                                class="hidden h-2 w-2 rounded-full bg-accent animate-ping"></span>
                         </a>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 lg:gap-6">
-                    <div class="hidden sm:block text-right border-r border-slate-100 pr-6">
-                        <p class="text-[9px] text-emerald-600 font-black uppercase tracking-widest leading-none mb-1">
-                            {{ Auth::user()->divisi->nama_divisi ?? 'Staff Member' }}
+                    <div class="hidden sm:block text-right border-r border-slate-200 pr-6">
+                        <p class="text-[9px] text-primary font-black uppercase tracking-widest leading-none mb-1">
+                            {{ Auth::user()->divisi->nama_divisi ?? 'Technical Staff' }}
                         </p>
                         <p class="text-xs font-bold text-slate-800 tracking-tight">{{ Auth::user()->nama_lengkap }}</p>
                     </div>
@@ -253,7 +158,7 @@
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit"
-                                class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-wider border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all">
+                                class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider border border-slate-200 hover:bg-primary hover:text-white transition-all">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
                         </form>
@@ -269,47 +174,46 @@
 
         <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-            class="lg:hidden bg-white border-t border-gold-400 px-4 py-6 shadow-2xl relative z-[70]">
-            <div class="flex flex-col space-y-2">
+            class="lg:hidden bg-white border-t border-primary/20 px-4 py-6 shadow-2xl relative z-[70]">
+            <div class="flex flex-col space-y-3">
                 <a href="{{ route('staff.dashboard') }}"
-                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.dashboard') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
-                    <span class="flex items-center gap-3"><i class="fas fa-home w-5"></i> Main Station</span>
+                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.dashboard') ? 'bg-blue-50 text-primary border border-blue-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
+                    <span class="flex items-center gap-3"><i
+                            class="fas fa-desktop w-5 {{ request()->routeIs('staff.dashboard') ? 'text-primary' : 'text-slate-400' }}"></i>
+                        Main Station</span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
 
                 <a href="{{ route('staff.input') }}"
-                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.input') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
-                    <span class="flex items-center gap-3"><i class="fas fa-edit w-5"></i> Input Daily Case</span>
+                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.input') ? 'bg-blue-50 text-primary border border-blue-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
+                    <span class="flex items-center gap-3"><i
+                            class="fas fa-plus-circle w-5 {{ request()->routeIs('staff.input') ? 'text-primary' : 'text-slate-400' }}"></i>
+                        Input Case</span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
 
                 <a href="{{ route('staff.kpi.logs') }}"
-                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.kpi.logs') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
-                    <span class="flex items-center gap-3"><i class="fas fa-history w-5"></i> Submission Logs</span>
+                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.kpi.logs') ? 'bg-blue-50 text-primary border border-blue-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
+                    <span class="flex items-center gap-3"><i
+                            class="fas fa-history w-5 {{ request()->routeIs('staff.kpi.logs') ? 'text-primary' : 'text-slate-400' }}"></i>
+                        Logs</span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
 
-                @if (Auth::user()->divisi_id == 1)
-                    <a href="{{ route('staff.kpi.achievements') }}"
-                        class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.kpi.achievements') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
-                        <span class="flex items-center gap-3"><i class="fas fa-chart-line w-5"></i> Achievement
-                            Stats</span>
-                        <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
-                    </a>
-                @endif
-
                 <a href="{{ route('staff.profile.edit') }}"
-                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.profile.*') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
-                    <span class="flex items-center gap-3"><i class="fas fa-user-circle w-5"></i> My Profile</span>
+                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('staff.profile.*') ? 'bg-blue-50 text-primary border border-blue-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
+                    <span class="flex items-center gap-3"><i
+                            class="fas fa-user-circle w-5 {{ request()->routeIs('staff.profile.*') ? 'text-primary' : 'text-slate-400' }}"></i>
+                        Profile</span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
 
                 <a href="{{ route('updates.index') }}" onclick="markUpdateRead()"
-                    class="flex items-center justify-between p-4 rounded-2xl {{ request()->routeIs('updates.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600' }} font-bold text-sm uppercase">
+                    class="flex items-center justify-between p-4 rounded-2xl {{ request()->routeIs('updates.index') ? 'bg-blue-50 text-primary' : 'text-slate-600' }} font-bold text-sm uppercase">
                     <span class="flex items-center gap-3">
                         Pembaruan
                         <span id="update-badge-mobile-staff"
-                            class="hidden text-[9px] bg-gold-400 text-emerald-900 px-1.5 py-0.5 rounded-full">Baru</span>
+                            class="hidden text-[9px] bg-accent text-white px-1.5 py-0.5 rounded-full">Baru</span>
                     </span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>
@@ -318,8 +222,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit"
-                            class="w-full flex items-center justify-center gap-3 p-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-200">
-                            <i class="fas fa-power-off"></i> Sign Out
+                            class="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl font-black text-sm uppercase shadow-lg shadow-blue-200">
+                            <i class="fas fa-power-off"></i> Sign Out Station
                         </button>
                     </form>
                 </div>
@@ -338,50 +242,34 @@
                     <div class="flex justify-between items-start">
                         <div class="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
                             <div
-                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-emerald-900/40 backdrop-blur-md border border-gold-500/30 text-white flex items-center gap-2 w-fit">
-                                <i class="fas fa-calendar-check text-gold-400 text-[10px]"></i>
+                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center gap-2 w-fit">
+                                <i class="fas fa-signal text-accent text-[10px]"></i>
                                 <div class="flex flex-col leading-none">
                                     <span
-                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Menuju Libur
-                                        Idul Fitri</span>
-                                    <span id="eid-countdown"
-                                        class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">Memuat...</span>
-                                </div>
-                            </div>
-
-                            <div class="hidden lg:block w-[1px] h-4 bg-gold-500/20"></div>
-
-                            <div
-                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-emerald-900/40 backdrop-blur-md border border-gold-500/30 text-white flex items-center gap-2 w-fit">
-                                <i class="fas fa-clock text-gold-400 animate-pulse text-[10px]"></i>
-                                <div id="next-prayer" class="flex flex-col leading-none">
-                                    <span
-                                        class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5 text-center lg:text-left">Memuat...</span>
-                                    <span
-                                        class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">Jadwal
-                                        Sholat</span>
+                                        class="text-accent text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Station
+                                        Status</span>
+                                    <span class="text-[9px] lg:text-[10px] font-bold text-white uppercase">Operational
+                                        / Online</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="text-right text-white">
                             <div id="digital-clock"
-                                class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-gold-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]">
-                                00:00:00
+                                class="font-mono text-xl lg:text-3xl font-bold tracking-tighter text-white">00:00:00
                             </div>
                             <div id="current-date"
-                                class="text-[9px] font-black text-emerald-300 uppercase tracking-widest mt-1 opacity-80">
-                                Loading...
-                            </div>
+                                class="text-[9px] font-black text-accent uppercase tracking-widest mt-1 opacity-80">
+                                Loading...</div>
                         </div>
                     </div>
 
                     <div>
                         <h1 class="text-xl lg:text-3xl font-black text-white tracking-tight uppercase">
-                            Selamat Berpuasa, </br><span class="text-gold-400">{{ Auth::user()->nama_lengkap }}</span>
+                            Selamat Bekerja, </br><span class="text-accent">{{ Auth::user()->nama_lengkap }}</span>
                         </h1>
-                        <p class="text-slate-300 text-[9px] font-bold uppercase tracking-[0.2em] mt-1 italic">
-                            "Semoga keberkahan menyertai setiap pekerjaan Anda hari ini."
+                        <p class="text-slate-300 text-[9px] font-bold uppercase tracking-[0.2em] mt-1">
+                            "Berikan layanan terbaik untuk efisiensi operasional hari ini."
                         </p>
                     </div>
                 </div>
@@ -396,10 +284,10 @@
     <footer class="mt-auto py-8 border-t border-slate-200 bg-white relative z-10">
         <div class="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">
-                &copy; 2026 MyBolo <span class="text-emerald-600">Staff Station</span>
+                &copy; 2026 MyBolo <span class="text-primary">Staff Station</span>
             </p>
-            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                Kinerja Barokah <div class="w-1.5 h-1.5 rounded-full bg-gold-500 animate-ping"></div>
+            <div class="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                Operational Excellence <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
             </div>
         </div>
     </footer>
@@ -421,190 +309,20 @@
         setInterval(updateTime, 1000);
         updateTime();
 
-        // Fungsi Countdown Idul Fitri
-        function updateEidCountdown() {
-            // Target 1 Syawal 1447 H (20 Maret 2026)
-            const eidTarget = new Date('March 20, 2026 00:00:00').getTime();
-            const now = new Date().getTime();
-            const distance = eidTarget - now;
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const countdownEl = document.getElementById('eid-countdown');
-
-            if (!countdownEl) return;
-
-            if (distance < 0) {
-                if (days === -1 || days === 0) {
-                    countdownEl.innerHTML = "<span class='text-gold-400 animate-pulse'>Hari Raya</span>";
-                } else {
-                    countdownEl.innerText = "Syawal 1447H";
-                }
-            } else {
-                // Output: "13 Hari Lagi"
-                countdownEl.innerText = `${days} Hari Lagi`;
-            }
-        }
-
-        // Jalankan fungsi
-        updateEidCountdown();
-        // Update setiap 1 jam saja untuk efisiensi (tidak perlu per detik)
-        setInterval(updateEidCountdown, 3600000);
-
-        // Stars Effect
-        const canvas = document.getElementById('star-canvas');
-        const ctx = canvas.getContext('2d');
-        let stars = [];
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Star {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 2.5;
-                this.speedX = (Math.random() - 0.5) * 1;
-                this.speedY = (Math.random() - 0.5) * 1;
-                this.alpha = 1;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.alpha -= 0.015;
-            }
-            draw() {
-                ctx.fillStyle = `rgba(251, 191, 36, ${this.alpha})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        window.addEventListener('mousemove', (e) => {
-            for (let i = 0; i < 2; i++) stars.push(new Star(e.clientX, e.clientY));
-        });
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach((s, i) => {
-                if (s.alpha <= 0) stars.splice(i, 1);
-                else {
-                    s.update();
-                    s.draw();
-                }
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // ============================================
-        // Logic JS untuk modul Waktu Sholat
-        // ============================================
-
-        async function updatePrayerSchedule() {
-            const prayerElement = document.getElementById('next-prayer');
-            const city = "Bandar Lampung";
-            const country = "Indonesia";
-
-            try {
-                // Mengambil jadwal berdasarkan tanggal hari ini
-                const response = await fetch(
-                    `https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=11`);
-                const data = await response.json();
-                const timings = data.data.timings;
-
-                // Daftar waktu yang ingin dipantau (Termasuk Imsak)
-                const schedule = [{
-                        name: "Imsak",
-                        time: timings.Imsak
-                    },
-                    {
-                        name: "Subuh",
-                        time: timings.Fajr
-                    },
-                    {
-                        name: "Dzuhur",
-                        time: timings.Dhuhr
-                    },
-                    {
-                        name: "Ashar",
-                        time: timings.Asr
-                    },
-                    {
-                        name: "Maghrib",
-                        time: timings.Maghrib
-                    },
-                    {
-                        name: "Isya",
-                        time: timings.Isha
-                    }
-                ];
-
-                const now = new Date();
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-
-                let nextPrayer = schedule[0]; // Default ke Imsak besok jika sudah lewat Isya
-                let found = false;
-
-                for (let item of schedule) {
-                    const [hours, minutes] = item.time.split(':').map(Number);
-                    const prayerTimeInMinutes = hours * 60 + minutes;
-
-                    if (prayerTimeInMinutes > currentTime) {
-                        nextPrayer = item;
-                        found = true;
-                        break;
-                    }
-                }
-
-                // Tampilkan hasil
-                const statusText = found ? nextPrayer.name : `Imsak Besok`;
-                prayerElement.innerHTML = `
-                    <span class="text-gold-400 text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">${statusText} ${nextPrayer.time}</span>
-                    <span class="text-[9px] lg:text-[10px] font-bold text-white uppercase whitespace-nowrap">${city}</span>
-                `;
-
-            } catch (error) {
-                console.error("Gagal mengambil jadwal sholat:", error);
-                prayerElement.innerText = "Jadwal Tidak Tersedia";
-            }
-        }
-
-        // Jalankan saat load dan update setiap 1 menit
-        updatePrayerSchedule();
-        setInterval(updatePrayerSchedule, 60000);
-
-        // ============================================
-        // Logic JS untuk modul Pembaruan Sistem
-        // ============================================
-        const SYSTEM_VERSION = "1.3.7";
+        // System Update Check
+        const SYSTEM_VERSION = "1.3.8";
 
         function checkSystemUpdate() {
             const lastSeenVersion = localStorage.getItem('last_seen_version');
-
-            // Jika user belum pernah buka atau versinya lama
             if (lastSeenVersion !== SYSTEM_VERSION) {
-                // Mencari SEMUA elemen yang ID-nya dimulai dengan 'update-badge' atau 'update-text'
-                document.querySelectorAll('[id^="update-badge"], [id^="update-text"]').forEach(el => {
-                    el.classList.remove('hidden');
-                });
+                document.querySelectorAll('[id^="update-badge"]').forEach(el => el.classList.remove('hidden'));
             }
         }
 
         function markUpdateRead() {
-            // Simpan versi saat ini ke storage
             localStorage.setItem('last_seen_version', SYSTEM_VERSION);
-
-            // Sembunyikan semua badge di halaman secara instan
-            document.querySelectorAll('[id^="update-badge"], [id^="update-text"]').forEach(el => {
-                el.classList.add('hidden');
-            });
+            document.querySelectorAll('[id^="update-badge"]').forEach(el => el.classList.add('hidden'));
         }
-
-        // Jalankan saat dokumen siap
         document.addEventListener('DOMContentLoaded', checkSystemUpdate);
     </script>
 </body>

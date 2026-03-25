@@ -18,7 +18,7 @@
             class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div>
                 <h1 class="text-3xl font-header font-black text-slate-800 tracking-tight uppercase">
-                    Mission <span class="text-amber-500 italic">Control</span>
+                    Mission <span class="text-primary italic">Control</span>
                 </h1>
                 <p class="text-slate-500 text-xs tracking-widest font-bold uppercase mt-1">
                     Monitoring Performa:
@@ -35,13 +35,13 @@
             </div>
 
             {{-- BUTTON SWITCHER DIVISI (Reload Halaman untuk reset context staff) --}}
-            <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
+            <div class="flex items-center gap-2 bg-primary p-1.5 rounded-2xl border border-slate-200">
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '1']) }}'"
-                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '1' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200' }}">
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '1' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     TAC
                 </button>
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '2']) }}'"
-                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-200' }}">
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     Infra
                 </button>
             </div>

@@ -8,7 +8,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 ml-2 gap-4">
             <div>
                 <h2 class="text-2xl font-header font-black text-slate-800 uppercase tracking-tight">
-                    Monitoring <span class="text-emerald-600">& Validations</span>
+                    Monitoring <span class="text-primary">& Validations</span>
                 </h2>
                 <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
                     Pusat persetujuan laporan dan log aktivitas
@@ -19,12 +19,12 @@
             <div
                 class="bg-slate-200/50 p-1.5 rounded-2xl flex flex-wrap gap-2 w-full md:w-max border border-slate-200 shadow-inner">
                 <button type="button" @click="activeTab = 'pending'"
-                    :class="activeTab === 'pending' ? 'bg-white text-emerald-600 shadow-md font-black' :
-                        'text-slate-500 font-bold hover:text-slate-700'"
+                    :class="activeTab === 'pending' ? 'bg-white text-primary shadow-md font-black' :
+                        'text-secondary font-bold hover:text-slate-700'"
                     class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
                     <i class="fas fa-clipboard-check mr-2"></i> Pending
                     <span
-                        class="ml-2 bg-emerald-100 text-emerald-600 py-0.5 px-2 rounded-md">{{ $pendingReports->count() }}</span>
+                        class="ml-2 bg-accent text-primary py-0.5 px-2 rounded-md">{{ $pendingReports->count() }}</span>
                 </button>
                 <button type="button" @click="activeTab = 'rating'"
                     :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' :
@@ -54,7 +54,7 @@
                         {{-- (Isi Accordion Header biarkan sama persis seperti kode Anda) --}}
                         <div class="flex items-start sm:items-center gap-5">
                             <div
-                                class="w-12 h-12 rounded-2xl bg-emerald-100 flex-shrink-0 flex items-center justify-center text-emerald-700 font-black text-lg">
+                                class="w-12 h-12 rounded-2xl bg-accent flex-shrink-0 flex items-center justify-center text-primary font-black text-lg">
                                 {{ strtoupper(substr($rp->user->nama_lengkap, 0, 1)) }}
                             </div>
                             <div>
