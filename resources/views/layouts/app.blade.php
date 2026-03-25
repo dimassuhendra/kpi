@@ -8,7 +8,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka&family=Sniglet:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka&family=Sniglet:wght@400;800&display=swap"
+        rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -18,9 +19,9 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#09637E',
-                        secondary: '#088395',
-                        accent: '#7AB2B2',
+                        primary: '#0065cf',
+                        secondary: '#2f8de4',
+                        accent: '#7fb5f0',
                         background: '#EBF4F6',
                     },
                     fontFamily: {
