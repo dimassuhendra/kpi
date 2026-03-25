@@ -34,6 +34,8 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::get('/dashboard', [StaffDashboardController::class, 'dashboard'])->name('staff.dashboard');
     Route::get('/input-case', [StaffInputController::class, 'index'])->name('staff.input');
     Route::post('/kpi/store', [StaffInputController::class, 'store'])->name('staff.kpi.store');
+    Route::post('/staff/feedback', [StaffInputController::class, 'storeFeedback'])->name('staff.feedback.store');
+    Route::post('/staff/assessment', [StaffInputController::class, 'storeAssessment'])->name('staff.assessment.store');
     Route::get('/kpi/logs', [StaffLogsController::class, 'logs'])->name('staff.kpi.logs');
     Route::put('/kpi/logs/{id}', [StaffLogsController::class, 'update'])->name('staff.kpi.update');
     Route::delete('/kpi/logs/{id}', [StaffLogsController::class, 'destroy'])->name('staff.kpi.destroy');

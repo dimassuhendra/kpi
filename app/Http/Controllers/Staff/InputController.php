@@ -9,6 +9,8 @@ use App\Models\VariabelKpi;
 use App\Models\DailyReport;
 use App\Models\KegiatanDetail;
 use App\Models\Shift;
+use App\Models\CustomerFeedback;
+use App\Models\TechnicalAssessment;
 use Carbon\Carbon;
 
 class InputController extends Controller
@@ -312,5 +314,57 @@ class InputController extends Controller
         }
 
         return redirect()->route('staff.input')->with('success', 'Laporan berhasil diperbarui!');
+    }
+
+    // Fungsi untuk menyimpan Customer Feedback (Rating)
+    public function storeFeedback(Request $request)
+    {
+        $request->validate([
+            'nomor_tiket' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'tanggal_survey' => 'required|date',
+            'rating' => 'required|integer|min:1|max:5',
+            'bukti_survey' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Simpan gambar bukti survey
+        $pathBukti = $request->file('bukti_survey')->store('kpi_evidences/feedbacks', 'public');
+
+        CustomerFeedback::create([
+            'user_id' => Auth::id(),
+            'nomor_tiket' => $request->nomor_tiket,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'tanggal_survey' => $request->tanggal_survey,
+            'rating' => $request->rating,
+            'bukti_survey' => $pathBukti,
+        ]);
+
+        return redirect()->route('staff.input')->with('success', 'Data Rating Pelanggan berhasil disimpan!');
+    }
+
+    // Fungsi untuk menyimpan Technical Assessment (Nilai Kuis)
+    public function storeAssessment(Request $request)
+    {
+        $request->validate([
+            'periode_bulan' => 'required|integer|min:1|max:12',
+            'periode_tahun' => 'required|integer|min:2020',
+            'jumlah_soal' => 'required|integer|min:1',
+            'jumlah_benar' => 'required|integer|min:0|lte:jumlah_soal', // jumlah benar tidak boleh lebih besar dari soal
+            'bukti_kuis' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Simpan gambar bukti kuis
+        $pathBukti = $request->file('bukti_kuis')->store('kpi_evidences/assessments', 'public');
+
+        TechnicalAssessment::create([
+            'user_id' => Auth::id(),
+            'periode_bulan' => $request->periode_bulan,
+            'periode_tahun' => $request->periode_tahun,
+            'jumlah_soal' => $request->jumlah_soal,
+            'jumlah_benar' => $request->jumlah_benar,
+            'bukti_kuis' => $pathBukti,
+        ]);
+
+        return redirect()->route('staff.input')->with('success', 'Nilai Asesmen Kuis berhasil disimpan!');
     }
 }
