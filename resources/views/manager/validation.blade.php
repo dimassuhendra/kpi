@@ -191,7 +191,6 @@
                                 <th class="p-4 font-black">Staff / TAC</th>
                                 <th class="p-4 font-black text-center">Periode</th>
                                 <th class="p-4 font-black text-center">Skor Global</th>
-                                <th class="p-4 font-black">Detail Pemahaman</th>
                                 <th class="p-4 font-black text-center">Bukti SS</th>
                             </tr>
                         </thead>
@@ -224,20 +223,6 @@
                                         <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
                                         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar
                                             {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
-                                    </td>
-                                    <td class="p-4">
-                                        <div class="flex flex-wrap gap-2 text-[10px] font-bold">
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">NW:
-                                                {{ $quiz->pemahaman_network ?? 0 }}</span>
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">HW:
-                                                {{ $quiz->pemahaman_hardware ?? 0 }}</span>
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">SW:
-                                                {{ $quiz->pemahaman_software ?? 0 }}</span>
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">CCTV:
-                                                {{ $quiz->pemahaman_cctv ?? 0 }}</span>
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">GPS:
-                                                {{ $quiz->pemahaman_gps ?? 0 }}</span>
-                                        </div>
                                     </td>
                                     <td class="p-4 text-center">
                                         <button type="button"
