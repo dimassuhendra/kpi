@@ -8,19 +8,19 @@
             </div>
             <div>
                 <h2 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Log Pembaruan</h2>
-                <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Informasi perkembangan sistem
+                <p class="text-[10px] font-bold text-primary uppercase tracking-widest">Informasi perkembangan sistem
                     MyBolo</p>
             </div>
         </div>
 
         <div
-            class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-emerald-500 before:via-gold-500 before:to-transparent">
+            class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:via-accent before:to-transparent">
 
             @foreach ($updates as $update)
                 <div
                     class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                     <div
-                        class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-emerald-600 text-gold-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                        class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-primary text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
                         <i class="fas fa-rocket text-xs"></i>
                     </div>
 
@@ -28,7 +28,7 @@
                         class="w-[calc(100%-4rem)] md:w-[45%] bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:border-gold-400/50 transition-all duration-300">
                         <div class="flex items-center justify-between mb-2">
                             <span
-                                class="text-[10px] font-black px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg uppercase tracking-wider">
+                                class="text-[10px] font-black px-2 py-1 bg-accent text-primary rounded-lg uppercase tracking-wider">
                                 v{{ $update['version'] }}
                             </span>
                             <time class="font-mono text-[10px] text-slate-400 font-bold">{{ $update['date'] }}</time>
@@ -41,7 +41,7 @@
                         <ul class="space-y-2">
                             @foreach ($update['changes'] as $change)
                                 <li class="flex items-start gap-2 text-[11px] text-slate-600 font-medium text-justify">
-                                    <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
+                                    <i class="fas fa-check-circle text-primary mt-0.5"></i>
                                     <span>{{ $change }}</span>
                                 </li>
                             @endforeach

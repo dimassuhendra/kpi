@@ -12,6 +12,22 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '1.3.26',
+                'date' => '26 Maret 2026',
+                'title' => 'Laporan Excel 4 Tab & Dashboard Analitik Baru',
+                'description' => 'Peningkatan besar pada sistem pelaporan Excel, tampilan dashboard manager yang lebih informatif, dan kemudahan edit data bagi staff.',
+                'changes' => [
+                    'Manager: Laporan Excel kini otomatis terbagi dalam 4 Tab (Ringkasan, Detail Kesalahan, Log Foto, & Kuis).',
+                    'Manager: Dashboard baru dengan grafik warna (Hijau/Kuning/Merah) untuk memantau kecepatan respon staff secara real-time.',
+                    'Manager: Filter data (Staff & Tanggal) kini bekerja instan tanpa perlu reload halaman (AJAX).',
+                    'Manager: Tampilan validasi otomatis menyesuaikan kebutuhan data antara divisi TAC dan Infra.',
+                    'Staff  : Halaman Log Aktivitas baru yang lebih detail, lengkap dengan fitur intip foto (Image Preview).',
+                    'Staff  : Kini bisa mengedit seluruh isi laporan (Revisi) termasuk mengganti bukti foto dan jumlah kendaraan.',
+                    'System : Perbaikan perhitungan waktu laporan agar lebih akurat, terutama untuk staff shift malam (GMT+7).'
+                ],
+                'type' => 'Major'
+            ],
+            [
                 'version' => '1.3.7',
                 'date' => '07 Maret 2026',
                 'title' => 'Alur Revisi Laporan & Optimasi Dashboard',
