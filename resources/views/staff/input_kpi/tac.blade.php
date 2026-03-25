@@ -180,6 +180,10 @@
                 </div>
             </div>
         </template>
+        <button type="button" @click="addNetworkRow()"
+            class="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-amber-400 hover:text-amber-500 hover:bg-amber-50/30 transition-all font-bold text-sm uppercase tracking-widest">
+            <i class="fas fa-plus-circle mr-2"></i> Tambah Network Case
+        </button>
     </div>
 </div>
 
@@ -222,6 +226,10 @@
                 </div>
             </div>
         </template>
+        <button type="button" @click="addGpsRow()"
+            class="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-emerald-400 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all font-bold text-sm uppercase tracking-widest">
+            <i class="fas fa-plus-circle mr-2"></i> Tambah GPS Case
+        </button>
     </div>
 </div>
 
@@ -248,5 +256,9 @@
                 </button>
             </div>
         </template>
+        <button type="button" @click="addActivity()"
+            class="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-emerald-400 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all font-bold text-sm uppercase tracking-widest">
+            <i class="fas fa-plus-circle mr-2"></i> Tambah General Activity
+        </button>
     </div>
 </div>
