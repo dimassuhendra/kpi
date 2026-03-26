@@ -28,6 +28,12 @@ class QuizSheet implements FromView, ShouldAutoSize, WithTitle
         if (!empty($this->filters['user_id'])) {
             $query->where('user_id', $this->filters['user_id']);
         }
+        // Tambahan filter divisi (lewat relasi user -> divisi)
+        if (!empty($this->filters['divisi_name'])) {
+            $query->whereHas('user.divisi', function ($q) {
+                $q->where('nama_divisi', $this->filters['divisi_name']);
+            });
+        }
 
         return view('manager.exports.sheet_quiz', [
             'quizzes' => $query->get()

@@ -60,6 +60,31 @@ class ReportController extends Controller
     }
 
     /**
+     * Fungsi Export Excel untuk Satu Divisi Penuh
+     */
+    public function exportDivisi(Request $request)
+    {
+        $request->validate([
+            'divisi'     => 'required|string',
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $filters = [
+            'divisi_name' => $request->divisi,
+            'start_date'  => $request->start_date,
+            'end_date'    => $request->end_date,
+        ];
+
+        // Format nama file: Report_Divisi_TAC_20260214_102030.xlsx
+        $safeDivisiName = str_replace([' ', '/'], '_', $request->divisi);
+        $fileName = 'Report_Divisi_' . $safeDivisiName . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        // Pastikan Anda membuat class KpiDivisiExport atau menyesuaikan KpiExport yang sudah ada
+        return Excel::download(new \App\Exports\KpiDivisiExport($filters), $fileName);
+    }
+
+    /**
      * Fungsi Export PDF untuk satu User (Laporan Bulanan)
      */
     public function exportPdf(Request $request)

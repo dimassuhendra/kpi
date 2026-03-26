@@ -39,10 +39,21 @@
         {{-- Daftar Staff Per Divisi --}}
         @foreach ($staffs as $divisi => $group)
             <div class="space-y-4">
-                <div class="flex items-center gap-4 ml-2">
-                    <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{{ $divisi ?? 'Tanpa Divisi' }}
-                    </h2>
-                    <div class="h-px bg-slate-200 flex-1"></div>
+                {{-- Header Divisi dengan Tombol Export --}}
+                <div class="flex items-center justify-between ml-2 mb-6">
+                    <div class="flex items-center gap-4 flex-1">
+                        <h2 class="text-xs font-black uppercase tracking-[0.3em] text-slate-500">
+                            {{ $divisi ?? 'Tanpa Divisi' }}
+                        </h2>
+                        <div class="h-px bg-slate-200 flex-1 mr-4"></div>
+                    </div>
+
+                    {{-- Tombol Export Excel Per Divisi --}}
+                    <a href="{{ route('manager.reports.export.divisi', ['divisi' => $divisi, 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 transition-all flex items-center gap-2">
+                        <i class="fas fa-users"></i>
+                        <span>Export Divisi</span>
+                    </a>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -66,7 +77,8 @@
                                 </div>
 
                                 <h3 class="font-bold text-slate-800 text-lg leading-tight mb-1">{{ $s->nama_lengkap }}</h3>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">{{ $s->divisi->nama_divisi ?? 'Tanpa Divisi' }}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">
+                                    {{ $s->divisi->nama_divisi ?? 'Tanpa Divisi' }}</p>
 
                                 <div class="flex gap-3 w-full">
                                     <a href="{{ route('manager.reports.export', ['user_id' => $s->id, 'start_date' => $startDate, 'end_date' => $endDate]) }}"

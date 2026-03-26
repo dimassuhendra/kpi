@@ -28,9 +28,17 @@ class RawActivitySheet implements FromView, ShouldAutoSize, WithTitle
         $endDate = $this->filters['end_date'];
 
         $usersQuery = User::with('divisi')->where('role', 'staff');
+        // Filter jika export per user
         if (!empty($this->filters['user_id'])) {
             $usersQuery->where('id', $this->filters['user_id']);
         }
+        // Filter jika export per divisi
+        if (!empty($this->filters['divisi_name'])) {
+            $usersQuery->whereHas('divisi', function ($q) {
+                $q->where('nama_divisi', $this->filters['divisi_name']);
+            });
+        }
+
         $users = $usersQuery->get();
 
         $dataExport = [];
