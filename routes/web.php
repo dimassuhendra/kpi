@@ -74,3 +74,8 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::get('/profile', [ManagerProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ManagerProfileController::class, 'update'])->name('profile.update');
 });
+
+// Route ini hanya merespon 'ok' untuk memperbarui waktu sesi user
+Route::post('/keep-alive', function () {
+    return response()->json(['status' => 'Sesi diperpanjang']);
+})->name('keep-alive');

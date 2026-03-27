@@ -324,6 +324,71 @@
             document.querySelectorAll('[id^="update-badge"]').forEach(el => el.classList.add('hidden'));
         }
         document.addEventListener('DOMContentLoaded', checkSystemUpdate);
+
+        // =============================================================
+        // Js untuk session timeout warning
+        // =============================================================
+        const sessionLifetimeMs = {{ config('session.lifetime') }} * 60 * 1000;
+
+        const warningTimeMs = sessionLifetimeMs - (60 * 60 * 1000);
+
+        let warningTimer;
+
+        function startSessionTimers() {
+            clearTimeout(warningTimer);
+
+            warningTimer = setTimeout(function() {
+                Swal.fire({
+                    title: 'Apakah Anda masih di sana?',
+                    text: 'Sesi login Anda sudah lama tidak ada aktivitas. Klik tombol di bawah untuk tetap login.',
+                    icon: 'question', // Mengganti ikon menjadi pertanyaan
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Tetap Login',
+                    cancelButtonText: 'Keluar',
+                    allowOutsideClick: false, // Wajib diklik tombolnya
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('{{ route('keep-alive') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json' // Penting: Agar server membalas pesan error dengan format JSON jika sesi sudah terlanjur habis
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                Swal.fire({
+                                    title: 'Sesi Diperpanjang!',
+                                    text: 'Anda bisa melanjutkan pekerjaan kembali.',
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                startSessionTimers();
+                            } else {
+                                Swal.fire({
+                                    title: 'Sesi Berakhir',
+                                    text: 'Maaf, Anda terlalu lama merespon. Silakan login kembali untuk keamanan.',
+                                    icon: 'error'
+                                }).then(() => {
+                                    window.location
+                                        .reload(); // Ini akan otomatis melempar ke halaman login
+                                });
+                            }
+                        }).catch(error => {
+                            window.location.reload();
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.reload();
+                    }
+                });
+            }, warningTimeMs);
+        }
+
+        startSessionTimers();
     </script>
 </body>
 
