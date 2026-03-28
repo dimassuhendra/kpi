@@ -85,14 +85,17 @@ class DashboardController extends Controller
         // ========================================================================
         // A. METRIK EKSEKUTIF (Semua Divisi - Compliance & Evaluation)
         // ========================================================================
+        $gpsReports = $reports->whereNotNull('bukti_report_gps');
+
         $compliance = [
             'dashboard' => [
                 'ontime' => $reports->where('is_dashboard_ontime', 1)->count(),
                 'late' => $reports->where('is_dashboard_ontime', 0)->count()
             ],
             'gps' => [
-                'ontime' => $reports->where('is_gps_ontime', 1)->count(),
-                'late' => $reports->where('is_gps_ontime', 0)->count()
+                // Hanya menghitung dari populasi yang ada bukti GPS-nya
+                'ontime' => $gpsReports->where('is_gps_ontime', 1)->count(),
+                'late' => $gpsReports->where('is_gps_ontime', 0)->count()
             ]
         ];
 
