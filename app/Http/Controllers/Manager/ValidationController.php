@@ -97,7 +97,11 @@ class ValidationController extends Controller
             $message .= "⏰ *Shift:* " . $report->shift->nama_shift . "\n";
         }
 
-        $message .= "📅 *Tanggal:* " . $report->tanggal->format('d M Y') . "\n";
+        // Pastikan locale diatur ke Indonesia (bisa ditaruh di AppServiceProvider atau langsung di sini)
+        \Carbon\Carbon::setLocale('id');
+        // Tambahkan timezone('Asia/Jakarta') sebelum translatedFormat
+        $message .= "📅 *Tanggal:* " . $report->tanggal->timezone('Asia/Jakarta')->translatedFormat('d F Y') . "\n";
+        $message .= "🕒 *Disubmit pada:* " . $report->created_at->timezone('Asia/Jakarta')->translatedFormat('l, d F Y \p\u\k\u\l H:i') . "\n";
         $message .= "━━━━━━━━━━━━━━━━━━\n\n";
 
         if (str_contains(strtolower($namaDivisi), 'infrastructure') || str_contains(strtolower($namaDivisi), 'infra')) {
@@ -133,10 +137,13 @@ class ValidationController extends Controller
                 $i = 1;
                 foreach ($cases as $case) {
                     if ($case->kategori === 'GPS') {
-                        $message .= "{$i}. {$case->deskripsi_kegiatan} (" . ($case->value_raw == '0' ? 'ALL' : $case->value_raw) . ")\n";
+                        // Cek jika value_raw adalah 'ALL' atau '0', tampilkan sesuai kebutuhan
+                        $kendaraan = ($case->value_raw == '0' || $case->value_raw == 'ALL') ? 'ALL' : $case->value_raw;
+                        $message .= "{$i}. {$case->deskripsi_kegiatan} ({$kendaraan} Kendaraan)\n";
                     } else {
-                        // Jika ada tiket, tampilkan di telegram
-                        $tiketInfo = $case->nomor_tiket ? " [{$case->nomor_tiket}]" : "";
+                        // Logika baru: Jika nomor_tiket ada, buat format string-nya. Jika tidak, kosongkan.
+                        $tiketInfo = $case->nomor_tiket ? " (Nomor Tiket: {$case->nomor_tiket})" : "";
+
                         $message .= "{$i}. {$case->deskripsi_kegiatan}{$tiketInfo}\n";
                     }
                     $i++;
