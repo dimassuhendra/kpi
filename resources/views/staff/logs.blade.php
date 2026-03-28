@@ -10,26 +10,37 @@
                 <h1 class="text-2xl md:text-3xl font-header font-bold text-slate-800">Log Aktivitas</h1>
                 <p class="text-slate-500 font-body text-xs md:text-sm">Rekam jejak dan riwayat input data Anda.</p>
             </div>
-            
+
             {{-- TAB SWITCHER --}}
-            @if(auth()->user()->divisi_id == 1)
-            <div class="bg-slate-200/50 p-1.5 rounded-2xl flex gap-2 w-full md:w-max border border-slate-200 shadow-inner">
-                <button type="button" @click="activeTab = 'laporan'" :class="activeTab === 'laporan' ? 'bg-white text-indigo-600 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
-                    <i class="fas fa-calendar-check mr-1"></i> Laporan
-                </button>
-                <button type="button" @click="activeTab = 'rating'" :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
-                    <i class="fas fa-star mr-1"></i> Rating
-                </button>
-                <button type="button" @click="activeTab = 'kuis'" :class="activeTab === 'kuis' ? 'bg-white text-emerald-500 shadow-md font-black' : 'text-slate-500 font-bold hover:text-slate-700'" class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
-                    <i class="fas fa-award mr-1"></i> Kuis
-                </button>
-            </div>
+            @if (auth()->user()->divisi_id == 1)
+                <div
+                    class="bg-slate-200/50 p-1.5 rounded-2xl flex gap-2 w-full md:w-max border border-slate-200 shadow-inner">
+                    <button type="button" @click="activeTab = 'laporan'"
+                        :class="activeTab === 'laporan' ? 'bg-white text-indigo-600 shadow-md font-black' :
+                            'text-slate-500 font-bold hover:text-slate-700'"
+                        class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                        <i class="fas fa-calendar-check mr-1"></i> Laporan
+                    </button>
+                    <button type="button" @click="activeTab = 'rating'"
+                        :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' :
+                            'text-slate-500 font-bold hover:text-slate-700'"
+                        class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                        <i class="fas fa-star mr-1"></i> Rating
+                    </button>
+                    <button type="button" @click="activeTab = 'kuis'"
+                        :class="activeTab === 'kuis' ? 'bg-white text-emerald-500 shadow-md font-black' :
+                            'text-slate-500 font-bold hover:text-slate-700'"
+                        class="flex-1 md:px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
+                        <i class="fas fa-award mr-1"></i> Kuis
+                    </button>
+                </div>
             @endif
         </div>
 
         {{-- Flash Message --}}
         @if (session('success'))
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
+            <div
+                class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
                 <i class="fas fa-check-circle mr-3 text-emerald-500"></i> {{ session('success') }}
             </div>
         @endif
@@ -38,28 +49,37 @@
         {{-- TAB 1: LOG LAPORAN HARIAN (KODE LAMA ANDA) --}}
         {{-- ========================================== --}}
         <div x-show="activeTab === 'laporan'" x-transition.opacity.duration.500ms>
-            
+
             {{-- Filter Section (Biarkan sama persis) --}}
             <div class="bg-white p-5 mb-6 rounded-2xl border border-slate-200 shadow-sm">
-                <form action="{{ route('staff.kpi.logs') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                <form action="{{ route('staff.kpi.logs') }}" method="GET"
+                    class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="w-full md:flex-1">
                         <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Cari Deskripsi</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari keyword kegiatan..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Cari keyword kegiatan..."
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
                     </div>
                     <div class="w-full md:w-48">
                         <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Status Validasi</label>
-                        <select name="status" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
+                        <select name="status"
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
                             <option value="">Semua Status</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu</option>
-                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui</option>
-                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu
+                            </option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui
+                            </option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak
+                            </option>
                         </select>
                     </div>
                     <div class="w-full md:w-auto flex gap-2">
-                        <button type="submit" class="flex-1 md:flex-none bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200">
+                        <button type="submit"
+                            class="flex-1 md:flex-none bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200">
                             <i class="fas fa-filter mr-1"></i> Filter
                         </button>
-                        <a href="{{ route('staff.kpi.logs') }}" class="flex-1 md:flex-none text-center bg-slate-200 text-slate-600 text-sm py-2 px-4 rounded-xl hover:bg-slate-300 transition font-bold">Reset</a>
+                        <a href="{{ route('staff.kpi.logs') }}"
+                            class="flex-1 md:flex-none text-center bg-slate-200 text-slate-600 text-sm py-2 px-4 rounded-xl hover:bg-slate-300 transition font-bold">Reset</a>
                     </div>
                 </form>
             </div>
@@ -67,295 +87,342 @@
             {{-- Table Section (Desktop & Mobile persis kode lama) --}}
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
                 <table class="hidden md:table w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
-                        <th class="p-5">Tanggal Laporan</th>
-                        <th class="p-5 text-center">Jumlah Item</th>
-                        <th class="p-5">Status</th>
-                        <th class="p-5 text-right">Aksi</th>
-                    </tr>
-                </thead>
+                    <thead>
+                        <tr
+                            class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
+                            <th class="p-5">Tanggal Laporan</th>
+                            <th class="p-5 text-center">Jumlah Item</th>
+                            <th class="p-5">Status</th>
+                            <th class="p-5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
 
-                @forelse($logs as $log)
-                    <tbody class="text-slate-600 border-t border-slate-100" x-data="{ expanded: false }">
-                        <tr class="hover:bg-slate-50 transition-all cursor-pointer" @click="expanded = !expanded">
-                            <td class="p-5 font-bold text-slate-800">
-                                <div class="flex items-center group">
-                                    <i class="fas fa-chevron-right text-[10px] mr-3 transition-transform text-slate-400"
-                                        :class="expanded ? 'rotate-90 text-amber-500' : ''"></i>
-                                    {{ \Carbon\Carbon::parse($log->tanggal)->translatedFormat('l, d F Y') }}
-                                </div>
-                            </td>
-                            <td class="p-5 text-center">
-                                <span
-                                    class="bg-slate-100 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-600">
-                                    {{ $log->details->count() }} Kegiatan
-                                </span>
-                            </td>
-                            <td class="p-5">
-                                <span
-                                    class="w-fit text-[10px] px-3 py-1 rounded-full border uppercase font-bold tracking-tighter
+                    @forelse($logs as $log)
+                        <tbody class="text-slate-600 border-t border-slate-100" x-data="{ expanded: false }">
+                            <tr class="hover:bg-slate-50 transition-all cursor-pointer" @click="expanded = !expanded">
+                                <td class="p-5 font-bold text-slate-800">
+                                    <div class="flex items-center group">
+                                        <i class="fas fa-chevron-right text-[10px] mr-3 transition-transform text-slate-400"
+                                            :class="expanded ? 'rotate-90 text-amber-500' : ''"></i>
+                                        {{ \Carbon\Carbon::parse($log->tanggal)->translatedFormat('l, d F Y') }}
+                                    </div>
+                                </td>
+                                <td class="p-5 text-center">
+                                    <span
+                                        class="bg-slate-100 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-600">
+                                        {{ $log->details->count() }} Kegiatan
+                                    </span>
+                                </td>
+                                <td class="p-5">
+                                    <span
+                                        class="w-fit text-[10px] px-3 py-1 rounded-full border uppercase font-bold tracking-tighter
                                     {{ $log->status == 'pending' ? 'text-amber-600 bg-amber-50 border-amber-200' : '' }}
                                     {{ $log->status == 'rejected' ? 'text-rose-600 bg-rose-50 border-rose-200' : '' }}
                                     {{ $log->status == 'approved' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : '' }}">
-                                    {{ $log->status == 'pending' ? 'Menunggu' : ($log->status == 'rejected' ? 'Ditolak' : 'Disetujui') }}
-                                </span>
-                            </td>
-                            <td class="p-5 text-right" @click.stop>
-                                @if ($log->status == 'pending' || $log->status == 'rejected')
-                                    <form action="{{ route('staff.kpi.destroy', $log->id) }}" method="POST" class="inline"
-                                        onsubmit="return confirm('Hapus seluruh laporan tanggal ini?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-slate-400 hover:text-rose-500 p-2 transition">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                @else
-                                    <i class="fas fa-check-double text-emerald-400 text-xs"></i>
-                                @endif
-                            </td>
-                        </tr>
+                                        {{ $log->status == 'pending' ? 'Menunggu' : ($log->status == 'rejected' ? 'Ditolak' : 'Disetujui') }}
+                                    </span>
+                                </td>
+                                <td class="p-5 text-right" @click.stop>
+                                    @if ($log->status == 'pending' || $log->status == 'rejected')
+                                        <form action="{{ route('staff.kpi.destroy', $log->id) }}" method="POST"
+                                            class="inline" onsubmit="return confirm('Hapus seluruh laporan tanggal ini?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                class="text-slate-400 hover:text-rose-500 p-2 transition">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <i class="fas fa-check-double text-emerald-400 text-xs"></i>
+                                    @endif
+                                </td>
+                            </tr>
 
-                        {{-- Expanded Details Desktop --}}
-                        <tr x-show="expanded" x-cloak class="bg-slate-50/50" x-transition>
-                            <td colspan="4" class="p-6 border-t border-slate-100 shadow-inner">
+                            {{-- Expanded Details Desktop --}}
+                            <tr x-show="expanded" x-cloak class="bg-slate-50/50" x-transition>
+                                <td colspan="4" class="p-6 border-t border-slate-100 shadow-inner">
 
-                                {{-- JIKA ADA CATATAN MANAGER (REVISI) --}}
-                                @if ($log->catatan_manager)
-                                    <div
-                                        class="mb-5 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
-                                        <i class="fas fa-exclamation-circle text-rose-500 mt-0.5"></i>
-                                        <div>
-                                            <p class="text-xs font-bold text-rose-700 uppercase tracking-widest mb-1">
-                                                Catatan Manager (Revisi)</p>
-                                            <p class="text-sm text-rose-600 italic">"{{ $log->catatan_manager }}"</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                {{-- SUMMARY REPORTING (Khusus TAC) --}}
-                                @if ($log->user->divisi_id == 1)
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl border border-indigo-100 bg-indigo-50/30">
-                                        {{-- Shift --}}
-                                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                            <span class="block text-[9px] text-slate-400 uppercase font-black mb-1">Shift
-                                                Kerja</span>
-                                            @if ($log->shift)
-                                                <span
-                                                    class="font-bold text-xs text-slate-700 block">{{ $log->shift->nama_shift }}</span>
-                                                <span
-                                                    class="text-[10px] text-slate-500">{{ \Carbon\Carbon::parse($log->shift->jam_masuk)->format('H:i') }}
-                                                    -
-                                                    {{ \Carbon\Carbon::parse($log->shift->jam_pulang)->format('H:i') }}</span>
-                                            @else
-                                                <span class="text-xs text-rose-500 font-bold">Tidak diisi</span>
-                                            @endif
-                                        </div>
-                                        {{-- GPS --}}
+                                    {{-- JIKA ADA CATATAN MANAGER (REVISI) --}}
+                                    @if ($log->catatan_manager)
                                         <div
-                                            class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+                                            class="mb-5 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
+                                            <i class="fas fa-exclamation-circle text-rose-500 mt-0.5"></i>
                                             <div>
+                                                <p class="text-xs font-bold text-rose-700 uppercase tracking-widest mb-1">
+                                                    Catatan Manager (Revisi)</p>
+                                                <p class="text-sm text-rose-600 italic">"{{ $log->catatan_manager }}"</p>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    {{-- SUMMARY REPORTING (Khusus TAC) --}}
+                                    @if ($log->user->divisi_id == 1)
+                                        <div
+                                            class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl border border-indigo-100 bg-indigo-50/30">
+                                            {{-- Shift --}}
+                                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                <span
+                                                    class="block text-[9px] text-slate-400 uppercase font-black mb-1">Shift
+                                                    Kerja</span>
+                                                @if ($log->shift)
+                                                    <span
+                                                        class="font-bold text-xs text-slate-700 block">{{ $log->shift->nama_shift }}</span>
+                                                    <span
+                                                        class="text-[10px] text-slate-500">{{ \Carbon\Carbon::parse($log->shift->jam_masuk)->format('H:i') }}
+                                                        -
+                                                        {{ \Carbon\Carbon::parse($log->shift->jam_pulang)->format('H:i') }}</span>
+                                                @else
+                                                    <span class="text-xs text-rose-500 font-bold">Tidak diisi</span>
+                                                @endif
+                                            </div>
+                                            {{-- GPS --}}
+                                            <div
+                                                class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between">
+                                                <div>
+                                                    <span
+                                                        class="block text-[9px] text-slate-400 uppercase font-black mb-1">Status
+                                                        GPS</span>
+                                                    @if ($log->is_gps_ontime)
+                                                        <span class="text-emerald-600 text-[10px] font-bold"><i
+                                                                class="fas fa-check-circle mr-1"></i> Tepat Waktu</span>
+                                                    @else
+                                                        <span class="text-rose-500 text-[10px] font-bold"><i
+                                                                class="fas fa-times-circle mr-1"></i> Late / None</span>
+                                                    @endif
+                                                </div>
+                                                @if ($log->bukti_report_gps)
+                                                    <button type="button"
+                                                        onclick="openImageModal('{{ asset('storage/' . $log->bukti_report_gps) }}')"
+                                                        class="mt-2 text-left text-[10px] text-indigo-500 font-bold hover:underline"><i
+                                                            class="fas fa-image"></i> Lihat Bukti</button>
+                                                @endif
+                                            </div>
+                                            {{-- Dashboard --}}
+                                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                                                 <span
                                                     class="block text-[9px] text-slate-400 uppercase font-black mb-1">Status
-                                                    GPS</span>
-                                                @if ($log->is_gps_ontime)
-                                                    <span class="text-emerald-600 text-[10px] font-bold"><i
+                                                    Dashboard KPI</span>
+                                                @if ($log->is_dashboard_ontime)
+                                                    <span class="text-emerald-600 text-[10px] font-bold block"><i
                                                             class="fas fa-check-circle mr-1"></i> Tepat Waktu</span>
                                                 @else
-                                                    <span class="text-rose-500 text-[10px] font-bold"><i
-                                                            class="fas fa-times-circle mr-1"></i> Late / None</span>
+                                                    <span class="text-rose-500 text-[10px] font-bold block"><i
+                                                            class="fas fa-times-circle mr-1"></i> Terlambat</span>
                                                 @endif
+                                                <span class="text-[9px] text-slate-400 font-bold mt-1 block">Submit:
+                                                    {{ $log->created_at->timezone('Asia/Jakarta')->format('H:i') }}</span>
                                             </div>
-                                            @if ($log->bukti_report_gps)
-                                                <button type="button"
-                                                    onclick="openImageModal('{{ asset('storage/' . $log->bukti_report_gps) }}')"
-                                                    class="mt-2 text-left text-[10px] text-indigo-500 font-bold hover:underline"><i
-                                                        class="fas fa-image"></i> Lihat Bukti</button>
-                                            @endif
                                         </div>
-                                        {{-- Dashboard --}}
-                                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                            <span class="block text-[9px] text-slate-400 uppercase font-black mb-1">Status
-                                                Dashboard KPI</span>
-                                            @if ($log->is_dashboard_ontime)
-                                                <span class="text-emerald-600 text-[10px] font-bold block"><i
-                                                        class="fas fa-check-circle mr-1"></i> Tepat Waktu</span>
-                                            @else
-                                                <span class="text-rose-500 text-[10px] font-bold block"><i
-                                                        class="fas fa-times-circle mr-1"></i> Terlambat</span>
-                                            @endif
-                                            <span class="text-[9px] text-slate-400 font-bold mt-1 block">Submit:
-                                                {{ $log->created_at->timezone('Asia/Jakarta')->format('H:i') }}</span>
-                                        </div>
-                                    </div>
-                                @endif
+                                    @endif
 
-                                {{-- LIST KEGIATAN --}}
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    @foreach ($log->details as $detail)
-                                        <div
-                                            class="bg-white p-4 rounded-xl border border-l-4 {{ $detail->kategori == 'Network' ? 'border-l-amber-500' : 'border-l-emerald-500' }} border-slate-200 shadow-sm">
+                                    {{-- LIST KEGIATAN --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @foreach ($log->details as $detail)
+                                            <div
+                                                class="bg-white p-4 rounded-xl border border-l-4 {{ $detail->kategori == 'Network' ? 'border-l-amber-500' : 'border-l-emerald-500' }} border-slate-200 shadow-sm">
 
-                                            <div class="flex justify-between items-start mb-2">
-                                                <span
-                                                    class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 inline-block">
-                                                    {{ $detail->kategori ?? 'Aktivitas' }}
-                                                </span>
-                                                @if ($log->status == 'pending' || $log->status == 'rejected')
-                                                    <button
-                                                        @click="editModal = true; activeCase = {{ json_encode($detail) }}"
-                                                        class="text-amber-500 hover:text-amber-700 text-xs font-bold">
-                                                        <i class="fas fa-pen"></i> Edit
-                                                    </button>
-                                                @endif
-                                            </div>
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <span
+                                                        class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 inline-block">
+                                                        {{ $detail->kategori ?? 'Aktivitas' }}
+                                                    </span>
+                                                    @if ($log->status == 'pending' || $log->status == 'rejected')
+                                                        <div class="flex items-center gap-3">
+                                                            {{-- Tombol Edit --}}
+                                                            <button
+                                                                @click="editModal = true; activeCase = {{ json_encode($detail) }}"
+                                                                class="text-amber-500 hover:text-amber-700 text-xs font-bold">
+                                                                <i class="fas fa-pen"></i> Edit
+                                                            </button>
 
-                                            <h4 class="text-slate-800 text-sm font-bold mb-1 leading-relaxed">
-                                                {{ $detail->deskripsi_kegiatan }}
-                                            </h4>
-
-                                            @if ($detail->nomor_tiket)
-                                                <p class="text-[10px] text-indigo-600 font-bold mb-2"><i
-                                                        class="fas fa-ticket-alt mr-1"></i> {{ $detail->nomor_tiket }}</p>
-                                            @endif
-
-                                            {{-- DETAIL METRIK (KHUSUS NETWORK) --}}
-                                            @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
-                                                <div
-                                                    class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
-                                                    @if ($detail->temuan_sendiri)
-                                                        <div class="flex justify-between items-center mb-1">
-                                                            <span class="text-slate-500 font-bold text-[10px]">Tipe:</span>
-                                                            <span class="text-rose-500 font-bold text-[10px]">Deteksi
-                                                                Dini</span>
+                                                            {{-- Tombol Hapus --}}
+                                                            <form
+                                                                action="{{ route('staff.kpi.case-destroy', $detail->id) }}"
+                                                                method="POST" class="inline"
+                                                                onsubmit="return confirm('Yakin ingin menghapus item kegiatan ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="text-rose-500 hover:text-rose-700 text-xs font-bold">
+                                                                    <i class="fas fa-trash"></i> Hapus
+                                                                </button>
+                                                            </form>
                                                         </div>
-                                                        @if ($detail->bukti_deteksi_dini)
-                                                            <button type="button"
-                                                                onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
-                                                                class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block"><i
-                                                                    class="fas fa-search"></i> Lihat Bukti Deteksi</button>
-                                                        @endif
-                                                    @else
-                                                        <div class="flex justify-between items-center mb-1">
-                                                            <span
-                                                                class="text-slate-500 font-bold text-[10px]">Respons:</span>
-                                                            <span
-                                                                class="text-amber-600 font-bold text-[10px]">{{ $detail->waktu_respon_menit }}
-                                                                Menit</span>
-                                                        </div>
-                                                        @if ($detail->bukti_respon_time)
-                                                            <button type="button"
-                                                                onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
-                                                                class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block"><i
-                                                                    class="fas fa-image"></i> Lihat Bukti Respons</button>
-                                                        @endif
                                                     @endif
-
-                                                    <div
-                                                        class="flex justify-between items-start pt-2 border-t border-slate-200">
-                                                        <span
-                                                            class="text-slate-500 font-bold text-[10px]">Penyelesaian:</span>
-                                                        @if ($detail->is_mandiri)
-                                                            <span
-                                                                class="text-emerald-600 font-bold text-[10px]">Mandiri</span>
-                                                        @else
-                                                            <span
-                                                                class="text-purple-600 font-bold text-[10px] text-right">Eskalasi<br><span
-                                                                    class="text-[9px] text-slate-400">PIC:
-                                                                    {{ $detail->pic_name }}</span></span>
-                                                        @endif
-                                                    </div>
                                                 </div>
-                                            @endif
 
-                                            {{-- DETAIL GPS --}}
-                                            @if ($detail->kategori == 'GPS' && $detail->value_raw !== '0')
-                                                <p class="text-[10px] text-slate-500 font-bold mt-2">Total Kendaraan: <span
-                                                        class="text-slate-800">{{ $detail->value_raw }}</span></p>
-                                            @endif
+                                                <h4 class="text-slate-800 text-sm font-bold mb-1 leading-relaxed">
+                                                    {{ $detail->deskripsi_kegiatan }}
+                                                </h4>
 
-                                        </div>
-                                    @endforeach
+                                                @if ($detail->nomor_tiket)
+                                                    <p class="text-[10px] text-indigo-600 font-bold mb-2"><i
+                                                            class="fas fa-ticket-alt mr-1"></i> {{ $detail->nomor_tiket }}
+                                                    </p>
+                                                @endif
+
+                                                {{-- DETAIL METRIK (KHUSUS NETWORK) --}}
+                                                @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
+                                                    <div
+                                                        class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                                                        @if ($detail->temuan_sendiri)
+                                                            <div class="flex justify-between items-center mb-1">
+                                                                <span
+                                                                    class="text-slate-500 font-bold text-[10px]">Tipe:</span>
+                                                                <span class="text-rose-500 font-bold text-[10px]">Deteksi
+                                                                    Dini</span>
+                                                            </div>
+                                                            @if ($detail->bukti_deteksi_dini)
+                                                                <button type="button"
+                                                                    onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
+                                                                    class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block"><i
+                                                                        class="fas fa-search"></i> Lihat Bukti
+                                                                    Deteksi</button>
+                                                            @endif
+                                                        @else
+                                                            <div class="flex justify-between items-center mb-1">
+                                                                <span
+                                                                    class="text-slate-500 font-bold text-[10px]">Respons:</span>
+                                                                <span
+                                                                    class="text-amber-600 font-bold text-[10px]">{{ $detail->waktu_respon_menit }}
+                                                                    Menit</span>
+                                                            </div>
+                                                            @if ($detail->bukti_respon_time)
+                                                                <button type="button"
+                                                                    onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
+                                                                    class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block"><i
+                                                                        class="fas fa-image"></i> Lihat Bukti
+                                                                    Respons</button>
+                                                            @endif
+                                                        @endif
+
+                                                        <div
+                                                            class="flex justify-between items-start pt-2 border-t border-slate-200">
+                                                            <span
+                                                                class="text-slate-500 font-bold text-[10px]">Penyelesaian:</span>
+                                                            @if ($detail->is_mandiri)
+                                                                <span
+                                                                    class="text-emerald-600 font-bold text-[10px]">Mandiri</span>
+                                                            @else
+                                                                <span
+                                                                    class="text-purple-600 font-bold text-[10px] text-right">Eskalasi<br><span
+                                                                        class="text-[9px] text-slate-400">PIC:
+                                                                        {{ $detail->pic_name }}</span></span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                {{-- DETAIL GPS --}}
+                                                @if ($detail->kategori == 'GPS' && $detail->value_raw !== '0')
+                                                    <p class="text-[10px] text-slate-500 font-bold mt-2">Total Kendaraan:
+                                                        <span class="text-slate-800">{{ $detail->value_raw }}</span>
+                                                    </p>
+                                                @endif
+
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    @empty
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="p-10 text-center text-slate-400 italic">Belum ada laporan.</td>
+                            </tr>
+                        </tbody>
+                    @endforelse
+                </table>
+
+                {{-- Mobile Version --}}
+                <div class="md:hidden divide-y divide-slate-100">
+                    @forelse($logs as $log)
+                        <div x-data="{ expanded: false }" class="p-4">
+                            <div class="flex justify-between items-start mb-2" @click="expanded = !expanded">
+                                <div>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">
+                                        {{ \Carbon\Carbon::parse($log->tanggal)->translatedFormat('d M Y') }}
+                                    </p>
+                                    <p class="text-slate-800 font-bold flex items-center">
+                                        <i class="fas fa-chevron-right text-[10px] mr-2 transition-transform text-slate-400"
+                                            :class="expanded ? 'rotate-90 text-amber-500' : ''"></i>
+                                        {{ $log->details->count() }} Kegiatan
+                                    </p>
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                @empty
-                    <tbody>
-                        <tr>
-                            <td colspan="4" class="p-10 text-center text-slate-400 italic">Belum ada laporan.</td>
-                        </tr>
-                    </tbody>
-                @endforelse
-            </table>
-
-            {{-- Mobile Version --}}
-            <div class="md:hidden divide-y divide-slate-100">
-                @forelse($logs as $log)
-                    <div x-data="{ expanded: false }" class="p-4">
-                        <div class="flex justify-between items-start mb-2" @click="expanded = !expanded">
-                            <div>
-                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">
-                                    {{ \Carbon\Carbon::parse($log->tanggal)->translatedFormat('d M Y') }}
-                                </p>
-                                <p class="text-slate-800 font-bold flex items-center">
-                                    <i class="fas fa-chevron-right text-[10px] mr-2 transition-transform text-slate-400"
-                                        :class="expanded ? 'rotate-90 text-amber-500' : ''"></i>
-                                    {{ $log->details->count() }} Kegiatan
-                                </p>
-                            </div>
-                            <span
-                                class="w-fit text-[10px] px-3 py-1 rounded-full border uppercase font-bold tracking-tighter
+                                <span
+                                    class="w-fit text-[10px] px-3 py-1 rounded-full border uppercase font-bold tracking-tighter
                                 {{ $log->status == 'pending' ? 'text-amber-600 bg-amber-50 border-amber-200' : '' }}
                                 {{ $log->status == 'rejected' ? 'text-rose-600 bg-rose-50 border-rose-200' : '' }}
                                 {{ $log->status == 'approved' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : '' }}">
-                                {{ $log->status == 'pending' ? 'Pending' : ($log->status == 'rejected' ? 'Ditolak' : 'Disetujui') }}
-                            </span>
-                        </div>
+                                    {{ $log->status == 'pending' ? 'Pending' : ($log->status == 'rejected' ? 'Ditolak' : 'Disetujui') }}
+                                </span>
+                            </div>
 
-                        {{-- Expanded Isi Mobile --}}
-                        <div x-show="expanded" x-cloak x-transition class="mt-4 space-y-3 pt-4 border-t border-slate-100">
-                            {{-- Manager Note Mobile --}}
-                            @if ($log->catatan_manager)
-                                <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl mb-3">
-                                    <p class="text-[10px] font-bold text-rose-700 uppercase mb-1"><i
-                                            class="fas fa-exclamation-circle mr-1"></i>Catatan Manager</p>
-                                    <p class="text-xs text-rose-600 italic">"{{ $log->catatan_manager }}"</p>
-                                </div>
-                            @endif
-
-                            @foreach ($log->details as $detail)
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                    <div class="flex justify-between mb-2">
-                                        <span
-                                            class="text-[9px] text-slate-500 font-bold uppercase">{{ $detail->kategori ?? 'Aktivitas' }}</span>
+                            {{-- Expanded Isi Mobile --}}
+                            <div x-show="expanded" x-cloak x-transition
+                                class="mt-4 space-y-3 pt-4 border-t border-slate-100">
+                                {{-- Manager Note Mobile --}}
+                                @if ($log->catatan_manager)
+                                    <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl mb-3">
+                                        <p class="text-[10px] font-bold text-rose-700 uppercase mb-1"><i
+                                                class="fas fa-exclamation-circle mr-1"></i>Catatan Manager</p>
+                                        <p class="text-xs text-rose-600 italic">"{{ $log->catatan_manager }}"</p>
                                     </div>
-                                    <h4 class="text-slate-800 text-sm font-bold mb-2">{{ $detail->deskripsi_kegiatan }}
-                                    </h4>
+                                @endif
 
-                                    @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
-                                        <div class="text-[10px] space-y-1 text-slate-500">
-                                            @if ($detail->temuan_sendiri)
-                                                <p>Tipe: <span class="font-bold text-rose-500">Deteksi Dini</span></p>
-                                            @else
-                                                <p>Respons: <span
-                                                        class="font-bold text-amber-600">{{ $detail->waktu_respon_menit }}
-                                                        Menit</span></p>
+                                @foreach ($log->details as $detail)
+                                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span
+                                                class="text-[9px] text-slate-500 font-bold uppercase">{{ $detail->kategori ?? 'Aktivitas' }}</span>
+
+                                            {{-- Aksi Edit & Hapus Mobile --}}
+                                            @if ($log->status == 'pending' || $log->status == 'rejected')
+                                                <div class="flex items-center gap-3">
+                                                    <button
+                                                        @click="editModal = true; activeCase = {{ json_encode($detail) }}"
+                                                        class="text-amber-500 hover:text-amber-700 text-[10px] font-bold">
+                                                        <i class="fas fa-pen"></i> Edit
+                                                    </button>
+                                                    <form action="{{ route('staff.kpi.case-destroy', $detail->id) }}"
+                                                        method="POST" class="inline"
+                                                        onsubmit="return confirm('Hapus kegiatan ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="text-rose-500 hover:text-rose-700 text-[10px] font-bold">
+                                                            <i class="fas fa-trash"></i> Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             @endif
-                                            <p>Penyelesaian: <span
-                                                    class="font-bold text-slate-700">{{ $detail->is_mandiri ? 'Mandiri' : 'Eskalasi (' . $detail->pic_name . ')' }}</span>
-                                            </p>
                                         </div>
-                                    @endif
-                                </div>
-                            @endforeach
+                                        <h4 class="text-slate-800 text-sm font-bold mb-2">
+                                            {{ $detail->deskripsi_kegiatan }}</h4>
+
+                                        @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
+                                            <div class="text-[10px] space-y-1 text-slate-500">
+                                                @if ($detail->temuan_sendiri)
+                                                    <p>Tipe: <span class="font-bold text-rose-500">Deteksi Dini</span></p>
+                                                @else
+                                                    <p>Respons: <span
+                                                            class="font-bold text-amber-600">{{ $detail->waktu_respon_menit }}
+                                                            Menit</span></p>
+                                                @endif
+                                                <p>Penyelesaian: <span
+                                                        class="font-bold text-slate-700">{{ $detail->is_mandiri ? 'Mandiri' : 'Eskalasi (' . $detail->pic_name . ')' }}</span>
+                                                </p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-                @empty
-                    <div class="p-10 text-center text-slate-400 italic text-sm">Data tidak ditemukan...</div>
-                @endforelse
-            </div>
+                    @empty
+                        <div class="p-10 text-center text-slate-400 italic text-sm">Data tidak ditemukan...</div>
+                    @endforelse
+                </div>
             </div>
 
             <div class="mt-6">
@@ -366,100 +433,124 @@
         {{-- ========================================== --}}
         {{-- TAB 2: LOG RATING PELANGGAN                --}}
         {{-- ========================================== --}}
-        @if(auth()->user()->divisi_id == 1)
-        <div x-show="activeTab === 'rating'" style="display: none;" x-transition.opacity.duration.500ms>
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
-                                <th class="p-4 font-black">Detail Tiket</th>
-                                <th class="p-4 font-black text-center">Rating</th>
-                                <th class="p-4 font-black text-center">Waktu Survey</th>
-                                <th class="p-4 font-black text-center">Bukti</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            @forelse($feedbacks as $fb)
-                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                                    <td class="p-4">
-                                        <p class="font-bold text-slate-800">{{ $fb->nomor_tiket }}</p>
-                                        <p class="text-xs text-slate-500">{{ $fb->nama_pelanggan }}</p>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <div class="flex justify-center gap-0.5 text-amber-400 text-xs">
-                                            @for($i=0; $i<$fb->rating; $i++) <i class="fas fa-star"></i> @endfor
-                                            @for($i=0; $i<(5-$fb->rating); $i++) <i class="far fa-star text-slate-300"></i> @endfor
-                                        </div>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                                            {{ \Carbon\Carbon::parse($fb->tanggal_survey)->format('d M Y') }}
-                                        </span>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $fb->bukti_survey) }}')" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
-                                            <i class="fas fa-image fa-lg"></i>
-                                        </button>
-                                    </td>
+        @if (auth()->user()->divisi_id == 1)
+            <div x-show="activeTab === 'rating'" style="display: none;" x-transition.opacity.duration.500ms>
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                    <th class="p-4 font-black">Detail Tiket</th>
+                                    <th class="p-4 font-black text-center">Rating</th>
+                                    <th class="p-4 font-black text-center">Waktu Survey</th>
+                                    <th class="p-4 font-black text-center">Bukti</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada data rating masuk.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="text-sm">
+                                @forelse($feedbacks as $fb)
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                        <td class="p-4">
+                                            <p class="font-bold text-slate-800">{{ $fb->nomor_tiket }}</p>
+                                            <p class="text-xs text-slate-500">{{ $fb->nama_pelanggan }}</p>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <div class="flex justify-center gap-0.5 text-amber-400 text-xs">
+                                                @for ($i = 0; $i < $fb->rating; $i++)
+                                                    <i class="fas fa-star"></i>
+                                                @endfor
+                                                @for ($i = 0; $i < 5 - $fb->rating; $i++)
+                                                    <i class="far fa-star text-slate-300"></i>
+                                                @endfor
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span
+                                                class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                                                {{ \Carbon\Carbon::parse($fb->tanggal_survey)->format('d M Y') }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <button type="button"
+                                                onclick="openImageModal('{{ asset('storage/' . $fb->bukti_survey) }}')"
+                                                class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
+                                                <i class="fas fa-image fa-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada
+                                            data rating masuk.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- ========================================== --}}
-        {{-- TAB 3: LOG NILAI KUIS / ASESMEN            --}}
-        {{-- ========================================== --}}
-        <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms>
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
-                                <th class="p-4 font-black text-center">Periode</th>
-                                <th class="p-4 font-black text-center">Skor Global</th>
-                                <th class="p-4 font-black text-center">Bukti</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            @forelse($assessments as $quiz)
-                                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
-                                    <td class="p-4 text-center">
-                                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                                            {{ date('F', mktime(0, 0, 0, $quiz->periode_bulan, 1)) }} {{ $quiz->periode_tahun }}
-                                        </span>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        @php
-                                            $percent = $quiz->jumlah_soal > 0 ? round(($quiz->jumlah_benar / $quiz->jumlah_soal) * 100) : 0;
-                                            $color = $percent >= 80 ? 'text-emerald-500' : ($percent >= 60 ? 'text-amber-500' : 'text-rose-500');
-                                        @endphp
-                                        <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <button type="button" onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
-                                            <i class="fas fa-image fa-lg"></i>
-                                        </button>
-                                    </td>
+            {{-- ========================================== --}}
+            {{-- TAB 3: LOG NILAI KUIS / ASESMEN            --}}
+            {{-- ========================================== --}}
+            <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms>
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                    <th class="p-4 font-black text-center">Periode</th>
+                                    <th class="p-4 font-black text-center">Skor Global</th>
+                                    <th class="p-4 font-black text-center">Bukti</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada data kuis masuk.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="text-sm">
+                                @forelse($assessments as $quiz)
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                        <td class="p-4 text-center">
+                                            <span
+                                                class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                                                {{ date('F', mktime(0, 0, 0, $quiz->periode_bulan, 1)) }}
+                                                {{ $quiz->periode_tahun }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            @php
+                                                $percent =
+                                                    $quiz->jumlah_soal > 0
+                                                        ? round(($quiz->jumlah_benar / $quiz->jumlah_soal) * 100)
+                                                        : 0;
+                                                $color =
+                                                    $percent >= 80
+                                                        ? 'text-emerald-500'
+                                                        : ($percent >= 60
+                                                            ? 'text-amber-500'
+                                                            : 'text-rose-500');
+                                            @endphp
+                                            <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar
+                                                {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <button type="button"
+                                                onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')"
+                                                class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition">
+                                                <i class="fas fa-image fa-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada
+                                            data kuis masuk.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
         @endif
 
         {{-- Modal Edit Case (KODE LAMA ANDA) --}}
@@ -585,7 +676,7 @@
                 </form>
             </div>
         </div>
-        
+
     </div>
 
     {{-- MODAL PREVIEW GAMBAR (KODE LAMA ANDA) --}}
@@ -607,7 +698,7 @@
         </div>
     </div>
 
- <script>
+    <script>
         function openImageModal(imageUrl) {
             document.getElementById('modalImgContent').src = imageUrl;
             document.getElementById('imagePreviewModal').classList.remove('hidden');

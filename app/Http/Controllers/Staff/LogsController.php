@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\DailyReport;
 use App\Models\KegiatanDetail;
@@ -91,6 +92,42 @@ class LogsController extends Controller
         $detail->update($updateData);
 
         return back()->with('success', 'Detail aktivitas berhasil diperbarui secara menyeluruh!');
+    }
+
+    // Logika Hapus Per Case / Item Kegiatan
+    public function destroyCase($id)
+    {
+        // Cari detail kegiatan dan pastikan laporannya milik user yang sedang login 
+        // serta statusnya masih pending atau rejected
+        $detail = KegiatanDetail::where('id', $id)
+            ->whereHas('dailyReport', function ($q) {
+                $q->where('user_id', Auth::id())
+                    ->whereIn('status', ['pending', 'rejected']);
+            })->firstOrFail();
+
+        $reportId = $detail->daily_report_id; // Simpan ID DailyReport (sesuaikan nama kolom foreign key jika berbeda)
+
+        // Opsional: Hapus file bukti (gambar) dari storage jika ada
+        if ($detail->bukti_deteksi_dini) {
+            \Storage::disk('public')->delete($detail->bukti_deteksi_dini);
+        }
+        if ($detail->bukti_respon_time) {
+            \Storage::disk('public')->delete($detail->bukti_respon_time);
+        }
+
+        // Hapus item detail
+        $detail->delete();
+
+        // Cek apakah ini adalah item terakhir di DailyReport tersebut
+        $remainingDetails = KegiatanDetail::where('daily_report_id', $reportId)->count();
+
+        if ($remainingDetails === 0) {
+            // Jika tidak ada item lagi, sekalian hapus Daily Report-nya
+            DailyReport::find($reportId)->delete();
+            return back()->with('success', 'Item dihapus. Karena tidak ada kegiatan tersisa, laporan harian otomatis dihapus.');
+        }
+
+        return back()->with('success', 'Item kegiatan berhasil dihapus!');
     }
 
     // Dummy Export Excel (Contoh sederhana CSV)

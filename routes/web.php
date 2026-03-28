@@ -40,6 +40,7 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::get('/kpi/logs', [StaffLogsController::class, 'logs'])->name('staff.kpi.logs');
     Route::put('/kpi/logs/{id}', [StaffLogsController::class, 'update'])->name('staff.kpi.update');
     Route::delete('/kpi/logs/{id}', [StaffLogsController::class, 'destroy'])->name('staff.kpi.destroy');
+    Route::delete('/staff/kpi/case-destroy/{id}', [StaffLogsController::class, 'destroyCase'])->name('staff.kpi.case-destroy');
     Route::put('/kpi/case-update/{id}', [StaffLogsController::class, 'updateCase'])->name('staff.kpi.case_update');
     Route::get('/kpi/export-excel', [StaffLogsController::class, 'exportExcel'])->name('staff.kpi.export.excel');
 
