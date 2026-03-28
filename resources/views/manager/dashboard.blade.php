@@ -142,7 +142,8 @@
                     this.isLoading = true;
 
                     // Buat Parameter URL
-                    let url = new URL('{{ route('manager.dashboard') }}', window.location.origin);
+                    // Mengambil base URL dari halaman saat ini tanpa query parameter
+                    let url = new URL(window.location.origin + window.location.pathname);
                     url.searchParams.append('divisi_id', this.activeDivisi);
                     url.searchParams.append('filter', this.filterTime);
                     url.searchParams.append('user_id', this.filterUser);
