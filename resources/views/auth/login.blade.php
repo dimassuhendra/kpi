@@ -20,8 +20,7 @@
                 <div class="w-full mt-10 lg:mt-auto pt-5 border-t border-gray-100" x-data="{ slide: 0, maxSlide: 1 }">
 
                     <div class="flex items-center justify-between mb-4 px-1">
-                        <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0 font-header">Ekosistem
-                            Aplikasi</p>
+                        <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0 font-header">Mybolo Workspace</p>
 
                         <div class="flex gap-1">
                             <button type="button" @click="slide = Math.max(0, slide - 1)"
