@@ -20,7 +20,8 @@
                 <div class="w-full mt-10 lg:mt-auto pt-5 border-t border-gray-100" x-data="{ slide: 0, maxSlide: 1 }">
 
                     <div class="flex items-center justify-between mb-4 px-1">
-                        <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0 font-header">Mybolo Workspace</p>
+                        <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-0 font-header">Mybolo
+                            Workspace</p>
 
                         <div class="flex gap-1">
                             <button type="button" @click="slide = Math.max(0, slide - 1)"
@@ -42,30 +43,27 @@
                             :style="`transform: translateX(-${slide * 100}%)`">
 
                             <div class="w-full flex-shrink-0 grid grid-cols-2 gap-3">
+                                <a href="https://cloud.mybolo.id"
+                                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 hover:border-primary hover:bg-primary/5 transition-all group">
+                                    <i
+                                        class="fas fa-cloud text-primary opacity-70 group-hover:opacity-100 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-xs text-gray-600 font-medium text-center">Cloud Mybolo</span>
+                                </a>
                                 <a href="https://ticket.mybolo.id/login"
                                     class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 hover:border-primary hover:bg-primary/5 transition-all group">
                                     <i
                                         class="fas fa-headset text-primary opacity-70 group-hover:opacity-100 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
                                     <span class="text-xs text-gray-600 font-medium text-center">Mybolo Ticketing</span>
                                 </a>
-                                <div
-                                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 bg-gray-50/70 cursor-not-allowed opacity-80">
-                                    <i class="fas fa-user-clock text-gray-400 text-xl mb-1"></i>
-                                    <span class="text-xs text-gray-500 font-medium text-center">Absensi Arin</span>
-                                    <span
-                                        class="text-[9px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full mt-1.5 font-header tracking-wide">Dalam Pengembangan</span>
-                                </div>
                             </div>
 
                             <div class="w-full flex-shrink-0 grid grid-cols-2 gap-3">
-                                <div
-                                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 bg-gray-50/70 cursor-not-allowed opacity-80">
-                                    <i class="fas fa-cubes text-gray-400 text-xl mb-1"></i>
-                                    <span class="text-xs text-gray-500 font-medium text-center">Segera Hadir</span>
-                                    <span
-                                        class="text-[9px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full mt-1.5 font-header tracking-wide">Coming
-                                        Soon</span>
-                                </div>
+                                <a href="https://inventory.mybolo.id"
+                                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 hover:border-primary hover:bg-primary/5 transition-all group">
+                                    <i
+                                        class="fas fa-boxes text-primary opacity-70 group-hover:opacity-100 text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-xs text-gray-600 font-medium text-center">Mybolo Inventory</span>
+                                </a>
                                 <div
                                     class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-100 bg-gray-50/70 cursor-not-allowed opacity-80">
                                     <i class="fas fa-cubes text-gray-400 text-xl mb-1"></i>
@@ -75,7 +73,6 @@
                                         Soon</span>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
