@@ -301,7 +301,7 @@ class InputController extends Controller
                         'is_mandiri'         => 1,
                         'value_raw'          => null,
                         'waktu_respon_menit' => null,
-                        'foto_dokumentasi'   => $pathFoto, 
+                        'foto_dokumentasi'   => $pathFoto,
                     ]);
                 }
             }
@@ -324,7 +324,14 @@ class InputController extends Controller
             }
         }
 
-        return redirect()->route('staff.input')->with('success', 'Laporan berhasil diperbarui!');
+        // Jika form dikirim via AJAX (Progress Bar)
+        if ($request->ajax()) {
+            session()->flash('success', 'Laporan berhasil dikirim!');
+            return response()->json(['redirect' => route('staff.input')]);
+        }
+
+        // Jika dikirim normal (fallback)
+        return redirect()->route('staff.input')->with('success', 'Laporan berhasil dikirim!');
     }
 
     // Fungsi untuk menyimpan Customer Feedback (Rating)

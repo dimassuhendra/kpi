@@ -90,7 +90,7 @@
         {{-- TAB 1: FORM DAILY REPORT UTAMA             --}}
         {{-- ========================================== --}}
         <div x-show="activeTab === 'daily'" x-transition.opacity.duration.500ms>
-            <form action="{{ route('staff.kpi.store') }}" method="POST" enctype="multipart/form-data">
+            <form id="formInputKpi" action="{{ route('staff.kpi.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if (auth()->user()->divisi_id == 1)
                     @include('staff.input_kpi.tac')
@@ -231,6 +231,31 @@
 
     </div>
 
+    {{-- MODAL UPLOAD PROGRESS --}}
+    <div id="uploadProgressModal"
+        class="fixed inset-0 z-[999] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-indigo-50">
+                <div id="progressIndeterminate" class="h-full bg-indigo-500 w-1/3 animate-pulse"></div>
+            </div>
+
+            <div class="mb-5 mt-2">
+                <i class="fas fa-cloud-upload-alt text-5xl text-indigo-500 animate-bounce"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Mengunggah Laporan...</h3>
+            <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-6">Mohon jangan tutup halaman ini
+            </p>
+
+            <div class="w-full bg-slate-100 rounded-full h-4 mb-2 overflow-hidden border border-slate-200 shadow-inner">
+                <div id="progressBar"
+                    class="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full transition-all duration-300 ease-out flex items-center justify-end px-2"
+                    style="width: 0%">
+                    <span id="progressText" class="text-[9px] font-black text-white">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function kpiForm() {
             return {
@@ -296,5 +321,78 @@
                 }
             }
         }
+
+        // Js untuk progress bar upload dengan AJAX (tanpa reload halaman)
+        document.addEventListener('DOMContentLoaded', function() {
+            const formInput = document.getElementById('formInputKpi');
+
+            if (formInput) {
+                formInput.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Mencegah submit normal
+
+                    const modal = document.getElementById('uploadProgressModal');
+                    const progressBar = document.getElementById('progressBar');
+                    const progressText = document.getElementById('progressText');
+                    const btnSubmit = formInput.querySelector('button[type="submit"]');
+
+                    // Cegah klik 2 kali dan tampilkan modal
+                    if (btnSubmit) btnSubmit.disabled = true;
+                    modal.classList.remove('hidden');
+
+                    let formData = new FormData(this);
+                    let xhr = new XMLHttpRequest();
+
+                    xhr.open('POST', this.action, true);
+                    // Beritahu Laravel ini adalah request AJAX & minta balasan berupa JSON
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Accept', 'application/json');
+
+                    // Event Tracking Progress File Upload
+                    xhr.upload.onprogress = function(e) {
+                        if (e.lengthComputable) {
+                            let percent = Math.round((e.loaded / e.total) * 100);
+                            progressBar.style.width = percent + '%';
+                            progressText.innerText = percent + '%';
+                        }
+                    };
+
+                    // Event Saat Selesai
+                    xhr.onload = function() {
+                        if (xhr.status === 200 || xhr.status === 201) {
+                            // Sukses! Redirect ke URL yang diberikan controller
+                            let response = JSON.parse(xhr.responseText);
+                            window.location.href = response.redirect;
+                        } else if (xhr.status === 422) {
+                            // Error Validasi Laravel (misal file > 2MB atau tidak sesuai format)
+                            modal.classList.add('hidden');
+                            if (btnSubmit) btnSubmit.disabled = false;
+
+                            let response = JSON.parse(xhr.responseText);
+                            let errorMsg = "Gagal! Ada isian yang tidak sesuai:\n\n";
+                            for (let field in response.errors) {
+                                errorMsg += "- " + response.errors[field][0] + "\n";
+                            }
+                            alert(errorMsg);
+                        } else {
+                            // Error Server 500 dll
+                            modal.classList.add('hidden');
+                            if (btnSubmit) btnSubmit.disabled = false;
+                            alert('Terjadi kesalahan pada server (Error ' + xhr.status +
+                                '). Coba lagi nanti.');
+                        }
+                    };
+
+                    // Event Saat Jaringan Putus
+                    xhr.onerror = function() {
+                        modal.classList.add('hidden');
+                        if (btnSubmit) btnSubmit.disabled = false;
+                        alert('Koneksi terputus. Silakan periksa jaringan internet Anda.');
+                    };
+
+                    // Jalankan Upload
+                    xhr.send(formData);
+                });
+            }
+        });
     </script>
 @endsection
