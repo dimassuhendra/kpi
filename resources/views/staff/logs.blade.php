@@ -46,11 +46,11 @@
         @endif
 
         {{-- ========================================== --}}
-        {{-- TAB 1: LOG LAPORAN HARIAN (KODE LAMA ANDA) --}}
+        {{-- TAB 1: LOG LAPORAN HARIAN                 --}}
         {{-- ========================================== --}}
         <div x-show="activeTab === 'laporan'" x-transition.opacity.duration.500ms>
 
-            {{-- Filter Section (Biarkan sama persis) --}}
+            {{-- Filter Section --}}
             <div class="bg-white p-5 mb-6 rounded-2xl border border-slate-200 shadow-sm">
                 <form action="{{ route('staff.kpi.logs') }}" method="GET"
                     class="flex flex-col md:flex-row gap-4 items-end">
@@ -84,7 +84,7 @@
                 </form>
             </div>
 
-            {{-- Table Section (Desktop & Mobile persis kode lama) --}}
+            {{-- Table Section --}}
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
                 <table class="hidden md:table w-full text-left border-collapse">
                     <thead>
@@ -219,105 +219,124 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         @foreach ($log->details as $detail)
                                             <div
-                                                class="bg-white p-4 rounded-xl border border-l-4 {{ $detail->kategori == 'Network' ? 'border-l-amber-500' : 'border-l-emerald-500' }} border-slate-200 shadow-sm">
+                                                class="bg-white p-4 rounded-xl border border-l-4 {{ $detail->kategori == 'Network' ? 'border-l-amber-500' : 'border-l-emerald-500' }} border-slate-200 shadow-sm flex flex-col justify-between">
 
-                                                <div class="flex justify-between items-start mb-2">
-                                                    <span
-                                                        class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 inline-block">
-                                                        {{ $detail->kategori ?? 'Aktivitas' }}
-                                                    </span>
-                                                    @if ($log->status == 'pending' || $log->status == 'rejected')
-                                                        <div class="flex items-center gap-3">
-                                                            {{-- Tombol Edit --}}
-                                                            <button
-                                                                @click="editModal = true; activeCase = {{ json_encode($detail) }}"
-                                                                class="text-amber-500 hover:text-amber-700 text-xs font-bold">
-                                                                <i class="fas fa-pen"></i> Edit
-                                                            </button>
-
-                                                            {{-- Tombol Hapus --}}
-                                                            <form
-                                                                action="{{ route('staff.kpi.case-destroy', $detail->id) }}"
-                                                                method="POST" class="inline"
-                                                                onsubmit="return confirm('Yakin ingin menghapus item kegiatan ini?')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit"
-                                                                    class="text-rose-500 hover:text-rose-700 text-xs font-bold">
-                                                                    <i class="fas fa-trash"></i> Hapus
+                                                <div>
+                                                    <div class="flex justify-between items-start mb-2">
+                                                        <span
+                                                            class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 inline-block">
+                                                            {{ $detail->kategori ?? 'Aktivitas' }}
+                                                        </span>
+                                                        @if ($log->status == 'pending' || $log->status == 'rejected')
+                                                            <div class="flex items-center gap-3">
+                                                                {{-- Tombol Edit --}}
+                                                                <button
+                                                                    @click="editModal = true; activeCase = {{ json_encode($detail) }}"
+                                                                    class="text-amber-500 hover:text-amber-700 text-xs font-bold">
+                                                                    <i class="fas fa-pen"></i> Edit
                                                                 </button>
-                                                            </form>
+
+                                                                {{-- Tombol Hapus --}}
+                                                                <form
+                                                                    action="{{ route('staff.kpi.case-destroy', $detail->id) }}"
+                                                                    method="POST" class="inline"
+                                                                    onsubmit="return confirm('Yakin ingin menghapus item kegiatan ini?')">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        class="text-rose-500 hover:text-rose-700 text-xs font-bold">
+                                                                        <i class="fas fa-trash"></i> Hapus
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+
+                                                    <h4 class="text-slate-800 text-sm font-bold mb-1 leading-relaxed">
+                                                        {{ $detail->deskripsi_kegiatan }}
+                                                    </h4>
+
+                                                    @if ($detail->nomor_tiket)
+                                                        <p class="text-[10px] text-indigo-600 font-bold mb-2"><i
+                                                                class="fas fa-ticket-alt mr-1"></i>
+                                                            {{ $detail->nomor_tiket }}
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- DETAIL METRIK KHUSUS TAC --}}
+                                                    @if (
+                                                        $log->user->divisi_id == 1 &&
+                                                            $detail->kategori == 'Network' &&
+                                                            strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
+                                                        <div
+                                                            class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                                                            @if ($detail->temuan_sendiri)
+                                                                <div class="flex justify-between items-center mb-1">
+                                                                    <span
+                                                                        class="text-slate-500 font-bold text-[10px]">Tipe:</span>
+                                                                    <span
+                                                                        class="text-rose-500 font-bold text-[10px]">Deteksi
+                                                                        Dini</span>
+                                                                </div>
+                                                                @if ($detail->bukti_deteksi_dini)
+                                                                    <button type="button"
+                                                                        onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
+                                                                        class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block"><i
+                                                                            class="fas fa-search"></i> Lihat Bukti
+                                                                        Deteksi</button>
+                                                                @endif
+                                                            @else
+                                                                <div class="flex justify-between items-center mb-1">
+                                                                    <span
+                                                                        class="text-slate-500 font-bold text-[10px]">Respons:</span>
+                                                                    <span
+                                                                        class="text-amber-600 font-bold text-[10px]">{{ $detail->waktu_respon_menit }}
+                                                                        Menit</span>
+                                                                </div>
+                                                                @if ($detail->bukti_respon_time)
+                                                                    <button type="button"
+                                                                        onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
+                                                                        class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block"><i
+                                                                            class="fas fa-image"></i> Lihat Bukti
+                                                                        Respons</button>
+                                                                @endif
+                                                            @endif
+
+                                                            <div
+                                                                class="flex justify-between items-start pt-2 border-t border-slate-200">
+                                                                <span
+                                                                    class="text-slate-500 font-bold text-[10px]">Penyelesaian:</span>
+                                                                @if ($detail->is_mandiri)
+                                                                    <span
+                                                                        class="text-emerald-600 font-bold text-[10px]">Mandiri</span>
+                                                                @else
+                                                                    <span
+                                                                        class="text-purple-600 font-bold text-[10px] text-right">Eskalasi<br><span
+                                                                            class="text-[9px] text-slate-400">PIC:
+                                                                            {{ $detail->pic_name }}</span></span>
+                                                                @endif
+                                                            </div>
                                                         </div>
+                                                    @endif
+
+                                                    {{-- DETAIL GPS KHUSUS TAC --}}
+                                                    @if ($log->user->divisi_id == 1 && $detail->kategori == 'GPS' && $detail->value_raw !== '0')
+                                                        <p class="text-[10px] text-slate-500 font-bold mt-2">Total
+                                                            Kendaraan:
+                                                            <span class="text-slate-800">{{ $detail->value_raw }}</span>
+                                                        </p>
                                                     @endif
                                                 </div>
 
-                                                <h4 class="text-slate-800 text-sm font-bold mb-1 leading-relaxed">
-                                                    {{ $detail->deskripsi_kegiatan }}
-                                                </h4>
-
-                                                @if ($detail->nomor_tiket)
-                                                    <p class="text-[10px] text-indigo-600 font-bold mb-2"><i
-                                                            class="fas fa-ticket-alt mr-1"></i> {{ $detail->nomor_tiket }}
-                                                    </p>
-                                                @endif
-
-                                                {{-- DETAIL METRIK (KHUSUS NETWORK) --}}
-                                                @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
-                                                    <div
-                                                        class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
-                                                        @if ($detail->temuan_sendiri)
-                                                            <div class="flex justify-between items-center mb-1">
-                                                                <span
-                                                                    class="text-slate-500 font-bold text-[10px]">Tipe:</span>
-                                                                <span class="text-rose-500 font-bold text-[10px]">Deteksi
-                                                                    Dini</span>
-                                                            </div>
-                                                            @if ($detail->bukti_deteksi_dini)
-                                                                <button type="button"
-                                                                    onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
-                                                                    class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block"><i
-                                                                        class="fas fa-search"></i> Lihat Bukti
-                                                                    Deteksi</button>
-                                                            @endif
-                                                        @else
-                                                            <div class="flex justify-between items-center mb-1">
-                                                                <span
-                                                                    class="text-slate-500 font-bold text-[10px]">Respons:</span>
-                                                                <span
-                                                                    class="text-amber-600 font-bold text-[10px]">{{ $detail->waktu_respon_menit }}
-                                                                    Menit</span>
-                                                            </div>
-                                                            @if ($detail->bukti_respon_time)
-                                                                <button type="button"
-                                                                    onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
-                                                                    class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block"><i
-                                                                        class="fas fa-image"></i> Lihat Bukti
-                                                                    Respons</button>
-                                                            @endif
-                                                        @endif
-
-                                                        <div
-                                                            class="flex justify-between items-start pt-2 border-t border-slate-200">
-                                                            <span
-                                                                class="text-slate-500 font-bold text-[10px]">Penyelesaian:</span>
-                                                            @if ($detail->is_mandiri)
-                                                                <span
-                                                                    class="text-emerald-600 font-bold text-[10px]">Mandiri</span>
-                                                            @else
-                                                                <span
-                                                                    class="text-purple-600 font-bold text-[10px] text-right">Eskalasi<br><span
-                                                                        class="text-[9px] text-slate-400">PIC:
-                                                                        {{ $detail->pic_name }}</span></span>
-                                                            @endif
-                                                        </div>
+                                                {{-- DETAIL BUKTI FOTO KHUSUS INFRA --}}
+                                                @if ($log->user->divisi_id == 2 && $detail->foto_dokumentasi)
+                                                    <div class="mt-4 pt-3 border-t border-slate-100">
+                                                        <button type="button"
+                                                            onclick="openImageModal('{{ asset('storage/' . $detail->foto_dokumentasi) }}')"
+                                                            class="text-xs text-indigo-500 font-bold hover:text-indigo-700 transition">
+                                                            <i class="fas fa-image mr-1"></i> Lihat Foto Dokumentasi
+                                                        </button>
                                                     </div>
-                                                @endif
-
-                                                {{-- DETAIL GPS --}}
-                                                @if ($detail->kategori == 'GPS' && $detail->value_raw !== '0')
-                                                    <p class="text-[10px] text-slate-500 font-bold mt-2">Total Kendaraan:
-                                                        <span class="text-slate-800">{{ $detail->value_raw }}</span>
-                                                    </p>
                                                 @endif
 
                                             </div>
@@ -401,7 +420,11 @@
                                         <h4 class="text-slate-800 text-sm font-bold mb-2">
                                             {{ $detail->deskripsi_kegiatan }}</h4>
 
-                                        @if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
+                                        {{-- KHUSUS TAC MOBILE --}}
+                                        @if (
+                                            $log->user->divisi_id == 1 &&
+                                                $detail->kategori == 'Network' &&
+                                                strtolower($detail->deskripsi_kegiatan) !== 'monitoring network')
                                             <div class="text-[10px] space-y-1 text-slate-500">
                                                 @if ($detail->temuan_sendiri)
                                                     <p>Tipe: <span class="font-bold text-rose-500">Deteksi Dini</span></p>
@@ -413,6 +436,17 @@
                                                 <p>Penyelesaian: <span
                                                         class="font-bold text-slate-700">{{ $detail->is_mandiri ? 'Mandiri' : 'Eskalasi (' . $detail->pic_name . ')' }}</span>
                                                 </p>
+                                            </div>
+                                        @endif
+
+                                        {{-- BUKTI FOTO INFRA MOBILE --}}
+                                        @if ($log->user->divisi_id == 2 && $detail->foto_dokumentasi)
+                                            <div class="mt-3 pt-2 border-t border-slate-200">
+                                                <button type="button"
+                                                    onclick="openImageModal('{{ asset('storage/' . $detail->foto_dokumentasi) }}')"
+                                                    class="text-[10px] text-indigo-500 font-bold hover:text-indigo-700">
+                                                    <i class="fas fa-image mr-1"></i> Lihat Foto Dokumentasi
+                                                </button>
                                             </div>
                                         @endif
                                     </div>
@@ -553,7 +587,7 @@
             </div>
         @endif
 
-        {{-- Modal Edit Case (KODE LAMA ANDA) --}}
+        {{-- Modal Edit Case --}}
         <div x-show="editModal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4"
             style="display: none;">
             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="editModal = false"></div>
@@ -575,6 +609,31 @@
                                 class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none text-sm"
                                 required></textarea>
                         </div>
+
+                        {{-- KHUSUS INFRA (FORM UPLOAD FOTO) --}}
+                        <template x-if="{{ auth()->user()->divisi_id }} == 2">
+                            <div class="space-y-4 pt-3 border-t border-slate-100">
+                                <div>
+                                    <label
+                                        class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Kategori</label>
+                                    <select name="kategori" x-model="activeCase.kategori"
+                                        class="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-sm font-bold text-slate-700 bg-white">
+                                        <option value="Network">Network</option>
+                                        <option value="CCTV">CCTV</option>
+                                        <option value="GPS">GPS</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Ganti Foto
+                                        Dokumentasi (Max 2MB)</label>
+                                    <input type="file" name="foto_dokumentasi" accept="image/*"
+                                        class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+                                    <span class="text-[9px] text-slate-400 block mt-1 italic">*Kosongkan jika tidak ingin
+                                        mengganti foto</span>
+                                </div>
+                            </div>
+                        </template>
 
                         {{-- KHUSUS NETWORK (TAC) --}}
                         <template
@@ -679,7 +738,7 @@
 
     </div>
 
-    {{-- MODAL PREVIEW GAMBAR (KODE LAMA ANDA) --}}
+    {{-- MODAL PREVIEW GAMBAR --}}
     <div id="imagePreviewModal"
         class="fixed inset-0 z-[100] hidden bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
         <div class="relative max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">

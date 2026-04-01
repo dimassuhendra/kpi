@@ -159,14 +159,25 @@
                         {{-- JIKA BUKAN DIVISI 1 (INFRA DLL) -> TAMPILKAN FORMAT SEDERHANA --}}
                     @else
                         <div
-                            class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500 border-slate-200 shadow-sm flex flex-col justify-center">
+                            class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500 border-slate-200 shadow-sm flex flex-col justify-between">
                             <div>
                                 <span
                                     class="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-600 mb-2 inline-block">
                                     {{ $case->kategori ?? 'Aktivitas' }}
                                 </span>
-                                <p class="text-sm font-bold text-slate-800">{{ $case->deskripsi_kegiatan }}</p>
+                                <p class="text-sm font-bold text-slate-800 leading-relaxed pb-2">
+                                    {{ $case->deskripsi_kegiatan }}</p>
                             </div>
+
+                            @if ($case->foto_dokumentasi)
+                                <div class="mt-2 pt-3 border-t border-slate-100 flex justify-start">
+                                    <button type="button"
+                                        onclick="openImageModal('{{ asset('storage/' . $case->foto_dokumentasi) }}')"
+                                        class="px-4 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-[10px] uppercase tracking-wider transition-all flex items-center">
+                                        <i class="fas fa-image mr-1.5 text-sm"></i> Lihat Dokumentasi
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 @endforeach

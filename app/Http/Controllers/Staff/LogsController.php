@@ -52,12 +52,24 @@ class LogsController extends Controller
 
         $user = Auth::user();
 
+        // Validasi input form dan file gambar
+        $request->validate([
+            'deskripsi' => 'required|string',
+            'kategori' => 'nullable|string',
+            'foto_dokumentasi' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_respon_time' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_deteksi_dini' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
         // Data dasar yang pasti diupdate semua divisi/kategori
         $updateData = [
             'deskripsi_kegiatan' => $request->deskripsi,
         ];
 
-        if ($user->divisi_id == 1) { // TAC
+        // ==========================================
+        // LOGIKA KHUSUS TAC (DIVISI 1)
+        // ==========================================
+        if ($user->divisi_id == 1) {
             if ($detail->kategori == 'Network' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring network') {
 
                 $isTemuan = $request->has('temuan_sendiri');
@@ -73,18 +85,41 @@ class LogsController extends Controller
                     $updateData['waktu_respon_menit'] = 0;
                     // Jika ada upload bukti baru, timpa yang lama
                     if ($request->hasFile('bukti_deteksi_dini')) {
+                        if ($detail->bukti_deteksi_dini) {
+                            Storage::disk('public')->delete($detail->bukti_deteksi_dini);
+                        }
                         $updateData['bukti_deteksi_dini'] = $request->file('bukti_deteksi_dini')->store('kpi_evidences/deteksi', 'public');
                     }
                 } else {
                     $updateData['waktu_respon_menit'] = $request->waktu_respon_menit ?? 0;
                     // Jika ada upload bukti baru, timpa yang lama
                     if ($request->hasFile('bukti_respon_time')) {
+                        if ($detail->bukti_respon_time) {
+                            Storage::disk('public')->delete($detail->bukti_respon_time);
+                        }
                         $updateData['bukti_respon_time'] = $request->file('bukti_respon_time')->store('kpi_evidences/respon', 'public');
                     }
                 }
             } elseif ($detail->kategori == 'GPS' && strtolower($detail->deskripsi_kegiatan) !== 'monitoring gps') {
                 // Update Kuantitas untuk GPS
                 $updateData['value_raw'] = $request->value_raw;
+            }
+        }
+        // ==========================================
+        // LOGIKA KHUSUS INFRASTRUKTUR (DIVISI 2)
+        // ==========================================
+        elseif ($user->divisi_id == 2) {
+            // Update Kategori
+            if ($request->has('kategori')) {
+                $updateData['kategori'] = $request->kategori;
+            }
+
+            // Jika ada upload foto dokumentasi baru, timpa yang lama
+            if ($request->hasFile('foto_dokumentasi')) {
+                if ($detail->foto_dokumentasi) {
+                    Storage::disk('public')->delete($detail->foto_dokumentasi);
+                }
+                $updateData['foto_dokumentasi'] = $request->file('foto_dokumentasi')->store('kpi_evidences/infra', 'public');
             }
         }
 
@@ -107,12 +142,15 @@ class LogsController extends Controller
 
         $reportId = $detail->daily_report_id; // Simpan ID DailyReport (sesuaikan nama kolom foreign key jika berbeda)
 
-        // Opsional: Hapus file bukti (gambar) dari storage jika ada
+        // Hapus file bukti (gambar) dari storage jika ada
         if ($detail->bukti_deteksi_dini) {
-            \Storage::disk('public')->delete($detail->bukti_deteksi_dini);
+            Storage::disk('public')->delete($detail->bukti_deteksi_dini);
         }
         if ($detail->bukti_respon_time) {
-            \Storage::disk('public')->delete($detail->bukti_respon_time);
+            Storage::disk('public')->delete($detail->bukti_respon_time);
+        }
+        if ($detail->foto_dokumentasi) { // Tambahan hapus gambar infra
+            Storage::disk('public')->delete($detail->foto_dokumentasi);
         }
 
         // Hapus item detail

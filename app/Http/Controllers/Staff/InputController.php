@@ -273,7 +273,11 @@ class InputController extends Controller
                 }
             }
         } else if ($user->divisi_id == 2) {
-            // LOGIKA INFRA
+            // LOGIKA INFRA LAMA (DENGAN TAMBAHAN UPLOAD GAMBAR)
+            $request->validate([
+                'infra_activity.*.foto_dokumentasi' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
 
             if ($request->has('infra_activity')) {
@@ -281,6 +285,12 @@ class InputController extends Controller
                     if (empty($infra['nama_kegiatan'])) continue;
                     $kategori = $infra['kategori'] ?? 'Network';
                     $tipe = ($kategori == 'Lainnya') ? 'activity' : 'case';
+
+                    // Proses Simpan Gambar
+                    $pathFoto = null;
+                    if (isset($infra['foto_dokumentasi'])) {
+                        $pathFoto = $infra['foto_dokumentasi']->store('kpi_evidences/infra', 'public');
+                    }
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
@@ -291,6 +301,7 @@ class InputController extends Controller
                         'is_mandiri'         => 1,
                         'value_raw'          => null,
                         'waktu_respon_menit' => null,
+                        'foto_dokumentasi'   => $pathFoto, 
                     ]);
                 }
             }
