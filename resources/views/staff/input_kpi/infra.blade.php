@@ -34,7 +34,7 @@
 
                     <div class="md:col-span-4">
                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Foto
-                            Dokumentasi (Max 2MB)</label>
+                            Dokumentasi (Max 1MB)</label>
                         <input type="file" :name="'infra_activity[' + index + '][foto_dokumentasi]'" accept="image/*"
                             class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-700 cursor-pointer transition">
                     </div>
