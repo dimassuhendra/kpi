@@ -43,7 +43,7 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::delete('/kpi/logs/{id}', [StaffLogsController::class, 'destroy'])->name('staff.kpi.destroy');
     Route::delete('/staff/kpi/case-destroy/{id}', [StaffLogsController::class, 'destroyCase'])->name('staff.kpi.case-destroy');
     Route::put('/kpi/case-update/{id}', [StaffLogsController::class, 'updateCase'])->name('staff.kpi.case_update');
-    Route::get('/kpi/export-excel', [StaffLogsController::class, 'exportExcel'])->name('staff.kpi.export.excel');
+    Route::get('/logs/export/excel', [StaffLogsController::class, 'exportExcel'])->name('staff.logs.export.excel');
 
     Route::get('/kpi/achievements', [StaffAchievementController::class, 'achievements'])->name('staff.kpi.achievements');
 

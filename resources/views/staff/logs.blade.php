@@ -52,36 +52,75 @@
 
             {{-- Filter Section --}}
             <div class="bg-white p-5 mb-6 rounded-2xl border border-slate-200 shadow-sm">
-                <form action="{{ route('staff.kpi.logs') }}" method="GET"
-                    class="flex flex-col md:flex-row gap-4 items-end">
-                    <div class="w-full md:flex-1">
-                        <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Cari Deskripsi</label>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari keyword kegiatan..."
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Filter Laporan</h3>
+                        <p class="text-xs text-slate-500">Sesuaikan data yang ingin Anda lihat atau unduh.</p>
                     </div>
-                    <div class="w-full md:w-48">
-                        <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Status Validasi</label>
-                        <select name="status"
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
-                            <option value="">Semua Status</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu
-                            </option>
-                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui
-                            </option>
-                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak
-                            </option>
-                        </select>
-                    </div>
-                    <div class="w-full md:w-auto flex gap-2">
+
+                    <form action="{{ route('staff.logs.export.excel') }}" method="GET" class="w-full md:w-auto">
+                        <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                        <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                         <button type="submit"
-                            class="flex-1 md:flex-none bg-amber-500 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200">
-                            <i class="fas fa-filter mr-1"></i> Filter
+                            class="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-600 transition shadow-md shadow-emerald-200">
+                            <i class="fas fa-file-excel"></i> Unduh Excel
                         </button>
+                    </form>
+                </div>
+
+                <hr class="border-slate-100 mb-5">
+
+                <form action="{{ route('staff.kpi.logs') }}" method="GET">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+
+                        <div>
+                            <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Tanggal Mulai</label>
+                            <input type="date" name="start_date" value="{{ request('start_date') }}"
+                                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+                        </div>
+
+                        <div>
+                            <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Tanggal Akhir</label>
+                            <input type="date" name="end_date" value="{{ request('end_date') }}"
+                                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+                        </div>
+
+                        <div>
+                            <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Status Validasi</label>
+                            <select name="status"
+                                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:border-amber-500 transition">
+                                <option value="">Semua Status</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Menunggu
+                                </option>
+                                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>✅ Disetujui
+                                </option>
+                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>❌ Ditolak
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Cari Deskripsi</label>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Contoh: perbaikan..."
+                                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition">
+                        </div>
+
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 justify-end">
                         <a href="{{ route('staff.kpi.logs') }}"
-                            class="flex-1 md:flex-none text-center bg-slate-200 text-slate-600 text-sm py-2 px-4 rounded-xl hover:bg-slate-300 transition font-bold">Reset</a>
+                            class="w-full sm:w-auto text-center bg-slate-200 text-slate-600 text-sm py-2 px-6 rounded-xl hover:bg-slate-300 transition font-bold">
+                            Reset Filter
+                        </a>
+                        <button type="submit"
+                            class="w-full sm:w-auto bg-amber-500 text-white px-8 py-2 rounded-xl font-bold text-sm hover:bg-amber-600 transition shadow-md shadow-amber-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-search"></i> Terapkan
+                        </button>
                     </div>
                 </form>
+
             </div>
 
             {{-- Table Section --}}

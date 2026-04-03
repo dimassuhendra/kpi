@@ -12,25 +12,40 @@ use App\Models\KegiatanDetail;
 use App\Models\CustomerFeedback;
 use App\Models\TechnicalAssessment;
 
+use App\Exports\KpiExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 class LogsController extends Controller
 {
     public function logs(Request $request)
     {
         $userId = Auth::id();
 
-        // 1. Ambil Laporan Harian (Kode Lama Anda)
+        // 1. Ambil Laporan Harian
         $query = DailyReport::with(['user.divisi', 'details', 'shift'])
             ->where('user_id', $userId);
 
-        if ($request->has('search')) {
+        // Filter Pencarian Deskripsi
+        if ($request->has('search') && $request->search != '') {
             $query->whereHas('details', function ($q) use ($request) {
                 $q->where('deskripsi_kegiatan', 'like', '%' . $request->search . '%');
             });
         }
 
+        // Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+
+        // --- TAMBAHKAN FILTER TANGGAL DI SINI ---
+        if ($request->filled('start_date')) {
+            $query->whereDate('tanggal', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('tanggal', '<=', $request->end_date);
+        }
+        // ----------------------------------------
 
         $logs = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
 
@@ -168,31 +183,28 @@ class LogsController extends Controller
         return back()->with('success', 'Item kegiatan berhasil dihapus!');
     }
 
-    // Dummy Export Excel (Contoh sederhana CSV)
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
-        $logs = DailyReport::with('details')->where('user_id', Auth::id())->get();
-        $filename = "Log_Aktivitas_" . date('Ymd') . ".csv";
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
 
-        $handle = fopen('php://output', 'w');
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        $user = Auth::user();
 
-        fputcsv($handle, ['Tanggal', 'Deskripsi Case', 'Respon (Min)', 'Tipe', 'Inisiatif']);
+        // KUNCI UTAMA: Paksa user_id ke ID milik staff yang sedang login
+        $filters = [
+            'user_id'    => $user->id,
+            'start_date' => $request->start_date,
+            'end_date'   => $request->end_date,
+        ];
 
-        foreach ($logs as $log) {
-            foreach ($log->details as $d) {
-                fputcsv($handle, [
-                    $log->tanggal,
-                    $d->deskripsi_kegiatan,
-                    $d->waktu_respon_menit,
-                    $d->is_mandiri ? 'Mandiri' : 'Bantuan',
-                    $d->temuan_sendiri ? 'Temuan' : 'Laporan'
-                ]);
-            }
-        }
+        // Buat nama file
+        $staffName = str_replace(' ', '_', $user->nama_lengkap);
+        $fileName = 'KPI_Analisa_Saya_' . $staffName . '_' . now()->format('Ymd_His') . '.xlsx';
 
-        fclose($handle);
+        // Panggil class KpiExport yang sama persis seperti di Manager
+        return Excel::download(new KpiExport($filters), $fileName);
     }
 
     public function destroy($id)
