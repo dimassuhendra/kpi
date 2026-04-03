@@ -1,5 +1,9 @@
 {{-- SECTION 1: DOCUMENTATION & REPORTING --}}
-<div class="mb-10" x-data="{ ada_laporan_gps: {{ isset($report) && $report->bukti_report_gps ? 'true' : 'false' }} }">
+<div class="mb-10" x-data="{
+    ada_laporan_gps: {{ isset($report) && $report->bukti_report_gps ? 'true' : 'false' }},
+    bukti_report_gps_path: '{{ $report->bukti_report_gps ?? '' }}',
+    isUploadingGps: false
+}">
     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
         <span
             class="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center mr-2 text-sm font-black">1</span>
@@ -52,11 +56,21 @@
                             </div>
                         </label>
                     </div>
+
+                    {{-- UPLOAD ASYNC GPS --}}
                     <div>
                         <label class="text-[10px] uppercase text-slate-400 font-black mb-1 block">Upload Bukti Report
                             GPS</label>
-                        <input type="file" name="bukti_report_gps" accept="image/*"
+                        <input type="hidden" name="bukti_report_gps_path" x-model="bukti_report_gps_path">
+                        <input type="file" accept="image/*"
+                            @change="isUploadingGps = true; uploadFile($event, 'gps', (path) => { bukti_report_gps_path = path; isUploadingGps = false; })"
                             class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200">
+
+                        <p x-show="isUploadingGps" class="text-[10px] text-amber-500 mt-1 animate-pulse"><i
+                                class="fas fa-spinner fa-spin mr-1"></i> Mengunggah...</p>
+                        <p x-show="!isUploadingGps && bukti_report_gps_path"
+                            class="text-[10px] text-emerald-500 mt-1 font-bold"><i class="fas fa-check-circle mr-1"></i>
+                            File siap dikirim</p>
                     </div>
                 </div>
             </div>
@@ -132,6 +146,7 @@
                                     <label class="text-xs font-bold text-slate-600">Deteksi Dini / Temuan
                                         Sendiri</label>
                                 </div>
+
                                 <div x-show="!row.temuan_sendiri" class="grid grid-cols-3 gap-2 items-center">
                                     <div class="col-span-1">
                                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Respons
@@ -140,22 +155,47 @@
                                             x-model="row.waktu_respon_menit"
                                             class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
                                     </div>
+
+                                    {{-- UPLOAD ASYNC RESPON --}}
                                     <div class="col-span-2">
                                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Bukti SS
                                             Respon</label>
-                                        <input type="file" :name="'case_network[' + index + '][bukti_respon_time]'"
-                                            accept="image/*"
+                                        <input type="hidden"
+                                            :name="'case_network[' + index + '][bukti_respon_time_path]'"
+                                            x-model="row.bukti_respon_time_path">
+                                        <input type="file" accept="image/*"
+                                            @change="row.isUploadingRespon = true; uploadFile($event, 'respon', (path) => { row.bukti_respon_time_path = path; row.isUploadingRespon = false; })"
                                             class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200">
+
+                                        <p x-show="row.isUploadingRespon"
+                                            class="text-[9px] text-amber-500 mt-1 animate-pulse"><i
+                                                class="fas fa-spinner fa-spin mr-1"></i> Uploading...</p>
+                                        <p x-show="!row.isUploadingRespon && row.bukti_respon_time_path"
+                                            class="text-[9px] text-emerald-500 mt-1 font-bold"><i
+                                                class="fas fa-check mr-1"></i> File OK</p>
                                     </div>
                                 </div>
+
+                                {{-- UPLOAD ASYNC DETEKSI DINI --}}
                                 <div x-show="row.temuan_sendiri">
                                     <label class="text-[10px] uppercase text-rose-400 font-black ml-1">Bukti SS Deteksi
                                         Dini</label>
-                                    <input type="file" :name="'case_network[' + index + '][bukti_deteksi_dini]'"
-                                        accept="image/*"
+                                    <input type="hidden"
+                                        :name="'case_network[' + index + '][bukti_deteksi_dini_path]'"
+                                        x-model="row.bukti_deteksi_dini_path">
+                                    <input type="file" accept="image/*"
+                                        @change="row.isUploadingDeteksi = true; uploadFile($event, 'deteksi', (path) => { row.bukti_deteksi_dini_path = path; row.isUploadingDeteksi = false; })"
                                         class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-600">
+
+                                    <p x-show="row.isUploadingDeteksi"
+                                        class="text-[9px] text-rose-500 mt-1 animate-pulse"><i
+                                            class="fas fa-spinner fa-spin mr-1"></i> Uploading...</p>
+                                    <p x-show="!row.isUploadingDeteksi && row.bukti_deteksi_dini_path"
+                                        class="text-[9px] text-emerald-500 mt-1 font-bold"><i
+                                            class="fas fa-check mr-1"></i> File OK</p>
                                 </div>
                             </div>
+
                             {{-- KANAN --}}
                             <div>
                                 <div class="bg-white p-3 rounded-lg border border-slate-200 h-full flex flex-col">

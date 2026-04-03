@@ -108,18 +108,16 @@ class InputController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-
-        // PAKSA ZONA WAKTU GMT+7 (Asia/Jakarta)
         $waktuSekarang = Carbon::now('Asia/Jakarta');
         $hariIni = $waktuSekarang->toDateString();
 
-        // 1. Validasi Awal & Validasi File Gambar
-        if ($user->divisi_id == 1) { // Validasi khusus TAC
+        // 1. Validasi Awal (Ubah image menjadi string path)
+        if ($user->divisi_id == 1) {
             $request->validate([
                 'shift_id' => 'required',
-                'case_network.*.bukti_respon_time' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-                'case_network.*.bukti_deteksi_dini' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-                'bukti_report_gps' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'case_network.*.bukti_respon_time_path' => 'nullable|string',
+                'case_network.*.bukti_deteksi_dini_path' => 'nullable|string',
+                'bukti_report_gps_path' => 'nullable|string',
             ]);
 
             if (!$request->has('case_network') && (!$request->has('case_gps') || empty(array_filter($request->case_gps, fn($item) => !empty($item['nama_kegiatan'])))) && !$request->has('activity')) {
@@ -152,18 +150,16 @@ class InputController extends Controller
                 }
             }
         }
-        // -------------------------------------------------------------------
 
         // 2. Cari Laporan Hari Ini
         $report = DailyReport::where('user_id', $user->id)
             ->where('tanggal', $hariIni)
             ->first();
 
-        // Mengelola Upload Bukti GPS
+        // Mengambil path Bukti GPS dari hidden input
         $pathBuktiGps = $report->bukti_report_gps ?? null;
-
-        if ($request->has('ada_laporan_gps') && $request->hasFile('bukti_report_gps')) {
-            $pathBuktiGps = $request->file('bukti_report_gps')->store('kpi_evidences/gps', 'public');
+        if ($request->has('ada_laporan_gps') && $request->filled('bukti_report_gps_path')) {
+            $pathBuktiGps = $request->input('bukti_report_gps_path');
         } elseif (!$request->has('ada_laporan_gps')) {
             $pathBuktiGps = null;
         }
@@ -207,16 +203,9 @@ class InputController extends Controller
                     $isMonitoring = (isset($item['is_monitoring']) && $item['is_monitoring'] == "1");
                     $isTemuanSendiri = !$isMonitoring && isset($item['temuan_sendiri']) ? 1 : 0;
 
-                    $pathRespon = null;
-                    $pathDeteksi = null;
-
-                    if (!$isTemuanSendiri && isset($item['bukti_respon_time'])) {
-                        $pathRespon = $item['bukti_respon_time']->store('kpi_evidences/respon', 'public');
-                    }
-
-                    if ($isTemuanSendiri && isset($item['bukti_deteksi_dini'])) {
-                        $pathDeteksi = $item['bukti_deteksi_dini']->store('kpi_evidences/deteksi', 'public');
-                    }
+                    // Menggunakan path dari hidden input
+                    $pathRespon = (!$isTemuanSendiri && !empty($item['bukti_respon_time_path'])) ? $item['bukti_respon_time_path'] : null;
+                    $pathDeteksi = ($isTemuanSendiri && !empty($item['bukti_deteksi_dini_path'])) ? $item['bukti_deteksi_dini_path'] : null;
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
@@ -230,10 +219,8 @@ class InputController extends Controller
                         'pic_name'           => (!$isMonitoring && isset($item['is_mandiri']) && $item['is_mandiri'] == 0) ? ($item['pic_name'] ?? null) : null,
                         'bukti_respon_time'  => $pathRespon,
                         'bukti_deteksi_dini' => $pathDeteksi,
-
-                        // KUNCI UTAMA LOGIKA PENYIMPANAN
-                        'value_raw'          => null, // Dikunci null agar tidak mengotori data network
-                        'waktu_respon_menit' => $isMonitoring ? null : ($isTemuanSendiri ? 0 : ($item['waktu_respon_menit'] ?? 0)), // Jika temuan sendiri pasti 0
+                        'value_raw'          => null,
+                        'waktu_respon_menit' => $isMonitoring ? null : ($isTemuanSendiri ? 0 : ($item['waktu_respon_menit'] ?? 0)),
                     ]);
                 }
             }
@@ -251,10 +238,8 @@ class InputController extends Controller
                         'deskripsi_kegiatan' => $item['nama_kegiatan'],
                         'is_mandiri'         => 1,
                         'kategori'           => 'GPS',
-
-                        // KUNCI UTAMA LOGIKA PENYIMPANAN
-                        'value_raw'          => $isMonitoring ? 'ALL' : ($item['jumlah_kendaraan'] ?? 0), // Hanya terisi jika itu GPS
-                        'waktu_respon_menit' => null, // Dikunci null karena GPS tidak ada hitungan menit waktu_respon_menit
+                        'value_raw'          => $isMonitoring ? 'ALL' : ($item['jumlah_kendaraan'] ?? 0),
+                        'waktu_respon_menit' => null,
                     ]);
                 }
             }
@@ -330,8 +315,27 @@ class InputController extends Controller
             return response()->json(['redirect' => route('staff.input')]);
         }
 
-        // Jika dikirim normal (fallback)
         return redirect()->route('staff.input')->with('success', 'Laporan berhasil dikirim!');
+    }
+    
+    public function uploadAsync(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|mimes:jpg,jpeg,png|max:2048', // Validasi per file tetap 2MB
+            'folder' => 'required|string'
+        ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $folder = $request->folder; // 'gps', 'respon', atau 'deteksi'
+
+            // Langsung simpan ke folder final
+            $path = $file->store("kpi_evidences/{$folder}", 'public');
+
+            return response()->json(['path' => $path], 200);
+        }
+
+        return response()->json(['error' => 'File tidak ditemukan'], 400);
     }
 
     // Fungsi untuk menyimpan Customer Feedback (Rating)

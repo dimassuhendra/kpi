@@ -259,13 +259,66 @@
     <script>
         function kpiForm() {
             return {
-                activeTab: 'daily', // Tambahan state untuk Tab Switcher
-                // Data disuntikkan dari Controller
-                rows_network: @json($formattedRows['network']),
+                activeTab: 'daily',
+
+                // Memetakan ulang format bawaan backend agar state upload default ter-set
+                rows_network: @json($formattedRows['network']).map(row => ({
+                    ...row,
+                    bukti_respon_time_path: '',
+                    bukti_deteksi_dini_path: '',
+                    isUploadingRespon: false,
+                    isUploadingDeteksi: false
+                })),
                 rows_gps: @json($formattedRows['gps']),
                 activities: @json($formattedRows['activities']),
                 infra_activities: @json($formattedRows['infra']),
                 bo_activities: @json($formattedRows['bo']),
+
+                // AJAX UPLOAD FUNCTION
+                async uploadFile(event, folderName, callback) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    // Validasi ukuran Client Side
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert("File terlalu besar! Maksimal 2MB per gambar.");
+                        event.target.value = "";
+                        callback(''); // Kosongkan state
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('folder', folderName);
+                    // Ambil token dari meta tag csrf atau dari form
+                    formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+                    try {
+                        const response = await fetch('{{ route('staff.upload.async') }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            callback(data.path); // Set hidden input & matikan loading via callback
+                        } else {
+                            alert("Gagal mengunggah: " + (data.message || data.error));
+                            event.target.value = "";
+                            callback('');
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        alert("Terjadi kesalahan koneksi saat mengunggah.");
+                        event.target.value = "";
+                        callback('');
+                    }
+                },
 
                 addNetworkRow() {
                     this.rows_network.push({
@@ -275,7 +328,12 @@
                         is_mandiri: 1,
                         pic_name: '',
                         is_monitoring: false,
-                        is_default: false
+                        is_default: false,
+                        // Inisialisasi state upload
+                        bukti_respon_time_path: '',
+                        bukti_deteksi_dini_path: '',
+                        isUploadingRespon: false,
+                        isUploadingDeteksi: false
                     });
                 },
                 addGpsRow() {
