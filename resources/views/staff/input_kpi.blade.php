@@ -271,7 +271,11 @@
                 })),
                 rows_gps: @json($formattedRows['gps']),
                 activities: @json($formattedRows['activities']),
-                infra_activities: @json($formattedRows['infra']),
+                infra_activities: @json($formattedRows['infra']).map(row => ({
+                    ...row,
+                    foto_dokumentasi_path: '',
+                    isUploading: false
+                })),
                 bo_activities: @json($formattedRows['bo']),
 
                 // AJAX UPLOAD FUNCTION
@@ -353,7 +357,9 @@
                     this.infra_activities.push({
                         kategori: 'Network',
                         nama_kegiatan: '',
-                        deskripsi: ''
+                        deskripsi: '',
+                        foto_dokumentasi_path: '',
+                        isUploading: false
                     });
                 },
                 addBoActivity() {

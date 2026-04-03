@@ -258,9 +258,9 @@ class InputController extends Controller
                 }
             }
         } else if ($user->divisi_id == 2) {
-            // LOGIKA INFRA LAMA (DENGAN TAMBAHAN UPLOAD GAMBAR)
+            // LOGIKA INFRA (UPDATE ASYNC UPLOAD)
             $request->validate([
-                'infra_activity.*.foto_dokumentasi' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'infra_activity.*.foto_dokumentasi_path' => 'nullable|string',
             ]);
 
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
@@ -268,14 +268,12 @@ class InputController extends Controller
             if ($request->has('infra_activity')) {
                 foreach ($request->infra_activity as $infra) {
                     if (empty($infra['nama_kegiatan'])) continue;
+
                     $kategori = $infra['kategori'] ?? 'Network';
                     $tipe = ($kategori == 'Lainnya') ? 'activity' : 'case';
 
-                    // Proses Simpan Gambar
-                    $pathFoto = null;
-                    if (isset($infra['foto_dokumentasi'])) {
-                        $pathFoto = $infra['foto_dokumentasi']->store('kpi_evidences/infra', 'public');
-                    }
+                    // Menggunakan path dari hidden input hasil async upload
+                    $pathFoto = !empty($infra['foto_dokumentasi_path']) ? $infra['foto_dokumentasi_path'] : null;
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
@@ -317,7 +315,7 @@ class InputController extends Controller
 
         return redirect()->route('staff.input')->with('success', 'Laporan berhasil dikirim!');
     }
-    
+
     public function uploadAsync(Request $request)
     {
         $request->validate([

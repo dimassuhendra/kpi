@@ -32,11 +32,21 @@
                             placeholder="Contoh: Pemasangan NVR Baru" required>
                     </div>
 
+                    {{-- UPLOAD ASYNC FOTO INFRA --}}
                     <div class="md:col-span-4">
                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Foto
-                            Dokumentasi (Max 1MB)</label>
-                        <input type="file" :name="'infra_activity[' + index + '][foto_dokumentasi]'" accept="image/*"
+                            Dokumentasi</label>
+                        <input type="hidden" :name="'infra_activity[' + index + '][foto_dokumentasi_path]'"
+                            x-model="infra.foto_dokumentasi_path">
+                        <input type="file" accept="image/*"
+                            @change="infra.isUploading = true; uploadFile($event, 'infra', (path) => { infra.foto_dokumentasi_path = path; infra.isUploading = false; })"
                             class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-700 cursor-pointer transition">
+
+                        <p x-show="infra.isUploading" class="text-[9px] text-amber-500 mt-1 animate-pulse"><i
+                                class="fas fa-spinner fa-spin mr-1"></i> Uploading...</p>
+                        <p x-show="!infra.isUploading && infra.foto_dokumentasi_path"
+                            class="text-[9px] text-emerald-500 mt-1 font-bold"><i class="fas fa-check mr-1"></i> File OK
+                        </p>
                     </div>
 
                     <div class="md:col-span-12 mt-1">
