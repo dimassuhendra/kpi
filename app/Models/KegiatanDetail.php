@@ -14,6 +14,7 @@ class KegiatanDetail extends Model
         'tipe_kegiatan',
         'kategori',
         'nomor_tiket',
+        'nama_kegiatan',
         'deskripsi_kegiatan',
         'foto_dokumentasi',
         'value_raw',

@@ -48,6 +48,7 @@ class LogsController extends Controller
         // ----------------------------------------
 
         $logs = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
+        
 
         // 2. Ambil Riwayat Rating & Kuis khusus user ini
         $feedbacks = CustomerFeedback::where('user_id', $userId)->latest('created_at')->get();
@@ -197,6 +198,7 @@ class LogsController extends Controller
             'user_id'    => $user->id,
             'start_date' => $request->start_date,
             'end_date'   => $request->end_date,
+            'divisi_id' => $request->divisi_id,
         ];
 
         // Buat nama file
