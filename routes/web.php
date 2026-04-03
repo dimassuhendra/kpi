@@ -33,7 +33,7 @@ Route::get('/system-updates', [UpdateController::class, 'index'])->name('updates
 Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], function () {
     Route::get('/dashboard', [StaffDashboardController::class, 'dashboard'])->name('staff.dashboard');
     Route::get('/input-case', [StaffInputController::class, 'index'])->name('staff.input');
-    Route::post('/upload-async', [App\Http\Controllers\Staff\InputController::class, 'uploadAsync'])->name('staff.upload.async');
+    Route::post('/upload-async', [StaffInputController::class, 'uploadAsync'])->name('staff.upload.async');
     Route::post('/kpi/store', [StaffInputController::class, 'store'])->name('staff.kpi.store');
     Route::post('/staff/feedback', [StaffInputController::class, 'storeFeedback'])->name('staff.feedback.store');
     Route::post('/staff/assessment', [StaffInputController::class, 'storeAssessment'])->name('staff.assessment.store');
