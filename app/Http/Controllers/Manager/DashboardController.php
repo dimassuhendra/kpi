@@ -135,10 +135,16 @@ class DashboardController extends Controller
         // B. LOGIKA DIVISI 1 (TAC)
         // ========================================================================
         if ($selectedDivisi == '1') {
-            $networkCases = $allDetails->where('kategori', 'Network')->where('tipe_kegiatan', 'case')
-                ->filter(fn($d) => strtolower($d->deskripsi_kegiatan) !== 'monitoring network');
-            $gpsCases = $allDetails->where('kategori', 'GPS')->where('tipe_kegiatan', 'case')
-                ->filter(fn($d) => strtolower($d->deskripsi_kegiatan) !== 'monitoring gps');
+            // Memfilter data Network yang TIDAK mengandung kata "monitoring"
+            $networkCases = $allDetails->where('kategori', 'Network')
+                ->where('tipe_kegiatan', 'case')
+                ->filter(fn($d) => !str_contains(strtolower($d->deskripsi_kegiatan), 'monitoring'));
+
+            // Memfilter data GPS yang TIDAK mengandung kata "monitoring"
+            $gpsCases = $allDetails->where('kategori', 'GPS')
+                ->where('tipe_kegiatan', 'case')
+                ->filter(fn($d) => !str_contains(strtolower($d->deskripsi_kegiatan), 'monitoring'));
+        }
 
             // 1. Baris 1: Overview
             $chartData['tac']['temuan_vs_laporan'] = [
