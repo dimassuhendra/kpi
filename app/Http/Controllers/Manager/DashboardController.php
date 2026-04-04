@@ -144,7 +144,6 @@ class DashboardController extends Controller
             $gpsCases = $allDetails->where('kategori', 'GPS')
                 ->where('tipe_kegiatan', 'case')
                 ->filter(fn($d) => !str_contains(strtolower($d->deskripsi_kegiatan), 'monitoring'));
-        }
 
             // 1. Baris 1: Overview
             $chartData['tac']['temuan_vs_laporan'] = [
