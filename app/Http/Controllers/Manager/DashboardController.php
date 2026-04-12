@@ -11,9 +11,9 @@ use App\Models\DailyReport;
 use App\Models\User;
 use App\Models\Divisi;
 use App\Models\KegiatanDetail;
-// Pastikan Anda memiliki model ini (sesuai struktur DB sebelumnya)
 use App\Models\CustomerFeedback;
 use App\Models\TechnicalAssessment;
+use App\Models\LemburReport;
 
 class DashboardController extends Controller
 {
@@ -265,6 +265,44 @@ class DashboardController extends Controller
                 ];
             }
             $chartData['infra']['trend_kategori'] = $trendInfra;
+
+            // ==========================================
+            // TAMBAHAN: LOGIKA CHART LEMBUR (KHUSUS INFRA)
+            // ==========================================
+            // Ambil data lembur yang sesuai filter tanggal, staff, dan sudah di-approve
+            $lemburData = LemburReport::with('dailyReport')
+                ->whereHas('dailyReport', function ($q) use ($staffIds, $start, $end) {
+                    $q->whereIn('user_id', $staffIds)
+                        ->whereBetween('tanggal', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                        ->where('status', 'approved');
+                })->get();
+
+            $lemburStaffLabels = [];
+            $lemburTotalJam = [];
+            $lemburFrekuensi = [];
+
+            foreach ($staffs as $st) {
+                $stLembur = $lemburData->filter(function ($l) use ($st) {
+                    return $l->dailyReport->user_id == $st->id;
+                });
+
+                // Hitung Total Jam (Bar Chart & Doughnut Proporsi Jam)
+                $totalMenit = $stLembur->sum(function ($l) {
+                    return \Carbon\Carbon::parse($l->waktu_mulai)->diffInMinutes(\Carbon\Carbon::parse($l->waktu_selesai));
+                });
+                $jam = round($totalMenit / 60, 1);
+
+                // Hitung Frekuensi (Berapa kali lembur)
+                $frekuensi = $stLembur->count();
+
+                $lemburStaffLabels[] = $st->nama_lengkap;
+                $lemburTotalJam[] = $jam;
+                $lemburFrekuensi[] = $frekuensi;
+            }
+
+            $chartData['infra']['lembur_labels'] = $lemburStaffLabels;
+            $chartData['infra']['lembur_jam'] = $lemburTotalJam;
+            $chartData['infra']['lembur_frekuensi'] = $lemburFrekuensi;
         }
 
         // ========================================================================

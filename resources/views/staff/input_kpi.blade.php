@@ -260,6 +260,15 @@
         function kpiForm() {
             return {
                 activeTab: 'daily',
+                infraTab: 'harian',
+
+                lembur_activities: [{
+                    waktu_mulai: '',
+                    waktu_selesai: '',
+                    detail: '',
+                    foto_path: '',
+                    isUploading: false
+                }],
 
                 // Memetakan ulang format bawaan backend agar state upload default ter-set
                 rows_network: @json($formattedRows['network']).map(row => ({
@@ -367,6 +376,37 @@
                         judul: '',
                         deskripsi: ''
                     });
+                },
+                addLemburActivity() {
+                    this.lembur_activities.push({
+                        waktu_mulai: '',
+                        waktu_selesai: '',
+                        detail: '',
+                        foto_path: '',
+                        isUploading: false
+                    });
+                },
+                removeLembur(index) {
+                    this.lembur_activities.splice(index, 1);
+                    if (this.lembur_activities.length === 0) {
+                        this.clearLembur();
+                    }
+                },
+                clearLembur() {
+                    this.lembur_activities = [{
+                        waktu_mulai: '',
+                        waktu_selesai: '',
+                        detail: '',
+                        foto_path: '',
+                        isUploading: false
+                    }];
+                    this.infraTab = 'harian'; // <-- UPDATE: gunakan infraTab
+                },
+                hasLemburData() {
+                    return this.lembur_activities.some(item =>
+                        item.waktu_mulai !== '' || item.waktu_selesai !== '' || item.detail !== '' || item.foto_path !==
+                        ''
+                    );
                 },
                 removeNetwork(index) {
                     this.rows_network.splice(index, 1);

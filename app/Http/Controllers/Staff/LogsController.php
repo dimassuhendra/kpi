@@ -21,8 +21,8 @@ class LogsController extends Controller
     {
         $userId = Auth::id();
 
-        // 1. Ambil Laporan Harian
-        $query = DailyReport::with(['user.divisi', 'details', 'shift'])
+        // 1. Ambil Laporan Harian & Lembur
+        $query = DailyReport::with(['user.divisi', 'details', 'shift', 'lemburReport'])
             ->where('user_id', $userId);
 
         // Filter Pencarian Deskripsi

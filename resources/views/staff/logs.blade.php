@@ -46,7 +46,7 @@
         @endif
 
         {{-- ========================================== --}}
-        {{-- TAB 1: LOG LAPORAN HARIAN                 --}}
+        {{-- TAB 1: LOG LAPORAN HARIAN                  --}}
         {{-- ========================================== --}}
         <div x-show="activeTab === 'laporan'" x-transition.opacity.duration.500ms>
 
@@ -381,6 +381,76 @@
                                             </div>
                                         @endforeach
                                     </div>
+
+                                    {{-- ========================================== --}}
+                                    {{-- BLOK TAMPILAN RIWAYAT LEMBUR (DESKTOP) --}}
+                                    {{-- ========================================== --}}
+                                    @if ($log->lemburReport && $log->lemburReport->count() > 0)
+                                        <div class="mt-6 pt-5 border-t-2 border-dashed border-slate-200">
+                                            <h4 class="font-bold text-slate-800 mb-3 text-xs uppercase tracking-widest">
+                                                <i class="fas fa-moon text-indigo-500 mr-2"></i>Overtime / Lembur Ekstra
+                                            </h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                @foreach ($log->lemburReport as $lembur)
+                                                    @php
+                                                        $mulai = \Carbon\Carbon::parse($lembur->waktu_mulai);
+                                                        $selesai = \Carbon\Carbon::parse($lembur->waktu_selesai);
+
+                                                        $totalMenit = $mulai->diffInMinutes($selesai);
+                                                        $jam = floor($totalMenit / 60);
+                                                        $menit = $totalMenit % 60;
+
+                                                        $teksDurasi = '';
+                                                        if ($jam > 0) {
+                                                            $teksDurasi .= $jam . ' Jam ';
+                                                        }
+                                                        if ($menit > 0) {
+                                                            $teksDurasi .= $menit . ' Menit';
+                                                        }
+
+                                                        $teksDurasi = trim($teksDurasi);
+                                                        if ($teksDurasi == '') {
+                                                            $teksDurasi = '0 Menit';
+                                                        }
+                                                    @endphp
+
+                                                    <div
+                                                        class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                                                        <div>
+                                                            <div class="flex items-center gap-2 mb-3">
+                                                                <span
+                                                                    class="text-[10px] font-bold text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm">
+                                                                    <i class="far fa-clock mr-1"></i>
+                                                                    {{ $mulai->format('H:i') }} -
+                                                                    {{ $selesai->format('H:i') }} WIB
+                                                                </span>
+                                                                <span
+                                                                    class="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md shadow-sm">
+                                                                    <i class="fas fa-hourglass-half mr-1"></i> Durasi:
+                                                                    {{ $teksDurasi }}
+                                                                </span>
+                                                            </div>
+                                                            <p class="text-sm font-bold text-slate-700 leading-relaxed">
+                                                                {{ $lembur->detail_pekerjaan }}</p>
+                                                        </div>
+
+                                                        @if ($lembur->foto_dokumentasi)
+                                                            <div
+                                                                class="mt-4 pt-3 border-t border-indigo-100/50 flex justify-start">
+                                                                <button type="button"
+                                                                    onclick="openImageModal('{{ asset('storage/' . $lembur->foto_dokumentasi) }}')"
+                                                                    class="px-3 py-1.5 rounded-lg bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 font-bold text-[10px] uppercase tracking-wider transition-all flex items-center shadow-sm">
+                                                                    <i class="fas fa-image mr-1.5 text-sm"></i> Lihat Bukti
+                                                                    Lembur
+                                                                </button>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </td>
                             </tr>
                         </tbody>
@@ -490,6 +560,69 @@
                                         @endif
                                     </div>
                                 @endforeach
+
+                                {{-- ========================================== --}}
+                                {{-- BLOK TAMPILAN RIWAYAT LEMBUR (MOBILE) --}}
+                                {{-- ========================================== --}}
+                                @if ($log->lemburReport && $log->lemburReport->count() > 0)
+                                    <div class="mt-5 pt-4 border-t-2 border-dashed border-slate-200">
+                                        <h4 class="font-bold text-slate-800 mb-3 text-[11px] uppercase tracking-widest">
+                                            <i class="fas fa-moon text-indigo-500 mr-2"></i>Lembur Ekstra
+                                        </h4>
+                                        <div class="space-y-3">
+                                            @foreach ($log->lemburReport as $lembur)
+                                                @php
+                                                    $mulai = \Carbon\Carbon::parse($lembur->waktu_mulai);
+                                                    $selesai = \Carbon\Carbon::parse($lembur->waktu_selesai);
+                                                    $totalMenit = $mulai->diffInMinutes($selesai);
+                                                    $jam = floor($totalMenit / 60);
+                                                    $menit = $totalMenit % 60;
+
+                                                    $teksDurasi = '';
+                                                    if ($jam > 0) {
+                                                        $teksDurasi .= $jam . ' Jam ';
+                                                    }
+                                                    if ($menit > 0) {
+                                                        $teksDurasi .= $menit . ' Menit';
+                                                    }
+                                                    $teksDurasi = trim($teksDurasi);
+                                                    if ($teksDurasi == '') {
+                                                        $teksDurasi = '0 Menit';
+                                                    }
+                                                @endphp
+
+                                                <div
+                                                    class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-sm relative">
+                                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                                        <span
+                                                            class="text-[9px] font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                                                            <i class="far fa-clock mr-1"></i>
+                                                            {{ $mulai->format('H:i') }} - {{ $selesai->format('H:i') }}
+                                                        </span>
+                                                        <span
+                                                            class="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                                                            <i class="fas fa-hourglass-half mr-1"></i> {{ $teksDurasi }}
+                                                        </span>
+                                                    </div>
+
+                                                    <p class="text-[13px] font-bold text-slate-700 leading-relaxed">
+                                                        {{ $lembur->detail_pekerjaan }}</p>
+
+                                                    @if ($lembur->foto_dokumentasi)
+                                                        <div class="mt-3 pt-2 border-t border-indigo-100/50">
+                                                            <button type="button"
+                                                                onclick="openImageModal('{{ asset('storage/' . $lembur->foto_dokumentasi) }}')"
+                                                                class="text-[10px] text-indigo-600 font-bold flex items-center">
+                                                                <i class="fas fa-image mr-1"></i> Lihat Bukti Lembur
+                                                            </button>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
                             </div>
                         </div>
                     @empty

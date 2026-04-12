@@ -191,6 +191,40 @@ class InputController extends Controller
             ]);
         }
 
+        // ==========================================
+        // FITUR BARU: LOGIKA PENYIMPANAN LEMBUR
+        // ==========================================
+        if ($request->has('is_lembur') && $request->is_lembur == '1') {
+            $request->validate([
+                'lembur_activity.*.waktu_mulai' => 'required|date',
+                'lembur_activity.*.waktu_selesai' => 'required|date|after:lembur_activity.*.waktu_mulai',
+                'lembur_activity.*.detail' => 'required|string',
+                'lembur_activity.*.foto_path' => 'required|string',
+            ], [
+                'lembur_activity.*.waktu_selesai.after' => 'Waktu selesai lembur harus lebih dari waktu mulai pada baris terkait.'
+            ]);
+
+            // Bersihkan data lembur lama untuk hari ini (jika ada) sebelum insert yang baru
+            \App\Models\LemburReport::where('daily_report_id', $report->id)->delete();
+
+            if ($request->has('lembur_activity')) {
+                foreach ($request->lembur_activity as $lembur) {
+                    if (empty($lembur['detail'])) continue;
+
+                    \App\Models\LemburReport::create([
+                        'daily_report_id' => $report->id,
+                        'waktu_mulai' => $lembur['waktu_mulai'],
+                        'waktu_selesai' => $lembur['waktu_selesai'],
+                        'detail_pekerjaan' => $lembur['detail'],
+                        'foto_dokumentasi' => $lembur['foto_path'],
+                    ]);
+                }
+            }
+        } else {
+            // Jika switch dimatikan, hapus semua data lembur hari ini
+            \App\Models\LemburReport::where('daily_report_id', $report->id)->delete();
+        }
+
         // 4. Proses Simpan Detail Berdasarkan Divisi
         if ($user->divisi_id == 1) { // TAC
             $vCount = VariabelKpi::where('divisi_id', 1)->where('nama_variabel', 'Jumlah Case Harian')->first();

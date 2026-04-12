@@ -40,8 +40,8 @@ class ValidationController extends Controller
     public function validationShow($id)
     {
         try {
-            // PERUBAHAN: Tambahkan 'shift' ke dalam eager loading
-            $report = DailyReport::with(['user', 'details.variabelKpi', 'shift'])->findOrFail($id);
+            // PERUBAHAN: Tambahkan 'lemburReport' ke dalam eager loading
+            $report = DailyReport::with(['user', 'details.variabelKpi', 'shift', 'lemburReport'])->findOrFail($id);
 
             $cases = $report->details->where('tipe_kegiatan', 'case');
             $activities = $report->details->where('tipe_kegiatan', 'activity');
@@ -60,24 +60,33 @@ class ValidationController extends Controller
     public function validationStore(Request $request)
     {
         $request->validate([
-            'report_id' => 'required|exists:daily_reports,id',
-            'status'    => 'required|in:approved,rejected',
+            'report_id'       => 'required|exists:daily_reports,id',
+            'status'          => 'required|in:approved,rejected',
             'catatan_manager' => 'nullable|string'
         ]);
 
-        $report = DailyReport::with(['user', 'details', 'shift'])->findOrFail($request->report_id);
+        $report = DailyReport::with(['user', 'details', 'shift', 'lemburReport'])->findOrFail($request->report_id);
 
+        // 1. Update status laporan harian
         $report->update([
             'status'          => $request->status,
             'catatan_manager' => $request->catatan_manager,
             'validated_at'    => now(),
         ]);
 
+        // 2. (Opsional) Jika tabel lembur_reports punya kolom status, kita selaraskan otomatis
+        if ($report->lemburReport) {
+            foreach ($report->lemburReport as $lembur) {
+                // Hapus baris ini jika tabel lembur tidak memiliki kolom status
+                $lembur->update(['status' => $request->status]);
+            }
+        }
+
         if ($request->status === 'approved') {
             $this->sendTelegramNotification($report);
         }
 
-        return redirect()->route('manager.approval.index')->with('success', 'Status laporan berhasil diperbarui.');
+        return redirect()->route('manager.approval.index')->with('success', 'Laporan dan Lembur berhasil divalidasi.');
     }
 
     private function sendTelegramNotification($report)
@@ -89,21 +98,23 @@ class ValidationController extends Controller
 
         $message = "*BERIKUT LAPORAN ACTIVITY PADA HARI INI*\n";
         $message .= "━━━━━━━━━━━━━━━━━━\n";
-        $message .= "👤 *Nama:* " . $report->user->nama_lengkap . "\n";
-        $message .= "🏢 *Divisi:* " . $namaDivisi . "\n";
+        $message .= "*Nama:* " . $report->user->nama_lengkap . "\n";
+        $message .= "*Divisi:* " . $namaDivisi . "\n";
 
-        // PERUBAHAN: Tambahan info Shift di Telegram jika TAC
+        // Tambahan info Shift di Telegram jika TAC
         if ($report->shift) {
-            $message .= "⏰ *Shift:* " . $report->shift->nama_shift . "\n";
+            $message .= "*Shift:* " . $report->shift->nama_shift . "\n";
         }
 
-        // Pastikan locale diatur ke Indonesia (bisa ditaruh di AppServiceProvider atau langsung di sini)
+        // Pastikan locale diatur ke Indonesia
         \Carbon\Carbon::setLocale('id');
-        // Tambahkan timezone('Asia/Jakarta') sebelum translatedFormat
-        $message .= "📅 *Tanggal:* " . $report->tanggal->timezone('Asia/Jakarta')->translatedFormat('d F Y') . "\n";
-        $message .= "🕒 *Disubmit pada:* " . $report->created_at->timezone('Asia/Jakarta')->translatedFormat('l, d F Y \p\u\k\u\l H:i') . "\n";
+        $message .= "*Tanggal:* " . $report->tanggal->timezone('Asia/Jakarta')->translatedFormat('d F Y') . "\n";
+        $message .= "*Disubmit pada:* " . $report->created_at->timezone('Asia/Jakarta')->translatedFormat('l, d F Y \p\u\k\u\l H:i') . "\n";
         $message .= "━━━━━━━━━━━━━━━━━━\n\n";
 
+        // ==========================================
+        // 1. BLOK AKTIVITAS UTAMA (HARIAN)
+        // ==========================================
         if (str_contains(strtolower($namaDivisi), 'infrastructure') || str_contains(strtolower($namaDivisi), 'infra')) {
             $mainWorks = $report->details->whereNotIn('kategori', ['Lainnya'])->whereNotNull('kategori');
             $otherWorks = $report->details->whereIn('kategori', ['Lainnya']);
@@ -111,7 +122,7 @@ class ValidationController extends Controller
             $counter = 1;
 
             if ($mainWorks->isNotEmpty()) {
-                $message .= "📋 *Technical Activities:*\n";
+                $message .= "*Technical Activities:*\n";
                 foreach ($mainWorks as $detail) {
                     $label = "*{$detail->kategori}*: ";
                     $message .= "{$counter}. {$label}{$detail->deskripsi_kegiatan}\n";
@@ -124,7 +135,7 @@ class ValidationController extends Controller
             }
 
             if ($otherWorks->isNotEmpty()) {
-                $message .= "📂 *General Activities:*\n";
+                $message .= "*General Activities:*\n";
                 foreach ($otherWorks as $detail) {
                     $message .= "{$counter}. {$detail->deskripsi_kegiatan}\n";
                     $counter++;
@@ -133,17 +144,14 @@ class ValidationController extends Controller
         } else {
             $cases = $report->details->where('tipe_kegiatan', 'case');
             if ($cases->isNotEmpty()) {
-                $message .= "🛠 *Technical Activities:*\n";
+                $message .= "*Technical Activities:*\n";
                 $i = 1;
                 foreach ($cases as $case) {
                     if ($case->kategori === 'GPS') {
-                        // Cek jika value_raw adalah 'ALL' atau '0', tampilkan sesuai kebutuhan
                         $kendaraan = ($case->value_raw == '0' || $case->value_raw == 'ALL') ? 'ALL' : $case->value_raw;
                         $message .= "{$i}. {$case->deskripsi_kegiatan} ({$kendaraan} Kendaraan)\n";
                     } else {
-                        // Logika baru: Jika nomor_tiket ada, buat format string-nya. Jika tidak, kosongkan.
                         $tiketInfo = $case->nomor_tiket ? " (Nomor Tiket: {$case->nomor_tiket})" : "";
-
                         $message .= "{$i}. {$case->deskripsi_kegiatan}{$tiketInfo}\n";
                     }
                     $i++;
@@ -153,7 +161,7 @@ class ValidationController extends Controller
 
             $activities = $report->details->where('tipe_kegiatan', 'activity');
             if ($activities->isNotEmpty()) {
-                $message .= "📝 *General Activities:*\n";
+                $message .= "*General Activities:*\n";
                 $j = 1;
                 foreach ($activities as $act) {
                     $message .= "{$j}. {$act->deskripsi_kegiatan}\n";
@@ -162,8 +170,58 @@ class ValidationController extends Controller
             }
         }
 
+        // ==========================================
+        // 2. BLOK AKTIVITAS LEMBUR (JIKA ADA)
+        // ==========================================
+        if ($report->lemburReport && $report->lemburReport->isNotEmpty()) {
+            $message .= "\n*Pekerjaan Lembur:*\n";
+            $k = 1;
+            foreach ($report->lemburReport as $lembur) {
+                // Konversi string ke format waktu dan pastikan zona waktu sesuai
+                $mulai = \Carbon\Carbon::parse($lembur->waktu_mulai)->timezone('Asia/Jakarta');
+                $selesai = \Carbon\Carbon::parse($lembur->waktu_selesai)->timezone('Asia/Jakarta');
+
+                // 1. Dapatkan total keseluruhan menit lembur
+                $totalMenit = $mulai->diffInMinutes($selesai);
+
+                // 2. Bagi 60 dan bulatkan ke bawah untuk dapat Jam bulat (contoh 48/60 = 0)
+                $jam = floor($totalMenit / 60);
+
+                // 3. Sisa baginya adalah Menit
+                $menit = $totalMenit % 60;
+
+                $teksDurasi = '';
+
+                // Karena $jam sudah dibulatkan (pasti angka 0, 1, 2, dst)
+                if ($jam > 0) {
+                    $teksDurasi .= $jam . ' Jam ';
+                }
+
+                if ($menit > 0) {
+                    $teksDurasi .= $menit . ' Menit';
+                }
+
+                // Menghapus spasi berlebih
+                $teksDurasi = trim($teksDurasi);
+
+                if ($teksDurasi == '') {
+                    $teksDurasi = '0 Menit';
+                }
+
+                $message .= "{$k}. {$lembur->detail_pekerjaan}\n";
+                // Tampilkan tanggal juga jaga-jaga jika lembur melewati tengah malam
+                $message .= "   *Waktu Mulai:* " . $mulai->format('d F, H:i') . " WIB\n";
+                $message .= "   *Waktu Selesai:* " . $selesai->format('d F, H:i') . " WIB\n";
+                $message .= "   *Durasi:* " . trim($teksDurasi) . "\n";
+                $k++;
+            }
+        }
+
+        // ==========================================
+        // 3. BLOK CATATAN MANAGER & PENUTUP
+        // ==========================================
         if ($report->catatan_manager) {
-            $message .= "\n💬 *Manager Note:* _" . $report->catatan_manager . "_\n";
+            $message .= "\n*Manager Note:* _" . $report->catatan_manager . "_\n";
         }
 
         $message .= "\n━━━━━━━━━━━━━━━━━━\n";

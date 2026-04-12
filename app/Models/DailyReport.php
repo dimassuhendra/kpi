@@ -40,6 +40,12 @@ class DailyReport extends Model
         return $this->belongsTo(Shift::class, 'shift_id');
     }
 
+    // Relasi ke tabel lembur
+    public function lemburReport()
+    {
+        return $this->hasMany(LemburReport::class, 'daily_report_id');
+    }
+
     protected $casts = [
         'tanggal' => 'date',
     ];
