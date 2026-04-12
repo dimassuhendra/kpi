@@ -171,60 +171,78 @@
             </div>
 
             {{-- ========================================== --}}
-            {{-- TAB 3: FORM NILAI KUIS                     --}}
+            {{-- TAB 3: RIWAYAT NILAI KUIS                  --}}
             {{-- ========================================== --}}
             <div x-show="activeTab === 'kuis'" x-cloak style="display: none;" x-transition.opacity.duration.500ms
                 class="mb-20">
-                <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
-                    <h2
-                        class="text-lg font-black text-slate-800 uppercase tracking-widest mb-1 border-l-4 border-emerald-500 pl-3">
-                        Input Nilai <span class="text-emerald-500">Asesmen Kuis</span></h2>
-                    <p class="text-xs text-slate-500 mb-6 pl-4">Masukkan rekap nilai jika Anda baru saja menyelesaikan kuis
-                        teknikal bulanan.</p>
-                    <form action="{{ route('staff.assessment.store') }}" method="POST" enctype="multipart/form-data"
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pl-4">
-                        @csrf
-                        <div>
-                            <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Bulan <span
-                                    class="text-rose-500">*</span></label>
-                            <select name="periode_bulan" required
-                                class="w-full border border-slate-300 rounded-xl px-4 py-3 bg-slate-50 outline-none focus:border-emerald-500 text-sm font-bold text-slate-700">
-                                @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}" {{ date('n') == $i ? 'selected' : '' }}>
-                                        {{ date('F', mktime(0, 0, 0, $i, 1)) }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Tahun <span
-                                    class="text-rose-500">*</span></label>
-                            <input type="number" name="periode_tahun" required value="{{ date('Y') }}"
-                                class="w-full border border-slate-300 rounded-xl px-4 py-3 bg-slate-50 outline-none focus:border-emerald-500 text-sm font-bold text-slate-700">
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Jumlah Soal <span
-                                    class="text-rose-500">*</span></label>
-                            <input type="number" name="jumlah_soal" required min="1" placeholder="Contoh: 50"
-                                class="w-full border border-slate-300 rounded-xl px-4 py-3 bg-slate-50 outline-none focus:border-emerald-500 text-sm font-bold text-slate-700">
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Jumlah Benar <span
-                                    class="text-rose-500">*</span></label>
-                            <input type="number" name="jumlah_benar" required min="0" placeholder="Contoh: 45"
-                                class="w-full border border-slate-300 rounded-xl px-4 py-3 bg-slate-50 outline-none focus:border-emerald-500 text-sm font-bold text-slate-700">
-                        </div>
-                        <div class="lg:col-span-4">
-                            <label class="text-[10px] uppercase text-slate-400 font-black mb-2 block">Bukti Screenshot Kuis
-                                <span class="text-rose-500">*</span></label>
-                            <input type="file" name="bukti_kuis" accept="image/*" required
-                                class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-100 file:text-emerald-700 cursor-pointer">
-                        </div>
-                        <div class="lg:col-span-4 text-right mt-2 border-t pt-4">
-                            <button type="submit"
-                                class="bg-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-emerald-600 transition">Simpan
-                                Nilai Kuis</button>
-                        </div>
-                    </form>
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                        <h2
+                            class="text-lg font-black text-slate-800 uppercase tracking-widest mb-1 border-l-4 border-emerald-500 pl-3">
+                            Riwayat Nilai <span class="text-emerald-500">Asesmen Kuis</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 pl-4">Daftar nilai kuis yang telah diinput oleh Manager.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400">
+                                    <th class="p-4 font-black text-center">Periode</th>
+                                    <th class="p-4 font-black text-center">Skor Global</th>
+                                    <th class="p-4 font-black text-center">Bukti SS</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                @forelse($myAssessments as $quiz)
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                        <td class="p-4 text-center">
+                                            <span
+                                                class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
+                                                {{ date('F', mktime(0, 0, 0, $quiz->periode_bulan, 1)) }}
+                                                {{ $quiz->periode_tahun }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            @php
+                                                $percent =
+                                                    $quiz->jumlah_soal > 0
+                                                        ? round(($quiz->jumlah_benar / $quiz->jumlah_soal) * 100)
+                                                        : 0;
+                                                $color =
+                                                    $percent >= 80
+                                                        ? 'text-emerald-500'
+                                                        : ($percent >= 60
+                                                            ? 'text-amber-500'
+                                                            : 'text-rose-500');
+                                            @endphp
+                                            <p class="font-black text-xl {{ $color }}">{{ $percent }}%</p>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Benar
+                                                {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            @if ($quiz->bukti_kuis)
+                                                <a href="{{ asset('storage/' . $quiz->bukti_kuis) }}" target="_blank"
+                                                    class="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-xl transition tooltip"
+                                                    title="Lihat Bukti Kuis">
+                                                    <i class="fas fa-image fa-lg"></i>
+                                                </a>
+                                            @else
+                                                <span class="text-[10px] text-slate-400 italic">Tidak ada bukti</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3"
+                                            class="p-8 text-center text-slate-400 text-sm italic border-t border-slate-100">
+                                            Belum ada data kuis yang dinilai oleh manager.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         @endif

@@ -34,7 +34,49 @@ class ValidationController extends Controller
             ->limit(50)
             ->get();
 
-        return view('manager.validation', compact('pendingReports', 'feedbacks', 'assessments'));
+        // --- TAMBAHAN: Ambil Daftar User Khusus Divisi TAC untuk Form Input Kuis ---
+        $tacUsers = User::whereHas('divisi', function ($q) {
+            $q->where('nama_divisi', 'like', '%TAC%');
+        })->orderBy('nama_lengkap', 'asc')->get();
+
+        return view('manager.validation', compact(
+            'pendingReports',
+            'feedbacks',
+            'assessments',
+            'tacUsers'
+        ));
+    }
+
+    public function storeAssessment(Request $request)
+    {
+        $request->validate([
+            'user_id'       => 'required|exists:users,id',
+            'periode_bulan' => 'required|integer|min:1|max:12',
+            'periode_tahun' => 'required|integer|min:2000',
+            'jumlah_soal'   => 'required|integer|min:1',
+            'jumlah_benar'  => 'required|integer|min:0|lte:jumlah_soal',
+            'bukti_kuis'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        try {
+            $path = null;
+            if ($request->hasFile('bukti_kuis')) {
+                $path = $request->file('bukti_kuis')->store('bukti_kuis', 'public');
+            }
+
+            TechnicalAssessment::create([
+                'user_id'       => $request->user_id,
+                'periode_bulan' => $request->periode_bulan,
+                'periode_tahun' => $request->periode_tahun,
+                'jumlah_soal'   => $request->jumlah_soal,
+                'jumlah_benar'  => $request->jumlah_benar,
+                'bukti_kuis'    => $path,
+            ]);
+
+            return redirect()->back()->with('success', 'Data kuis berhasil disimpan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan nilai: ' . $e->getMessage());
+        }
     }
 
     public function validationShow($id)

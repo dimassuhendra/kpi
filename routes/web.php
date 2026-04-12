@@ -58,6 +58,7 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::get('/validation/{id}', [ValidationController::class, 'validationShow'])->name('approval.show');
     Route::post('/manager/validation/{id}/update', [ValidationController::class, 'validationUpdate'])->name('manager.validation.update');
     Route::post('/validation/store', [ValidationController::class, 'validationStore'])->name('approval.store');
+    Route::post('/manager/validation/assessment', [ValidationController::class, 'storeAssessment'])->name('assessment.store');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/preview', [ReportController::class, 'preview'])->name('reports.preview');

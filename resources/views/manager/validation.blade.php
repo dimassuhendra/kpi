@@ -23,8 +23,7 @@
                         'text-secondary font-bold hover:text-slate-700'"
                     class="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest transition-all duration-300">
                     <i class="fas fa-clipboard-check mr-2"></i> Pending
-                    <span
-                        class="ml-2 bg-accent text-primary py-0.5 px-2 rounded-md">{{ $pendingReports->count() }}</span>
+                    <span class="ml-2 bg-accent text-primary py-0.5 px-2 rounded-md">{{ $pendingReports->count() }}</span>
                 </button>
                 <button type="button" @click="activeTab = 'rating'"
                     :class="activeTab === 'rating' ? 'bg-white text-amber-500 shadow-md font-black' :
@@ -179,10 +178,103 @@
         </div>
 
         {{-- ========================================== --}}
-        {{-- TAB 3: LOG NILAI KUIS / ASESMEN            --}}
+        {{-- TAB 3: INPUT & LOG NILAI KUIS / ASESMEN    --}}
         {{-- ========================================== --}}
-        <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms>
+        <div x-show="activeTab === 'kuis'" style="display: none;" x-transition.opacity.duration.500ms class="space-y-6">
+
+            {{-- FORM INPUT KUIS BARU --}}
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                    <h3 class="font-header font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-indigo-500"></i> Input Nilai Kuis Baru
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                        Masukkan data asesmen teknis untuk Staff TAC
+                    </p>
+                </div>
+
+                <form action="{{ route('manager.assessment.store') }}" method="POST" enctype="multipart/form-data"
+                    class="p-6">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {{-- Pilih Staff TAC --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih
+                                Staff TAC</label>
+                            <select name="user_id" required
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-colors">
+                                <option value="" disabled selected>-- Pilih Staff --</option>
+                                @foreach ($tacUsers as $user)
+                                    <option value="{{ $user->id }}">{{ $user->nama_lengkap }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Periode Bulan --}}
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Periode
+                                Bulan</label>
+                            <select name="periode_bulan" required
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3">
+                                @for ($m = 1; $m <= 12; ++$m)
+                                    <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
+                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        {{-- Periode Tahun --}}
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Periode
+                                Tahun</label>
+                            <input type="number" name="periode_tahun" value="{{ date('Y') }}" required
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3">
+                        </div>
+
+                        {{-- Jumlah Soal --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total
+                                Soal</label>
+                            <input type="number" name="jumlah_soal" min="1" required placeholder="Contoh: 50"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3">
+                        </div>
+
+                        {{-- Jumlah Benar --}}
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Jumlah
+                                Jawaban Benar</label>
+                            <input type="number" name="jumlah_benar" min="0" required placeholder="Contoh: 45"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3">
+                        </div>
+
+                        {{-- Upload Bukti Screenshot --}}
+                        <div class="md:col-span-2">
+                            <label
+                                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Upload
+                                Bukti Screenshot (Opsional)</label>
+                            <input type="file" name="bukti_kuis" accept="image/*"
+                                class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 transition-colors cursor-pointer border border-slate-200 rounded-xl bg-slate-50">
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                            class="bg-indigo-500 hover:bg-indigo-600 text-white font-black text-xs uppercase tracking-widest py-3 px-6 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                            <i class="fas fa-save"></i> Simpan Nilai Kuis
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- TABEL RIWAYAT LOG KUIS --}}
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                    <h3 class="font-header font-black text-slate-800 uppercase tracking-tight">Riwayat Log Kuis</h3>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -225,17 +317,21 @@
                                             {{ $quiz->jumlah_benar }}/{{ $quiz->jumlah_soal }}</p>
                                     </td>
                                     <td class="p-4 text-center">
-                                        <button type="button"
-                                            onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')"
-                                            class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition tooltip"
-                                            title="Lihat Bukti Kuis">
-                                            <i class="fas fa-image fa-lg"></i>
-                                        </button>
+                                        @if ($quiz->bukti_kuis)
+                                            <button type="button"
+                                                onclick="openImageModal('{{ asset('storage/' . $quiz->bukti_kuis) }}')"
+                                                class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-xl transition tooltip"
+                                                title="Lihat Bukti Kuis">
+                                                <i class="fas fa-image fa-lg"></i>
+                                            </button>
+                                        @else
+                                            <span class="text-[10px] text-slate-400 italic">Tidak ada bukti</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="p-8 text-center text-slate-400 text-sm italic">Belum ada
+                                    <td colspan="4" class="p-8 text-center text-slate-400 text-sm italic">Belum ada
                                         data kuis masuk.</td>
                                 </tr>
                             @endforelse
@@ -244,7 +340,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     {{-- MODAL PREVIEW GAMBAR (KODE LAMA ANDA) --}}

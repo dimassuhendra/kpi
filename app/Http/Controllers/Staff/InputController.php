@@ -34,6 +34,11 @@ class InputController extends Controller
         $isRejected = $report && $report->status == 'rejected';
         $catatanManager = $report->catatan_manager ?? null;
 
+        $myAssessments = TechnicalAssessment::where('user_id', $user->id)
+            ->orderBy('periode_tahun', 'desc')
+            ->orderBy('periode_bulan', 'desc')
+            ->get();
+
         // Inisialisasi struktur default untuk Alpine.js
         $formattedRows = [
             'network' => [],
@@ -102,7 +107,7 @@ class InputController extends Controller
             }
         }
 
-        return view('staff.input_kpi', compact('variabelKpis', 'formattedRows', 'isRejected', 'catatanManager', 'report', 'shifts'));
+        return view('staff.input_kpi', compact('variabelKpis', 'formattedRows', 'isRejected', 'catatanManager', 'report', 'shifts', 'myAssessments'));
     }
 
     public function store(Request $request)
