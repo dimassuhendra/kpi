@@ -12,6 +12,23 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '4.12',
+                'date' => '12 April 2026',
+                'title' => 'Modul Lembur & Transparansi Kuis Teknikal',
+                'description' => 'Pembaruan ini menghadirkan fitur manajemen lembur yang terintegrasi penuh, serta transparansi penilaian kuis teknikal antara manajer dan staf.',
+                'changes' => [
+                    'Manager: Penilaian Kuis Teknikal (TAC) kini diinput langsung oleh Manager melalui sistem.',
+                    'Manager: Dashboard baru dilengkapi dengan Overtime Analytics (Grafik Jam, Proporsi, & Frekuensi Lembur per Staf Infra).',
+                    'Manager: Dapat melakukan validasi laporan lembur ekstra dengan rincian durasi dan bukti dokumen.',
+                    'Manager: Laporan Excel otomatis mengakomodasi rekapitulasi data aktivitas lembur divisi infra.',
+                    'Staff  : Dapat menambahkan input pekerjaan ekstra/lembur setelah jam shift selesai beserta bukti fotonya.',
+                    'Staff  : Halaman Log Aktivitas kini menampilkan riwayat Kuis Teknikal secara transparan beserta skor kelulusan.',
+                    'Staff  : Tampilan riwayat lembur kini terintegrasi langsung di bawah daftar aktivitas harian pada halaman Log.',
+                    'System : Kalkulasi otomatis durasi lembur (Jam & Menit) berdasarkan waktu mulai dan selesai pekerjaan ekstra.'
+                ],
+                'type' => 'Major'
+            ],
+            [
                 'version' => '1.3.26',
                 'date' => '26 Maret 2026',
                 'title' => 'Laporan Excel 4 Tab & Dashboard Analitik Baru',

@@ -310,7 +310,7 @@
         updateTime();
 
         // System Update Check
-        const SYSTEM_VERSION = "1.3.26";
+        const SYSTEM_VERSION = "4.12";
 
         function checkSystemUpdate() {
             const lastSeenVersion = localStorage.getItem('last_seen_version');
