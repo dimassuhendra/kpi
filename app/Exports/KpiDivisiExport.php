@@ -15,8 +15,17 @@ class KpiDivisiExport implements WithMultipleSheets
 
     public function sheets(): array
     {
-        // Kita menggunakan ulang Sheet yang sama agar rapi,
-        // karena logic filter divisinya akan kita tambahkan di dalam masing-masing sheet.
+        // Tangkap divisi_id yang dikirim Controller
+        $divisiId = $this->filters['divisi_id'] ?? 1;
+
+        // JIKA DIVISI INFRA (2) -> Panggil sheet gabungan Infra
+        if ($divisiId == 2) {
+            return [
+                new Sheets\InfraActivitySheet($this->filters),
+            ];
+        }
+
+        // DEFAULT: DIVISI TAC -> Panggil 5 Sheet TAC
         return [
             new Sheets\KpiSummarySheet($this->filters),
             new Sheets\RawActivitySheet($this->filters),

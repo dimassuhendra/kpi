@@ -23,54 +23,51 @@ class InfraActivitySheet implements FromView, WithTitle, WithColumnWidths, WithS
 
     public function view(): View
     {
-        // 1. Query Kegiatan Reguler
         $query = KegiatanDetail::with(['dailyReport.user.divisi']);
-        // 2. Query Kegiatan Lembur
         $lemburQuery = LemburReport::with(['dailyReport.user.divisi']);
 
-        if (!empty($this->filters['start_date']) && !empty($this->filters['end_date'])) {
+        // CEK: Jika user_id KOSONG (berarti ini export per divisi), ambil SEMUA user infra
+        if (empty($this->filters['user_id'])) {
+            $query->whereHas('dailyReport.user', function ($q) {
+                $q->where('divisi_id', 2);
+            });
+            $lemburQuery->whereHas('dailyReport.user', function ($q) {
+                $q->where('divisi_id', 2);
+            });
+            $namaLengkap = 'Seluruh Anggota Divisi Infrastruktur';
+        }
+        // JIKA ADA user_id (berarti ini export per user biasa)
+        else {
             $query->whereHas('dailyReport', function ($q) {
-                $q->whereBetween('tanggal', [$this->filters['start_date'], $this->filters['end_date']]);
+                $q->where('user_id', $this->filters['user_id']);
             });
             $lemburQuery->whereHas('dailyReport', function ($q) {
-                $q->whereBetween('tanggal', [$this->filters['start_date'], $this->filters['end_date']]);
+                $q->where('user_id', $this->filters['user_id']);
             });
+            $user = User::find($this->filters['user_id']);
+            $namaLengkap = $user ? $user->nama_lengkap : 'User Infra';
         }
 
-        if (!empty($this->filters['user_id'])) {
-            $query->whereHas('dailyReport', function ($q) {
-                $q->where('user_id', $this->filters['user_id']);
+        // Filter Tanggal
+        if (!empty($this->filters['start_date']) && !empty($this->filters['end_date'])) {
+            $dateRange = [$this->filters['start_date'], $this->filters['end_date']];
+            $query->whereHas('dailyReport', function ($q) use ($dateRange) {
+                $q->whereBetween('tanggal', $dateRange);
             });
-            $lemburQuery->whereHas('dailyReport', function ($q) {
-                $q->where('user_id', $this->filters['user_id']);
+            $lemburQuery->whereHas('dailyReport', function ($q) use ($dateRange) {
+                $q->whereBetween('tanggal', $dateRange);
             });
         }
 
         $kegiatans = $query->get();
         $lemburs = $lemburQuery->get();
 
-        // 3. Menentukan Nama User
-        $namaLengkap = 'Semua User Infra';
-        if (!empty($this->filters['user_id'])) {
-            $user = User::find($this->filters['user_id']);
-            if ($user) $namaLengkap = $user->nama_lengkap;
-        } elseif ($kegiatans->isNotEmpty()) {
-            $namaLengkap = $kegiatans->first()->dailyReport->user->nama_lengkap;
-        } elseif ($lemburs->isNotEmpty()) {
-            $namaLengkap = $lemburs->first()->dailyReport->user->nama_lengkap;
-        }
-
-        $divisi = 'Infrastruktur';
-        $periodeStart = $this->filters['start_date'] ?? '-';
-        $periodeEnd = $this->filters['end_date'] ?? '-';
-        $periode = $periodeStart . ' s/d ' . $periodeEnd;
-
         return view('manager.exports.infra_activity', [
             'kegiatans' => $kegiatans,
-            'lemburs'   => $lemburs, // <-- Lempar data lembur ke Blade
+            'lemburs'   => $lemburs,
             'nama'      => $namaLengkap,
-            'divisi'    => $divisi,
-            'periode'   => $periode
+            'divisi'    => 'Infrastruktur',
+            'periode'   => ($this->filters['start_date'] ?? '-') . ' s/d ' . ($this->filters['end_date'] ?? '-')
         ]);
     }
 
@@ -88,10 +85,11 @@ class InfraActivitySheet implements FromView, WithTitle, WithColumnWidths, WithS
         return [
             'A' => 5,   // No
             'B' => 15,  // Tanggal
-            'C' => 20,  // Kategori
-            'D' => 35,  // Judul Kegiatan
-            'E' => 55,  // Deskripsi Kegiatan (Paling Lebar)
-            'F' => 35,  // Bukti Dokumentasi
+            'C' => 25,  // Nama Staff (Kolom Baru)
+            'D' => 20,  // Kategori
+            'E' => 35,  // Judul Kegiatan
+            'F' => 55,  // Deskripsi Kegiatan
+            'G' => 35,  // Bukti Dokumentasi
         ];
     }
 
@@ -100,13 +98,13 @@ class InfraActivitySheet implements FromView, WithTitle, WithColumnWidths, WithS
     // ==========================================
     public function styles(Worksheet $sheet)
     {
-        // Teks rata atas untuk semua cell A sampai F
-        $sheet->getStyle('A:F')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+        // Teks rata atas untuk semua cell A sampai G
+        $sheet->getStyle('A:G')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
 
-        // Wrap text untuk judul, deskripsi, dan dokumentasi
-        $sheet->getStyle('D')->getAlignment()->setWrapText(true);
+        // Wrap text untuk kolom teks panjang (sekarang bergeser ke E, F, G)
         $sheet->getStyle('E')->getAlignment()->setWrapText(true);
         $sheet->getStyle('F')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('G')->getAlignment()->setWrapText(true);
 
         return [];
     }

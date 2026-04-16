@@ -65,22 +65,30 @@ class ReportController extends Controller
     public function exportDivisi(Request $request)
     {
         $request->validate([
-            'divisi'     => 'required|string',
+            'divisi'     => 'required',
             'start_date' => 'nullable|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
         ]);
 
+        // Tangkap dari Blade (nilainya berupa string seperti "Infrastruktur" atau "TAC")
+        $namaDivisiDariBlade = $request->divisi;
+
+        // Ubah string menjadi ID. Jika mengandung kata "infra" (huruf besar/kecil bebas), set ID = 2
+        $divisiId = 1; // Default TAC
+        if (stripos($namaDivisiDariBlade, 'infra') !== false) {
+            $divisiId = 2; // Ini kuncinya!
+        }
+
         $filters = [
-            'divisi_name' => $request->divisi,
+            'divisi_id'   => $divisiId,
+            'divisi_name' => $namaDivisiDariBlade,
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
         ];
 
-        // Format nama file: Report_Divisi_TAC_20260214_102030.xlsx
-        $safeDivisiName = str_replace([' ', '/'], '_', $request->divisi);
+        $safeDivisiName = str_replace([' ', '/'], '_', $namaDivisiDariBlade);
         $fileName = 'Report_Divisi_' . $safeDivisiName . '_' . now()->format('Ymd_His') . '.xlsx';
 
-        // Pastikan Anda membuat class KpiDivisiExport atau menyesuaikan KpiExport yang sudah ada
         return Excel::download(new \App\Exports\KpiDivisiExport($filters), $fileName);
     }
 
