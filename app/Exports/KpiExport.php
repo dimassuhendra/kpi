@@ -47,7 +47,7 @@ class KpiExport implements WithMultipleSheets
             ];
         }
         // Jika divisi BUKAN 1 (TAC) dan BUKAN 2 (Infra) -> Berlaku untuk BOT, Purchasing, dsb.
-        else if ($divisiId == 6 || $divisiId == 8) {
+        else if ($divisiId == 4 || $divisiId == 5) {
             return [
                 new Sheets\GeneralActivitySheet($this->filters),  // Sheet Simple BOT/Purchasing
             ];
