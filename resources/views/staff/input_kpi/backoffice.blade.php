@@ -1,6 +1,6 @@
 <div class="mb-10">
-    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
-        <i class="fas fa-briefcase mr-3 text-amber-500"></i>
+    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center"> <i
+            class="fas fa-briefcase mr-3 text-amber-500"></i>
         {{ auth()->user()->divisi->nama_divisi ?? 'BOT' }} Daily Activities
     </h2>
     <div class="space-y-4">
@@ -19,10 +19,10 @@
                             required>
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Detail Activity</label>
+                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1">Detail Activity (Opsional)</label>
                         <textarea :name="'bo_activity[' + index + '][deskripsi]'" x-model="bo.deskripsi" rows="3"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-amber-500 resize-none transition"
-                            placeholder="Jelaskan secara detail..."></textarea>
+                            placeholder="Jelaskan secara detail (Opsional)..."></textarea>
                     </div>
                 </div>
             </div>

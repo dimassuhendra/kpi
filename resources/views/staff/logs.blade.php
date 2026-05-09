@@ -255,11 +255,30 @@
                                     @endif
 
                                     {{-- LIST KEGIATAN --}}
+                                    {{-- LIST KEGIATAN --}}
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         @foreach ($log->details as $detail)
+                                            @php
+                                                $judul = $detail->nama_kegiatan;
+                                                $deskripsi = $detail->deskripsi_kegiatan;
+
+                                                if (empty($judul) && !empty($deskripsi)) {
+                                                    if (strpos($deskripsi, ': ') !== false) {
+                                                        $parts = explode(': ', $deskripsi, 2);
+                                                        $judul = $parts[0];
+                                                        $deskripsi = trim($parts[1]);
+                                                    } else {
+                                                        $judul = $deskripsi;
+                                                        $deskripsi = '';
+                                                    }
+                                                }
+                                                if (trim($deskripsi) === '-') {
+                                                    $deskripsi = '';
+                                                }
+                                            @endphp
+
                                             <div
                                                 class="bg-white p-4 rounded-xl border border-l-4 {{ $detail->kategori == 'Network' ? 'border-l-amber-500' : 'border-l-emerald-500' }} border-slate-200 shadow-sm flex flex-col justify-between">
-
                                                 <div>
                                                     <div class="flex justify-between items-start mb-2">
                                                         <span
@@ -268,14 +287,11 @@
                                                         </span>
                                                         @if ($log->status == 'pending' || $log->status == 'rejected')
                                                             <div class="flex items-center gap-3">
-                                                                {{-- Tombol Edit --}}
                                                                 <button
                                                                     @click="editModal = true; activeCase = {{ json_encode($detail) }}"
                                                                     class="text-amber-500 hover:text-amber-700 text-xs font-bold">
                                                                     <i class="fas fa-pen"></i> Edit
                                                                 </button>
-
-                                                                {{-- Tombol Hapus --}}
                                                                 <form
                                                                     action="{{ route('staff.kpi.case-destroy', $detail->id) }}"
                                                                     method="POST" class="inline"
@@ -291,12 +307,21 @@
                                                         @endif
                                                     </div>
 
-                                                    <h4 class="text-slate-800 text-sm font-bold mb-1 leading-relaxed">
-                                                        {{ $detail->deskripsi_kegiatan }}
+                                                    <h4 class="text-sm font-bold text-slate-800 leading-snug">
+                                                        {{ $judul ?? '-' }}
                                                     </h4>
 
+                                                    @if (!empty($deskripsi))
+                                                        <div
+                                                            class="mt-3 p-3 bg-blue-50/50 backdrop-blur-sm rounded-xl border border-blue-100/50">
+                                                            <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                                                {{ $deskripsi }}
+                                                            </p>
+                                                        </div>
+                                                    @endif
+
                                                     @if ($detail->nomor_tiket)
-                                                        <p class="text-[10px] text-indigo-600 font-bold mb-2"><i
+                                                        <p class="text-[10px] text-indigo-600 font-bold mb-2 mt-2"><i
                                                                 class="fas fa-ticket-alt mr-1"></i>
                                                             {{ $detail->nomor_tiket }}
                                                         </p>
@@ -320,9 +345,9 @@
                                                                 @if ($detail->bukti_deteksi_dini)
                                                                     <button type="button"
                                                                         onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
-                                                                        class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block"><i
-                                                                            class="fas fa-search"></i> Lihat Bukti
-                                                                        Deteksi</button>
+                                                                        class="text-[10px] text-rose-500 font-bold hover:underline mb-2 block">
+                                                                        <i class="fas fa-search"></i> Lihat Bukti Deteksi
+                                                                    </button>
                                                                 @endif
                                                             @else
                                                                 <div class="flex justify-between items-center mb-1">
@@ -335,9 +360,9 @@
                                                                 @if ($detail->bukti_respon_time)
                                                                     <button type="button"
                                                                         onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
-                                                                        class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block"><i
-                                                                            class="fas fa-image"></i> Lihat Bukti
-                                                                        Respons</button>
+                                                                        class="text-[10px] text-amber-600 font-bold hover:underline mb-2 block">
+                                                                        <i class="fas fa-image"></i> Lihat Bukti Respons
+                                                                    </button>
                                                                 @endif
                                                             @endif
 
@@ -377,7 +402,6 @@
                                                         </button>
                                                     </div>
                                                 @endif
-
                                             </div>
                                         @endforeach
                                     </div>
@@ -500,12 +524,30 @@
                                 @endif
 
                                 @foreach ($log->details as $detail)
+                                    @php
+                                        $judul = $detail->nama_kegiatan;
+                                        $deskripsi = $detail->deskripsi_kegiatan;
+
+                                        if (empty($judul) && !empty($deskripsi)) {
+                                            if (strpos($deskripsi, ': ') !== false) {
+                                                $parts = explode(': ', $deskripsi, 2);
+                                                $judul = $parts[0];
+                                                $deskripsi = trim($parts[1]);
+                                            } else {
+                                                $judul = $deskripsi;
+                                                $deskripsi = '';
+                                            }
+                                        }
+                                        if (trim($deskripsi) === '-') {
+                                            $deskripsi = '';
+                                        }
+                                    @endphp
+
                                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                         <div class="flex justify-between items-start mb-2">
                                             <span
                                                 class="text-[9px] text-slate-500 font-bold uppercase">{{ $detail->kategori ?? 'Aktivitas' }}</span>
 
-                                            {{-- Aksi Edit & Hapus Mobile --}}
                                             @if ($log->status == 'pending' || $log->status == 'rejected')
                                                 <div class="flex items-center gap-3">
                                                     <button
@@ -526,8 +568,17 @@
                                                 </div>
                                             @endif
                                         </div>
-                                        <h4 class="text-slate-800 text-sm font-bold mb-2">
-                                            {{ $detail->deskripsi_kegiatan }}</h4>
+
+                                        <h4 class="text-slate-800 text-sm font-bold mb-1">
+                                            {{ $judul ?? '-' }}
+                                        </h4>
+
+                                        @if (!empty($deskripsi))
+                                            <p
+                                                class="text-[11px] text-slate-500 bg-white p-2 rounded-lg border border-slate-100 mb-2">
+                                                {{ $deskripsi }}
+                                            </p>
+                                        @endif
 
                                         {{-- KHUSUS TAC MOBILE --}}
                                         @if (
@@ -537,15 +588,36 @@
                                             <div class="text-[10px] space-y-1 text-slate-500">
                                                 @if ($detail->temuan_sendiri)
                                                     <p>Tipe: <span class="font-bold text-rose-500">Deteksi Dini</span></p>
+                                                    @if ($detail->bukti_deteksi_dini)
+                                                        <button type="button"
+                                                            onclick="openImageModal('{{ asset('storage/' . $detail->bukti_deteksi_dini) }}')"
+                                                            class="text-rose-500 font-bold hover:underline mb-1">
+                                                            <i class="fas fa-search"></i> Lihat Bukti Deteksi
+                                                        </button>
+                                                    @endif
                                                 @else
                                                     <p>Respons: <span
                                                             class="font-bold text-amber-600">{{ $detail->waktu_respon_menit }}
                                                             Menit</span></p>
+                                                    @if ($detail->bukti_respon_time)
+                                                        <button type="button"
+                                                            onclick="openImageModal('{{ asset('storage/' . $detail->bukti_respon_time) }}')"
+                                                            class="text-amber-600 font-bold hover:underline mb-1">
+                                                            <i class="fas fa-image"></i> Lihat Bukti Respons
+                                                        </button>
+                                                    @endif
                                                 @endif
                                                 <p>Penyelesaian: <span
                                                         class="font-bold text-slate-700">{{ $detail->is_mandiri ? 'Mandiri' : 'Eskalasi (' . $detail->pic_name . ')' }}</span>
                                                 </p>
                                             </div>
+                                        @endif
+
+                                        {{-- DETAIL GPS KHUSUS TAC MOBILE --}}
+                                        @if ($log->user->divisi_id == 1 && $detail->kategori == 'GPS' && $detail->value_raw !== '0')
+                                            <p class="text-[10px] text-slate-500 font-bold mt-1">Total Kendaraan:
+                                                <span class="text-slate-800">{{ $detail->value_raw }}</span>
+                                            </p>
                                         @endif
 
                                         {{-- BUKTI FOTO INFRA MOBILE --}}

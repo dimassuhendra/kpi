@@ -52,7 +52,7 @@
                     <button type="button" @click="addBoActivity()"
                         class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center">
                         <i class="fas fa-edit mr-2"></i> + Tambah Kegiatan
-                        {{ auth()->user()->divisi_id == 6 ? 'Purchasing' : 'BOT' }}
+                        {{ auth()->user()->divisi_id == 8 ? 'Purchasing' : 'BOT' }}
                     </button>
                 @endif
             </div>

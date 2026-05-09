@@ -10,8 +10,7 @@
 
                 <div class="flex-1 flex flex-col items-center justify-center w-full mt-4 lg:mt-0">
                     <div class="w-40 h-40 lg:w-64 lg:h-64 flex items-center justify-center rounded-2xl mb-4 lg:mb-8">
-                        <img src="{{ asset('img/logo-new.png') }}" alt="Your Logo" class="max-w-full h-auto"
-                            onerror="this.src='https://placehold.co/400x400/09637E/EBF4F6?text=YOUR+LOGO'">
+                        <img src="{{ asset('img/logo-new.png') }}" alt="Your Logo" class="max-w-full h-auto">
                     </div>
                     <h2 class="text-2xl lg:text-3xl text-primary font-header text-center">Sistem Monitoring KPI</h2>
                     <p class="text-secondary opacity-80 font-body text-sm lg:text-base mb-8">TAC & Infrastruktur IT</p>

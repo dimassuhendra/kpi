@@ -136,65 +136,81 @@ class ValidationController extends Controller
         $token = config('services.telegram.bot_token');
         $chatId = config('services.telegram.chat_id');
 
-        $namaDivisi = $report->user->divisi->nama_divisi;
+        $namaDivisi = $report->user->divisi->nama_divisi ?? 'General';
+        \Carbon\Carbon::setLocale('id');
 
-        $message = "*BERIKUT LAPORAN ACTIVITY PADA HARI INI*\n";
-        $message .= "━━━━━━━━━━━━━━━━━━\n";
+        // Header yang formal dan bersih
+        $message = "*LAPORAN AKTIVITAS HARIAN*\n";
+        $message .= "━━━━━━━━━━━━━━━━━━━━\n";
+
+        // Identitas
         $message .= "*Nama:* " . $report->user->nama_lengkap . "\n";
-        $message .= "*Divisi:* " . $namaDivisi . "\n";
+        $message .= "*Divisi:* " . strtoupper($namaDivisi) . "\n";
 
-        // Tambahan info Shift di Telegram jika TAC
         if ($report->shift) {
             $message .= "*Shift:* " . $report->shift->nama_shift . "\n";
         }
 
-        // Pastikan locale diatur ke Indonesia
-        \Carbon\Carbon::setLocale('id');
         $message .= "*Tanggal:* " . $report->tanggal->timezone('Asia/Jakarta')->translatedFormat('d F Y') . "\n";
-        $message .= "*Disubmit pada:* " . $report->created_at->timezone('Asia/Jakarta')->translatedFormat('l, d F Y \p\u\k\u\l H:i') . "\n";
-        $message .= "━━━━━━━━━━━━━━━━━━\n\n";
+        $message .= "━━━━━━━━━━━━━━━━━━━━\n\n";
+
+        $namaDivisiLower = strtolower($namaDivisi);
+        $isInfra = str_contains($namaDivisiLower, 'infra');
+        $isTac = str_contains($namaDivisiLower, 'tac');
 
         // ==========================================
         // 1. BLOK AKTIVITAS UTAMA (HARIAN)
         // ==========================================
-        if (str_contains(strtolower($namaDivisi), 'infrastructure') || str_contains(strtolower($namaDivisi), 'infra')) {
+        if ($isInfra) {
+            // --- LOGIKA KHUSUS INFRASTRUCTURE ---
             $mainWorks = $report->details->whereNotIn('kategori', ['Lainnya'])->whereNotNull('kategori');
             $otherWorks = $report->details->whereIn('kategori', ['Lainnya']);
 
-            $counter = 1;
-
             if ($mainWorks->isNotEmpty()) {
                 $message .= "*Technical Activities:*\n";
+                $counter = 1;
                 foreach ($mainWorks as $detail) {
-                    $label = "*{$detail->kategori}*: ";
-                    $message .= "{$counter}. {$label}{$detail->deskripsi_kegiatan}\n";
+                    $judul = $detail->nama_kegiatan ?? '';
+                    $deskripsi = trim($detail->deskripsi_kegiatan, " :-");
+                    $teksKegiatan = !empty($deskripsi) ? "{$judul} - {$deskripsi}" : $judul;
+
+                    $message .= "{$counter}. *{$detail->kategori}:* {$teksKegiatan}\n";
                     $counter++;
                 }
-            }
-
-            if ($mainWorks->isNotEmpty() && $otherWorks->isNotEmpty()) {
                 $message .= "\n";
             }
 
             if ($otherWorks->isNotEmpty()) {
                 $message .= "*General Activities:*\n";
+                $counter = 1;
                 foreach ($otherWorks as $detail) {
-                    $message .= "{$counter}. {$detail->deskripsi_kegiatan}\n";
+                    $judul = $detail->nama_kegiatan ?? '';
+                    $deskripsi = trim($detail->deskripsi_kegiatan, " :-");
+                    $teksKegiatan = (!empty($judul) && !empty($deskripsi)) ? "{$judul} - {$deskripsi}" : ($judul ?: $deskripsi);
+
+                    $message .= "{$counter}. {$teksKegiatan}\n";
                     $counter++;
                 }
+                $message .= "\n";
             }
-        } else {
+        } elseif ($isTac) {
+            // --- LOGIKA KHUSUS TAC ---
             $cases = $report->details->where('tipe_kegiatan', 'case');
             if ($cases->isNotEmpty()) {
                 $message .= "*Technical Activities:*\n";
                 $i = 1;
                 foreach ($cases as $case) {
+                    $deskripsi = trim($case->deskripsi_kegiatan, " :-");
+
                     if ($case->kategori === 'GPS') {
-                        $kendaraan = ($case->value_raw == '0' || $case->value_raw == 'ALL') ? 'ALL' : $case->value_raw;
-                        $message .= "{$i}. {$case->deskripsi_kegiatan} ({$kendaraan} Kendaraan)\n";
+                        $kendaraan = ($case->value_raw == '0' || strtoupper($case->value_raw) == 'ALL') ? 'ALL' : $case->value_raw;
+                        $message .= "{$i}. {$deskripsi} \n    └ Total: {$kendaraan} Unit\n";
                     } else {
-                        $tiketInfo = $case->nomor_tiket ? " (Nomor Tiket: {$case->nomor_tiket})" : "";
-                        $message .= "{$i}. {$case->deskripsi_kegiatan}{$tiketInfo}\n";
+                        if ($case->nomor_tiket) {
+                            $message .= "{$i}. {$deskripsi} \n    └ Tiket: {$case->nomor_tiket}\n";
+                        } else {
+                            $message .= "{$i}. {$deskripsi}\n";
+                        }
                     }
                     $i++;
                 }
@@ -206,9 +222,25 @@ class ValidationController extends Controller
                 $message .= "*General Activities:*\n";
                 $j = 1;
                 foreach ($activities as $act) {
-                    $message .= "{$j}. {$act->deskripsi_kegiatan}\n";
+                    $deskripsi = trim($act->deskripsi_kegiatan, " :-");
+                    $message .= "{$j}. {$deskripsi}\n";
                     $j++;
                 }
+                $message .= "\n";
+            }
+        } else {
+            // --- LOGIKA KHUSUS BOT, PURCHASING, BACKOFFICE ---
+            $semuaAktivitas = $report->details;
+
+            if ($semuaAktivitas->isNotEmpty()) {
+                $message .= "*Activities:*\n";
+                $counter = 1;
+                foreach ($semuaAktivitas as $act) {
+                    $deskripsi = trim($act->deskripsi_kegiatan, " :-");
+                    $message .= "{$counter}. {$deskripsi}\n";
+                    $counter++;
+                }
+                $message .= "\n";
             }
         }
 
@@ -216,67 +248,47 @@ class ValidationController extends Controller
         // 2. BLOK AKTIVITAS LEMBUR (JIKA ADA)
         // ==========================================
         if ($report->lemburReport && $report->lemburReport->isNotEmpty()) {
-            $message .= "\n*Pekerjaan Lembur:*\n";
+            $message .= "*AKTIVITAS LEMBUR:*\n";
             $k = 1;
             foreach ($report->lemburReport as $lembur) {
-                // Konversi string ke format waktu dan pastikan zona waktu sesuai
                 $mulai = \Carbon\Carbon::parse($lembur->waktu_mulai)->timezone('Asia/Jakarta');
                 $selesai = \Carbon\Carbon::parse($lembur->waktu_selesai)->timezone('Asia/Jakarta');
 
-                // 1. Dapatkan total keseluruhan menit lembur
                 $totalMenit = $mulai->diffInMinutes($selesai);
-
-                // 2. Bagi 60 dan bulatkan ke bawah untuk dapat Jam bulat (contoh 48/60 = 0)
                 $jam = floor($totalMenit / 60);
-
-                // 3. Sisa baginya adalah Menit
                 $menit = $totalMenit % 60;
 
                 $teksDurasi = '';
-
-                // Karena $jam sudah dibulatkan (pasti angka 0, 1, 2, dst)
-                if ($jam > 0) {
-                    $teksDurasi .= $jam . ' Jam ';
-                }
-
-                if ($menit > 0) {
-                    $teksDurasi .= $menit . ' Menit';
-                }
-
-                // Menghapus spasi berlebih
-                $teksDurasi = trim($teksDurasi);
-
-                if ($teksDurasi == '') {
-                    $teksDurasi = '0 Menit';
-                }
+                if ($jam > 0) $teksDurasi .= "{$jam}j ";
+                if ($menit > 0) $teksDurasi .= "{$menit}m";
+                $teksDurasi = trim($teksDurasi) ?: '0m';
 
                 $message .= "{$k}. {$lembur->detail_pekerjaan}\n";
-                // Tampilkan tanggal juga jaga-jaga jika lembur melewati tengah malam
-                $message .= "   *Waktu Mulai:* " . $mulai->format('d F, H:i') . " WIB\n";
-                $message .= "   *Waktu Selesai:* " . $selesai->format('d F, H:i') . " WIB\n";
-                $message .= "   *Durasi:* " . trim($teksDurasi) . "\n";
+                $message .= "    └ Durasi: {$mulai->format('H:i')} - {$selesai->format('H:i')} WIB ({$teksDurasi})\n";
                 $k++;
             }
+            $message .= "\n";
         }
 
         // ==========================================
         // 3. BLOK CATATAN MANAGER & PENUTUP
         // ==========================================
-        if ($report->catatan_manager) {
-            $message .= "\n*Manager Note:* _" . $report->catatan_manager . "_\n";
+        if (!empty($report->catatan_manager)) {
+            $message .= "*CATATAN MANAGER:*\n";
+            $message .= "_\"{$report->catatan_manager}\"_\n\n";
         }
 
-        $message .= "\n━━━━━━━━━━━━━━━━━━\n";
-        $message .= "Keep up the good work! 🚀";
+        $message .= "━━━━━━━━━━━━━━━━━━━━\n";
+        $message .= "_Disubmit pada: " . $report->created_at->timezone('Asia/Jakarta')->format('d/m/Y H:i') . " WIB_";
 
         try {
-            Http::withoutVerifying()->post("https://api.telegram.org/bot{$token}/sendMessage", [
+            \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $message,
                 'parse_mode' => 'Markdown',
             ]);
         } catch (\Exception $e) {
-            \Log::error("Telegram Notification Failed: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Telegram Notification Failed: " . $e->getMessage());
         }
     }
 }

@@ -338,7 +338,7 @@ class InputController extends Controller
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
                         'tipe_kegiatan'      => 'activity',
-                        'deskripsi_kegiatan' => $bo['judul'] . ': ' . ($bo['deskripsi'] ?? '-'),
+                        'deskripsi_kegiatan' => !empty($bo['deskripsi']) ? $bo['judul'] . ': ' . $bo['deskripsi'] : $bo['judul'],
                         'variabel_kpi_id'    => $vKpi ? $vKpi->id : null,
                         'value_raw'          => null,
                         'waktu_respon_menit' => null,

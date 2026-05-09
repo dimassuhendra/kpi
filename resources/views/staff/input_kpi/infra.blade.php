@@ -53,7 +53,6 @@
                     <div class="md:col-span-5">
                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Nama
                             Kegiatan</label>
-                        {{-- FIX: required diganti menjadi dinamis sesuai tab aktif --}}
                         <input type="text" :name="'infra_activity[' + index + '][nama_kegiatan]'"
                             x-model="infra.nama_kegiatan"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none focus:border-amber-500 transition"
@@ -78,11 +77,10 @@
 
                     <div class="md:col-span-12 mt-1">
                         <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Detail
-                            Pekerjaan</label>
-                        {{-- FIX: required diganti menjadi dinamis sesuai tab aktif --}}
+                            Pekerjaan (Opsional)</label>
                         <textarea :name="'infra_activity[' + index + '][deskripsi]'" x-model="infra.deskripsi" rows="3"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-amber-500 resize-none transition"
-                            placeholder="Jelaskan detail pekerjaan yang dilakukan hari ini..." :required="infraTab === 'harian'"></textarea>
+                            placeholder="Jelaskan detail pekerjaan (Opsional)..."></textarea>
                     </div>
                 </div>
             </div>

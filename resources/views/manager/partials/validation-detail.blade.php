@@ -135,20 +135,53 @@
                             </div>
                         </div>
                     @else
+                        {{-- BLOK NON-TAC (Bot, Purchasing, Infra) YANG SUDAH DIRAPIKAN SAMA SEPERTI GENERAL ACTIVITY --}}
+                        @php
+                            $judul = $case->nama_kegiatan ?? '';
+                            $deskripsi = $case->deskripsi_kegiatan ?? '';
+
+                            if (empty($judul) && !empty($deskripsi)) {
+                                if (strpos($deskripsi, ': ') !== false) {
+                                    $parts = explode(': ', $deskripsi, 2);
+                                    $judul = $parts[0];
+                                    $deskripsi = trim($parts[1]);
+                                } else {
+                                    $judul = $deskripsi;
+                                    $deskripsi = '';
+                                }
+                            }
+                            if (trim($deskripsi) === '-') {
+                                $deskripsi = '';
+                            }
+                        @endphp
+
                         <div
-                            class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500 border-slate-200 shadow-sm flex flex-col justify-between">
+                            class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
                             <div>
                                 <span
-                                    class="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-600 mb-2 inline-block">{{ $case->kategori ?? 'Aktivitas' }}</span>
-                                <p class="text-sm font-bold text-slate-800 leading-relaxed pb-2">
-                                    {{ $case->deskripsi_kegiatan }}</p>
+                                    class="text-[10px] uppercase font-black px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 mb-3 inline-block tracking-wider">
+                                    {{ $case->kategori ?? 'Aktivitas' }}
+                                </span>
+                                <h4 class="text-sm font-bold text-slate-800 leading-snug">
+                                    {{ $judul }}
+                                </h4>
+                                @if (!empty($deskripsi))
+                                    <div
+                                        class="mt-3 p-3 bg-slate-50/50 backdrop-blur-sm rounded-xl border border-slate-100">
+                                        <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                            {{ $deskripsi }}
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
-                            @if ($case->foto_dokumentasi)
-                                <div class="mt-2 pt-3 border-t border-slate-100 flex justify-start">
+
+                            @if (!empty($case->foto_dokumentasi))
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex justify-start">
                                     <button type="button"
                                         onclick="openImageModal('{{ asset('storage/' . $case->foto_dokumentasi) }}')"
-                                        class="px-4 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 font-bold text-[10px] uppercase tracking-wider transition-all flex items-center"><i
-                                            class="fas fa-image mr-1.5 text-sm"></i> Lihat Dokumentasi</button>
+                                        class="px-4 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-slate-800 font-bold text-[10px] uppercase tracking-wider transition-all duration-300 flex items-center">
+                                        <i class="fas fa-image mr-2 text-sm"></i> Lihat Dokumentasi
+                                    </button>
                                 </div>
                             @endif
                         </div>
@@ -163,11 +196,55 @@
         <div>
             <h4 class="font-bold text-slate-800 mb-3 text-xs uppercase tracking-widest"><i
                     class="fas fa-tasks text-slate-500 mr-2"></i>General / Other Activities</h4>
-            <div class="space-y-2">
+            <div class="space-y-3">
                 @foreach ($activities as $act)
+                    @php
+                        // Memperbaiki bug text $judul tidak muncul dengan mendefinisikannya di dalam loop
+                        $judul = $act->nama_kegiatan ?? '';
+                        $deskripsi = $act->deskripsi_kegiatan ?? '';
+
+                        if (empty($judul) && !empty($deskripsi)) {
+                            if (strpos($deskripsi, ': ') !== false) {
+                                $parts = explode(': ', $deskripsi, 2);
+                                $judul = $parts[0];
+                                $deskripsi = trim($parts[1]);
+                            } else {
+                                $judul = $deskripsi;
+                                $deskripsi = '';
+                            }
+                        }
+                        if (trim($deskripsi) === '-') {
+                            $deskripsi = '';
+                        }
+                    @endphp
                     <div
-                        class="bg-white p-3 rounded-xl border border-l-4 border-l-slate-400 border-slate-200 shadow-sm">
-                        <p class="text-sm font-bold text-slate-700">{{ $act->deskripsi_kegiatan }}</p>
+                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                        <div>
+                            <span
+                                class="text-[10px] uppercase font-black px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 mb-3 inline-block tracking-wider">
+                                {{ $act->kategori ?? 'Aktivitas Umum' }}
+                            </span>
+                            <h4 class="text-sm font-bold text-slate-800 leading-snug">
+                                {{ $judul }}
+                            </h4>
+                            @if (!empty($deskripsi))
+                                <div
+                                    class="mt-3 p-3 bg-slate-50/50 backdrop-blur-sm rounded-xl border border-slate-100">
+                                    <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                        {{ $deskripsi }}
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+                        @if (!empty($act->foto_dokumentasi))
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex justify-start">
+                                <button type="button"
+                                    onclick="openImageModal('{{ asset('storage/' . $act->foto_dokumentasi) }}')"
+                                    class="px-4 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-slate-800 font-bold text-[10px] uppercase tracking-wider transition-all duration-300 flex items-center">
+                                    <i class="fas fa-image mr-2 text-sm"></i> Lihat Dokumentasi
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>
