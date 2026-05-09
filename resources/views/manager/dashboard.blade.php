@@ -50,12 +50,12 @@
                     class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     Infra
                 </button>
-                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '6']) }}'"
-                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '6' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '4']) }}'"
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '4' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     BOT
                 </button>
-                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '8']) }}'"
-                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '8' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '5']) }}'"
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '5' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     Purchasing
                 </button>
             </div>
