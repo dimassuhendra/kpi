@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use App\Models\User; // Tambahkan ini untuk memanggil model User
+use App\Models\User;
 
 class KpiExport implements WithMultipleSheets
 {
@@ -27,7 +27,6 @@ class KpiExport implements WithMultipleSheets
             $divisiId = $this->filters->divisi_id;
         }
         // 3. BACKUP PLAN: Jika divisi_id tidak dikirim, tapi user_id dikirim
-        // Kita cari tahu divisi dari user tersebut langsung ke database
         elseif (isset($this->filters['user_id']) || (is_object($this->filters) && isset($this->filters->user_id))) {
             $userId = is_array($this->filters) ? $this->filters['user_id'] : $this->filters->user_id;
 
@@ -45,11 +44,16 @@ class KpiExport implements WithMultipleSheets
         if ($divisiId == 2) {
             return [
                 new Sheets\InfraActivitySheet($this->filters),    // Sheet Aktivitas Infra
-                // Tambahkan sheet lain untuk Infra jika ada
+            ];
+        }
+        // Jika divisi BUKAN 1 (TAC) dan BUKAN 2 (Infra) -> Berlaku untuk BOT, Purchasing, dsb.
+        else if ($divisiId == 6 || $divisiId == 8) {
+            return [
+                new Sheets\GeneralActivitySheet($this->filters),  // Sheet Simple BOT/Purchasing
             ];
         }
 
-        // Default: Jika divisi == 1 (TAC) atau lainnya
+        // Default: Jika divisi == 1 (TAC)
         return [
             new Sheets\KpiSummarySheet($this->filters),  // Sheet 1: Rekap Nilai KPI
             new Sheets\RawActivitySheet($this->filters), // Sheet 2: Semua Aktivitas Mentah

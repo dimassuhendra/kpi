@@ -70,17 +70,11 @@ class ReportController extends Controller
             'end_date'   => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        // Tangkap dari Blade (nilainya berupa string seperti "Infrastruktur" atau "TAC")
+        // Tangkap dari Blade (nilainya berupa string seperti "Infrastruktur", "TAC", "BOT", atau "Purchasing")
         $namaDivisiDariBlade = $request->divisi;
-
-        // Ubah string menjadi ID. Jika mengandung kata "infra" (huruf besar/kecil bebas), set ID = 2
-        $divisiId = 1; // Default TAC
-        if (stripos($namaDivisiDariBlade, 'infra') !== false) {
-            $divisiId = 2; // Ini kuncinya!
-        }
+        $namaLower = strtolower($namaDivisiDariBlade);
 
         $filters = [
-            'divisi_id'   => $divisiId,
             'divisi_name' => $namaDivisiDariBlade,
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
@@ -88,6 +82,19 @@ class ReportController extends Controller
 
         $safeDivisiName = str_replace([' ', '/'], '_', $namaDivisiDariBlade);
         $fileName = 'Report_Divisi_' . $safeDivisiName . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        // --- PENGECEKAN DIVISI UNTUK EXCEL SEDERHANA ---
+        if (str_contains($namaLower, 'bot') || str_contains($namaLower, 'purchasing')) {
+            return ('Fitur belum tersedia untuk divisi BOT atau Purchasing. Mohon gunakan fitur export standar untuk memilih staff secara individu.');
+        }
+
+        // --- LOGIKA LAMA UNTUK TAC & INFRA ---
+        // Ubah string menjadi ID. Jika mengandung kata "infra" (huruf besar/kecil bebas), set ID = 2
+        $divisiId = 1; // Default TAC
+        if (str_contains($namaLower, 'infra')) {
+            $divisiId = 2; // Ini kuncinya!
+        }
+        $filters['divisi_id'] = $divisiId;
 
         return Excel::download(new \App\Exports\KpiDivisiExport($filters), $fileName);
     }
@@ -199,14 +206,24 @@ class ReportController extends Controller
             $formattedData = $details->map(function ($item) {
                 $user = $item->dailyReport->user;
                 $divisiId = $user->divisi_id;
+                $namaDivisi = strtoupper($user->divisi->nama_divisi ?? 'UMUM');
+
+                // Smart Extractor untuk judul (guna preview Modal Datatable)
+                $judul = $item->nama_kegiatan ?? '';
+                $deskripsi = $item->deskripsi_kegiatan ?? '';
+                if (empty($judul) && !empty($deskripsi) && strpos($deskripsi, ': ') !== false) {
+                    $parts = explode(': ', $deskripsi, 2);
+                    $judul = $parts[0];
+                } else {
+                    $judul = $judul ?: $deskripsi;
+                }
 
                 return [
                     'tanggal' => $item->dailyReport->tanggal->format('d/m/Y'),
                     'nama_staff' => $user->nama_lengkap,
-                    'divisi' => $divisiId == 1 ? 'TAC' : 'INFRA',
-                    // Logika kolom gabungan sesuai Excel
-                    'col_5' => $divisiId == 1 ? strtoupper($item->tipe_kegiatan) : ($item->kategori ?? 'Lainnya'),
-                    'judul' => $item->deskripsi_kegiatan,
+                    'divisi' => $namaDivisi,
+                    'col_5' => $divisiId == 1 ? strtoupper($item->tipe_kegiatan) : ($item->kategori ?? 'Aktivitas'),
+                    'judul' => $judul,
                     'inisiatif' => $divisiId == 1 ? ($item->temuan_sendiri ? 'Ya' : 'Tidak') : '-',
                     'mandiri' => $divisiId == 1 ? ($item->is_mandiri ? 'Ya' : 'Tidak') : '-',
                     'durasi' => $divisiId == 1 ? $item->value_raw : '-',

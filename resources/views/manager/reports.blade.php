@@ -142,8 +142,8 @@
                                         <span>Excel</span>
                                     </a>
 
-                                    <button onclick="exportUserPdf({{ $s->id }})"
-                                        class="flex-1 bg-rose-500 hover:bg-rose-600 text-white text-center py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2">
+                                    <button onclick="exportUserPdf({{ $s->id }})" disabled
+                                        class="flex-1 bg-rose-500 text-white text-center py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2 disabled:opacity-90 disabled:cursor-not-allowed">
                                         <i class="fas fa-file-pdf text-sm"></i>
                                         <span>PDF</span>
                                     </button>
