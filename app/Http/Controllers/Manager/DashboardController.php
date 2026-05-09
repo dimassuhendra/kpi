@@ -306,38 +306,116 @@ class DashboardController extends Controller
         }
 
         // ========================================================================
-        // D. LOGIKA DIVISI 3 (BACKOFFICE)
+        // D. LOGIKA DIVISI BACKOFFICE (BOT, PURCHASING, DLL - ID 3 ke atas)
         // ========================================================================
-        elseif ($selectedDivisi == '3') {
-            // Asumsi Backoffice menggunakan format "Kategori Pekerjaan: Deskripsi" di deskripsi_kegiatannya
-            // Kita akan mengekstrak kata pertama sebelum titik dua ":" sebagai "Tipe Pekerjaan"
-            $boTypes = [];
+        elseif ($selectedDivisi >= '3') {
+            $activityCounts = [];
+            $activityDetails = [];
+            $wordFrequencies = [];
+
+            // Daftar stop words (kata yang tidak akan dimasukkan ke wordcloud)
+            $stopWords = ['dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'dengan', 'ini', 'itu', 'pada', 'dalam', 'adalah', 'sebagai', 'tidak', 'akan', 'atau', 'juga', 'bisa', 'ada', 'ya', 'sudah', 'belum', 'saat', 'menjadi', 'karena', 'oleh', 'atas', 'kegiatan', 'aktivitas', 'hari', 'jam', 'menit'];
+
             foreach ($allDetails as $d) {
-                $parts = explode(':', $d->deskripsi_kegiatan);
-                $type = trim($parts[0]);
-                if (!isset($boTypes[$type])) {
-                    $boTypes[$type] = 0;
+                $title = trim($d->nama_kegiatan ?: $d->deskripsi_kegiatan);
+                $deskripsiLengkap = strtolower($title . ' ' . $d->deskripsi_kegiatan);
+
+                if (empty($title) || $title == '-') continue;
+
+                // 1. LOGIKA TOP 5 KATEGORI
+                if (strpos($title, ':') !== false) {
+                    $parts = explode(':', $title, 2);
+                    $kategori = trim($parts[0]);
+                } else {
+                    $words = explode(' ', $title);
+                    $kategori = $words[0] . (isset($words[1]) && strlen($words[1]) > 3 ? ' ' . $words[1] : '');
                 }
-                $boTypes[$type]++;
+
+                $kategori = strtoupper($kategori);
+
+                if (!isset($activityCounts[$kategori])) {
+                    $activityCounts[$kategori] = 0;
+                    $activityDetails[$kategori] = [];
+                }
+                $activityCounts[$kategori]++;
+
+                if (!in_array($title, $activityDetails[$kategori]) && count($activityDetails[$kategori]) < 5) {
+                    $activityDetails[$kategori][] = $title;
+                }
+
+                // 2. LOGIKA WORD CLOUD
+                $cleanText = preg_replace('/[^\p{L}\p{N}\s]/u', '', $deskripsiLengkap);
+                $textWords = explode(' ', $cleanText);
+
+                foreach ($textWords as $word) {
+                    $word = trim($word);
+                    if (strlen($word) > 2 && !in_array($word, $stopWords) && !is_numeric($word)) {
+                        $wordFrequencies[$word] = ($wordFrequencies[$word] ?? 0) + 1;
+                    }
+                }
             }
 
-            // 1. Donut Tipe Pekerjaan
-            $chartData['bo']['donut_labels'] = array_keys($boTypes);
-            $chartData['bo']['donut_series'] = array_values($boTypes);
+            // Simpan Top 5 Kegiatan beserta Detailnya
+            arsort($activityCounts);
+            $top5Activities = array_slice($activityCounts, 0, 5, true);
 
-            // 2. Bar Chart Total Volume per Staf
-            $barVolume = [];
-            foreach ($staffs as $st) {
-                $barVolume[] = $allDetails->where('dailyReport.user_id', $st->id)->count();
+            $topLabels = array_keys($top5Activities);
+            $topSeries = array_values($top5Activities);
+
+            // Mengambil rincian "list kegiatan" khusus untuk 5 kategori teratas
+            $topDetails = [];
+            foreach ($topLabels as $lbl) {
+                $topDetails[] = $activityDetails[$lbl];
             }
-            $chartData['bo']['staff_volume'] = $barVolume;
 
-            // 3. Line Chart Tren Produktivitas Harian
+            $chartData['bo']['top_activities_labels'] = $topLabels;
+            $chartData['bo']['top_activities_series'] = $topSeries;
+            $chartData['bo']['top_activities_details'] = $topDetails; // <-- Data baru untuk Tooltip
+
+            // Simpan Top 60 Kata untuk Word Cloud
+            arsort($wordFrequencies);
+            $topWords = array_slice($wordFrequencies, 0, 60, true);
+            $wordCloudArray = [];
+            foreach ($topWords as $word => $count) {
+                $wordCloudArray[] = [$word, $count * 3 + 10];
+            }
+            $chartData['bo']['wordcloud_data'] = $wordCloudArray;
+
+            // 3. Line Chart: Tren Produktivitas Harian (Volume Total)
             $trendVolume = [];
             foreach ($trendLabels as $date) {
-                $trendVolume[] = $allDetails->where('tanggal_report', $date)->count();
+                $trendVolume[] = $allDetails->filter(function ($d) use ($date) {
+                    return \Carbon\Carbon::parse($d->tanggal_report)->format('Y-m-d') === $date;
+                })->count();
             }
             $chartData['bo']['trend_volume'] = $trendVolume;
+
+            // 4. Live Timeline Feed (Ambil 15 aktivitas terbaru)
+            $recentActivities = $allDetails->sortByDesc(function ($item) {
+                return $item->dailyReport->created_at ?? $item->dailyReport->tanggal;
+            })->take(15)->map(function ($item) {
+                $judul = $item->nama_kegiatan ?? '';
+                $deskripsi = $item->deskripsi_kegiatan ?? '';
+                if (empty($judul) && !empty($deskripsi)) {
+                    if (strpos($deskripsi, ': ') !== false) {
+                        $parts = explode(': ', $deskripsi, 2);
+                        $judul = $parts[0];
+                        $deskripsi = trim($parts[1]);
+                    } else {
+                        $judul = $deskripsi;
+                        $deskripsi = '';
+                    }
+                }
+                return [
+                    'staff' => $item->dailyReport->user->nama_lengkap ?? 'Unknown',
+                    'judul' => $judul,
+                    'deskripsi' => $deskripsi === '-' ? '' : $deskripsi,
+                    'waktu' => \Carbon\Carbon::parse($item->dailyReport->created_at ?? $item->dailyReport->tanggal)->diffForHumans(),
+                    'tanggal' => \Carbon\Carbon::parse($item->dailyReport->tanggal)->format('d M Y')
+                ];
+            })->values();
+
+            $chartData['bo']['timeline'] = $recentActivities;
         }
 
         // ========================================================================

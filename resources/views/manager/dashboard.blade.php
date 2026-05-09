@@ -13,7 +13,9 @@
             </div>
         </div>
 
+        {{-- ========================================================= --}}
         {{-- 1. HEADER & DIVISION SWITCHER --}}
+        {{-- ========================================================= --}}
         <div
             class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div>
@@ -27,15 +29,19 @@
                             TAC
                         @elseif($selectedDivisi == '2')
                             INFRASTRUCTURE
+                        @elseif($selectedDivisi == '3')
+                            BOT
+                        @elseif($selectedDivisi == '4')
+                            PURCHASING
                         @else
-                            BACKOFFICE
+                            UMUM
                         @endif
                     </span>
                 </p>
             </div>
 
-            {{-- BUTTON SWITCHER DIVISI (Reload Halaman untuk reset context staff) --}}
-            <div class="flex items-center gap-2 bg-primary p-1.5 rounded-2xl border border-slate-200">
+            {{-- BUTTON SWITCHER DIVISI --}}
+            <div class="flex flex-wrap items-center gap-2 bg-primary p-1.5 rounded-2xl border border-slate-200">
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '1']) }}'"
                     class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '1' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     TAC
@@ -44,10 +50,21 @@
                     class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     Infra
                 </button>
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '6']) }}'"
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '6' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
+                    BOT
+                </button>
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '8']) }}'"
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '8' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
+                    Purchasing
+                </button>
             </div>
         </div>
+        {{-- INI ADALAH PENUTUP KOTAK HEADER YANG KEMARIN TERHAPUS --}}
 
+        {{-- ========================================================= --}}
         {{-- 2. FILTER SECTION (AJAX - TANPA RELOAD) --}}
+        {{-- ========================================================= --}}
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-end">
             {{-- Filter Staff --}}
             <div class="w-full md:w-64">
@@ -95,21 +112,27 @@
             </div>
         </div>
 
+        {{-- ========================================================= --}}
         {{-- 3. CONTENT WRAPPER (Data Injector) --}}
+        {{-- ========================================================= --}}
         <div class="space-y-8">
-            {{-- Executive Summary (Selalu Muncul) --}}
+
+            {{-- Executive Summary (Selalu Muncul Paling Atas) --}}
             @include('manager.partials.content-executive')
 
-            {{-- Konten Dinamis Berdasarkan Divisi --}}
+            {{-- Konten Dinamis Berdasarkan Divisi (Akan Muncul Di Bawah Executive) --}}
             @if ($selectedDivisi == '1')
                 @include('manager.partials.content-tac')
             @elseif ($selectedDivisi == '2')
                 @include('manager.partials.content-infra')
+            @elseif ($selectedDivisi >= '3')
+                @include('manager.partials.content-bo')
             @endif
+
         </div>
     </div>
 
-    {{-- CDN ApexCharts (Wajib ditambahkan jika belum ada di layout) --}}
+    {{-- CDN ApexCharts --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
@@ -141,7 +164,6 @@
                 fetchData() {
                     this.isLoading = true;
 
-                    // Buat Parameter URL
                     // Mengambil base URL dari halaman saat ini tanpa query parameter
                     let url = new URL(window.location.origin + window.location.pathname);
                     url.searchParams.append('divisi_id', this.activeDivisi);
@@ -189,10 +211,6 @@
                 }
             }));
         });
-
-        // Catatan: Fungsi exportToPdf perlu disesuaikan karena kita pindah dari Chart.js ke ApexCharts.
-        // ApexCharts menggunakan metode `chart.dataURI()` untuk convert ke base64.
-        // Ini akan kita implementasikan di dalam script chart masing-masing partials jika diperlukan.
     </script>
 
     <style>
