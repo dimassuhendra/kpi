@@ -97,7 +97,7 @@ class InputController extends Controller
             } else {
                 $formattedRows['infra'] = [['kategori' => 'Network', 'nama_kegiatan' => '', 'deskripsi' => '']];
             }
-        } else { // BACKOFFICE
+        } elseif (in_array($user->divisi_id, [6, 8])) { // 6: BACKOFFICE, 8: PURCHASING (Sesuaikan ID-nya)
             if ($isRejected) {
                 foreach ($report->details as $detail) {
                     $formattedRows['bo'][] = ['judul' => $detail->deskripsi_kegiatan, 'deskripsi' => ''];
@@ -330,7 +330,7 @@ class InputController extends Controller
             }
         } else {
             // LOGIKA BACKOFFICE
-            $vBo = VariabelKpi::where('divisi_id', $user->divisi_id)->first();
+            $vKpi = VariabelKpi::where('divisi_id', $user->divisi_id)->first();
 
             if ($request->has('bo_activity')) {
                 foreach ($request->bo_activity as $bo) {
@@ -339,7 +339,7 @@ class InputController extends Controller
                         'daily_report_id'    => $report->id,
                         'tipe_kegiatan'      => 'activity',
                         'deskripsi_kegiatan' => $bo['judul'] . ': ' . ($bo['deskripsi'] ?? '-'),
-                        'variabel_kpi_id'    => $vBo ? $vBo->id : null,
+                        'variabel_kpi_id'    => $vKpi ? $vKpi->id : null,
                         'value_raw'          => null,
                         'waktu_respon_menit' => null,
                     ]);

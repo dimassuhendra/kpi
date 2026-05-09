@@ -48,10 +48,11 @@
                         class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center">
                         <i class="fas fa-tools mr-2"></i> + Tambah Kegiatan Infra
                     </button>
-                @else
+                @elseif (in_array(auth()->user()->divisi_id, [6, 8]))
                     <button type="button" @click="addBoActivity()"
                         class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center">
-                        <i class="fas fa-edit mr-2"></i> + Tambah Kegiatan Backoffice
+                        <i class="fas fa-edit mr-2"></i> + Tambah Kegiatan
+                        {{ auth()->user()->divisi_id == 6 ? 'Purchasing' : 'BOT' }}
                     </button>
                 @endif
             </div>
@@ -96,7 +97,7 @@
                     @include('staff.input_kpi.tac')
                 @elseif (auth()->user()->divisi_id == 2)
                     @include('staff.input_kpi.infra')
-                @else
+                @elseif (in_array(auth()->user()->divisi_id, [6, 8]))
                     @include('staff.input_kpi.backoffice')
                 @endif
 
@@ -303,7 +304,7 @@
                     foto_dokumentasi_path: '',
                     isUploading: false
                 })),
-                bo_activities: @json($formattedRows['bo']),
+                bo_activities: @json($formattedRows['bo'] ?? []),
 
                 // AJAX UPLOAD FUNCTION
                 async uploadFile(event, folderName, callback) {

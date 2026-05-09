@@ -1,6 +1,7 @@
 <div class="mb-10">
     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
-        <i class="fas fa-briefcase mr-3 text-amber-500"></i> Backoffice Daily Activities
+        <i class="fas fa-briefcase mr-3 text-amber-500"></i>
+        {{ auth()->user()->divisi->nama_divisi ?? 'BOT' }} Daily Activities
     </h2>
     <div class="space-y-4">
         <template x-for="(bo, index) in bo_activities" :key="index">
