@@ -12,6 +12,19 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '5.9',
+                'date' => '09 Mei 2026',
+                'title' => 'Integrasi Backoffice (BOT & Purchasing) & General Analytics',
+                'description' => 'Sistem kini diperluas untuk mengakomodasi manajemen kinerja divisi Backoffice. Pembaruan ini menghadirkan analitik visual modern untuk memantau produktivitas berbasis teks serta penyesuaian format laporan ekspor.',
+                'changes' => [
+                    'Manager: Dashboard Mission Control kini mendukung "General Analytics" khusus untuk divisi BOT dan Purchasing.',
+                    'Manager: Inovasi fitur "Topic Word Cloud" yang secara otomatis menyorot kata kunci pekerjaan yang paling sering muncul dalam laporan.',
+                    'Manager: Tampilan "Live Log Feed" ala sosial media untuk memantau 15 aktivitas terbaru staf secara real-time dan estetik.',
+                    'System : Ekspor Laporan Excel kini mendeteksi divisi secara cerdas, menghasilkan format log aktivitas sederhana untuk divisi non-teknis.',
+                    'Staff  : Penyesuaian form input untuk divisi BOT dan Purchasing agar lebih sesuai dengan jenis pekerjaan administratif.',],
+                'type' => 'Major'
+            ],
+            [
                 'version' => '4.12',
                 'date' => '12 April 2026',
                 'title' => 'Modul Lembur & Transparansi Kuis Teknikal',
