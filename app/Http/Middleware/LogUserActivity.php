@@ -45,8 +45,7 @@ class LogUserActivity
         $aktivitas = $this->terjemahkanRoute($routeName, $request->path());
 
         // 5. Susun Pesan (Minim Simbol agar bersih)
-        $message = "*LOG AKTIVITAS USER*\n\n";
-        $message .= "User: {$user}\n";
+        $message = "User: {$user}\n";
         $message .= "Aksi: {$tindakan}\n";
         $message .= "Aktivitas: {$aktivitas}\n";
         $message .= "IP Address: {$ip}\n";
