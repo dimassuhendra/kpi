@@ -1,11 +1,9 @@
 <table>
     <tr>
-        {{-- Diubah menjadi colspan="7" karena sekarang ada 7 kolom di tabel --}}
         <th colspan="7" style="font-weight: bold; font-size: 14px;">LAPORAN AKTIVITAS INFRASTRUKTUR</th>
     </tr>
     <tr>
         <th style="font-weight: bold;">Nama</th>
-        {{-- Diubah menjadi colspan="6" --}}
         <td colspan="6">: {{ $nama }}</td>
     </tr>
     <tr>
@@ -23,7 +21,6 @@
     <tr>
         <th style="font-weight: bold; text-align: center; border: 1px solid #000000;">No</th>
         <th style="font-weight: bold; text-align: center; border: 1px solid #000000;">Tanggal</th>
-        {{-- KOLOM BARU: Nama Staff --}}
         <th style="font-weight: bold; text-align: center; border: 1px solid #000000;">Nama Staff</th>
         <th style="font-weight: bold; text-align: center; border: 1px solid #000000;">Kategori</th>
         <th style="font-weight: bold; text-align: center; border: 1px solid #000000;">Judul Kegiatan</th>
@@ -44,7 +41,6 @@
                 {{ !empty($kegiatan->dailyReport->tanggal) ? \Carbon\Carbon::parse($kegiatan->dailyReport->tanggal)->format('d/m/Y') : '-' }}
             </td>
 
-            {{-- DATA BARU: Nama Staff Reguler --}}
             <td style="border: 1px solid #000000;">
                 {{ $kegiatan->dailyReport->user->nama_lengkap ?? '-' }}
             </td>
@@ -55,11 +51,11 @@
             <td style="border: 1px solid #000000;">{{ $kegiatan->deskripsi_kegiatan ?? ($kegiatan->keterangan ?? '-') }}
             </td>
 
-            <td style="border: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; text-align: left; font-size: 10px; color: #1e40af;">
                 @if (!empty($kegiatan->foto_dokumentasi))
-                    <img src="{{ public_path('storage/' . $kegiatan->foto_dokumentasi) }}" height="70" />
+                    {{ $kegiatan->foto_dokumentasi }}
                 @else
-                    Tidak ada
+                    -
                 @endif
             </td>
         </tr>
@@ -98,7 +94,6 @@
                 {{ !empty($lembur->dailyReport->tanggal) ? \Carbon\Carbon::parse($lembur->dailyReport->tanggal)->format('d/m/Y') : '-' }}
             </td>
 
-            {{-- DATA BARU: Nama Staff Lembur --}}
             <td style="border: 1px solid #000000; background-color: #f1f5f9;">
                 {{ $lembur->dailyReport->user->nama_lengkap ?? '-' }}
             </td>
@@ -116,22 +111,19 @@
                 <strong>Durasi Total:</strong> {{ $teksDurasi }}
             </td>
 
-            <td style="border: 1px solid #000000; text-align: center; background-color: #f1f5f9;">
+            <td
+                style="border: 1px solid #000000; text-align: left; background-color: #f1f5f9; font-size: 10px; color: #1e40af;">
                 @if (!empty($lembur->foto_dokumentasi))
-                    <img src="{{ public_path('storage/' . $lembur->foto_dokumentasi) }}" height="70" />
+                    {{ $lembur->foto_dokumentasi }}
                 @else
-                    Tidak ada
+                    -
                 @endif
             </td>
         </tr>
     @endforeach
 
-    {{-- ============================== --}}
-    {{-- JIKA DATA KOSONG KEDUANYA      --}}
-    {{-- ============================== --}}
     @if ($kegiatans->isEmpty() && $lemburs->isEmpty())
         <tr>
-            {{-- Diubah menjadi colspan="7" --}}
             <td colspan="7" style="text-align: center; border: 1px solid #000000;">Tidak ada aktivitas reguler maupun
                 lembur pada periode ini.</td>
         </tr>

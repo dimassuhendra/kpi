@@ -296,10 +296,12 @@ class InputController extends Controller
                     ]);
                 }
             }
+            // Di dalam method store()
+
         } else if ($user->divisi_id == 2) {
-            // LOGIKA INFRA (UPDATE ASYNC UPLOAD)
+            // 1. Update Validasi: Ubah dari image/string path menjadi url
             $request->validate([
-                'infra_activity.*.foto_dokumentasi_path' => 'nullable|string',
+                'infra_activity.*.foto_dokumentasi_path' => 'nullable|url', // Validasi format URL
             ]);
 
             $vInfra = VariabelKpi::where('divisi_id', 2)->where('nama_variabel', 'Volume Pekerjaan')->first();
@@ -311,8 +313,8 @@ class InputController extends Controller
                     $kategori = $infra['kategori'] ?? 'Network';
                     $tipe = ($kategori == 'Lainnya') ? 'activity' : 'case';
 
-                    // Menggunakan path dari hidden input hasil async upload
-                    $pathFoto = !empty($infra['foto_dokumentasi_path']) ? $infra['foto_dokumentasi_path'] : null;
+                    // 2. Ambil langsung dari input yang dikirim (berupa link)
+                    $linkFoto = !empty($infra['foto_dokumentasi_path']) ? $infra['foto_dokumentasi_path'] : null;
 
                     KegiatanDetail::create([
                         'daily_report_id'    => $report->id,
@@ -322,9 +324,7 @@ class InputController extends Controller
                         'deskripsi_kegiatan' => $infra['deskripsi'],
                         'variabel_kpi_id'    => $vInfra ? $vInfra->id : null,
                         'is_mandiri'         => 1,
-                        'value_raw'          => null,
-                        'waktu_respon_menit' => null,
-                        'foto_dokumentasi'   => $pathFoto,
+                        'foto_dokumentasi'   => $linkFoto,
                     ]);
                 }
             }

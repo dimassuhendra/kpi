@@ -286,7 +286,6 @@
                     waktu_selesai: '',
                     detail: '',
                     foto_path: '',
-                    isUploading: false
                 }],
 
                 // Memetakan ulang format bawaan backend agar state upload default ter-set
@@ -302,7 +301,6 @@
                 infra_activities: @json($formattedRows['infra']).map(row => ({
                     ...row,
                     foto_dokumentasi_path: '',
-                    isUploading: false
                 })),
                 bo_activities: @json($formattedRows['bo'] ?? []),
 
@@ -387,7 +385,6 @@
                         nama_kegiatan: '',
                         deskripsi: '',
                         foto_dokumentasi_path: '',
-                        isUploading: false
                     });
                 },
                 addBoActivity() {
@@ -402,7 +399,6 @@
                         waktu_selesai: '',
                         detail: '',
                         foto_path: '',
-                        isUploading: false
                     });
                 },
                 removeLembur(index) {

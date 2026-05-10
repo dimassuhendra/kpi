@@ -60,19 +60,19 @@
                     </div>
 
                     <div class="md:col-span-4">
-                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Foto
-                            Dokumentasi (Opsional)</label>
-                        <input type="hidden" :name="'infra_activity[' + index + '][foto_dokumentasi_path]'"
-                            x-model="infra.foto_dokumentasi_path">
-                        <input type="file" accept="image/*"
-                            @change="infra.isUploading = true; uploadFile($event, 'infra', (path) => { infra.foto_dokumentasi_path = path; infra.isUploading = false; })"
-                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-700 cursor-pointer transition">
-
-                        <p x-show="infra.isUploading" class="text-[9px] text-amber-500 mt-1 animate-pulse"><i
-                                class="fas fa-spinner fa-spin mr-1"></i> Uploading...</p>
-                        <p x-show="!infra.isUploading && infra.foto_dokumentasi_path"
-                            class="text-[9px] text-emerald-500 mt-1 font-bold"><i class="fas fa-check mr-1"></i> File OK
-                        </p>
+                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">
+                            Link Dokumentasi (Opsional)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i class="fas fa-link text-xs"></i>
+                            </span>
+                            <input type="url" :name="'infra_activity[' + index + '][foto_dokumentasi_path]'"
+                                x-model="infra.foto_dokumentasi_path"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-800 outline-none focus:border-amber-500 transition"
+                                placeholder="https://link-gambar.com/...">
+                        </div>
+                        <p class="text-[9px] text-slate-400 mt-1 italic">Masukkan link gambar dari cloud mybolo.</p>
                     </div>
 
                     <div class="md:col-span-12 mt-1">
@@ -141,22 +141,20 @@
                     </div>
 
                     <div class="md:col-span-4">
-                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">Bukti Foto
-                            Lembur (Wajib maks: 1MB)</label>
-                        <input type="hidden" :name="'lembur_activity[' + index + '][foto_path]'"
-                            x-model="lemburItem.foto_path">
-                        <input type="file" accept="image/*"
-                            @change="lemburItem.isUploading = true; uploadFile($event, 'lembur', (path) => { lemburItem.foto_path = path; lemburItem.isUploading = false; })"
-                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-100 file:text-indigo-700 cursor-pointer transition"
-                            :required="infraTab === 'lembur' && (lemburItem.waktu_mulai !== '' || lemburItem
-                                    .waktu_selesai !== '' || lemburItem.detail !== '') && !lemburItem
-                                .foto_path">
-
-                        <p x-show="lemburItem.isUploading" class="text-[9px] text-indigo-500 mt-1 animate-pulse"><i
-                                class="fas fa-spinner fa-spin mr-1"></i> Uploading...</p>
-                        <p x-show="!lemburItem.isUploading && lemburItem.foto_path"
-                            class="text-[9px] text-emerald-500 mt-1 font-bold"><i class="fas fa-check mr-1"></i> File
-                            OK</p>
+                        <label class="text-[10px] uppercase text-slate-400 font-black ml-1 tracking-widest">
+                            Link Bukti Lembur (Wajib jika lembur)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i class="fas fa-link text-xs"></i>
+                            </span>
+                            <input type="url" :name="'lembur_activity[' + index + '][foto_path]'"
+                                x-model="lemburItem.foto_path"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500 transition"
+                                placeholder="https://..."
+                                :required="infraTab === 'lembur' && (lemburItem.waktu_mulai !== '' || lemburItem
+                                    .waktu_selesai !== '' || lemburItem.detail !== '')">
+                        </div>
                     </div>
 
                     <div class="md:col-span-12 mt-1">

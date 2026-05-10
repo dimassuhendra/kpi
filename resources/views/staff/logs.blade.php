@@ -395,11 +395,11 @@
                                                 {{-- DETAIL BUKTI FOTO KHUSUS INFRA --}}
                                                 @if ($log->user->divisi_id == 2 && $detail->foto_dokumentasi)
                                                     <div class="mt-4 pt-3 border-t border-slate-100">
-                                                        <button type="button"
-                                                            onclick="openImageModal('{{ asset('storage/' . $detail->foto_dokumentasi) }}')"
-                                                            class="text-xs text-indigo-500 font-bold hover:text-indigo-700 transition">
-                                                            <i class="fas fa-image mr-1"></i> Lihat Foto Dokumentasi
-                                                        </button>
+                                                        <a href="{{ $detail->foto_dokumentasi }}" target="_blank"
+                                                            class="text-xs text-indigo-500 font-bold hover:text-indigo-700 transition flex items-center gap-1">
+                                                            <i class="fas fa-external-link-alt mr-1"></i> Buka Link
+                                                            Dokumentasi
+                                                        </a>
                                                     </div>
                                                 @endif
                                             </div>
@@ -461,12 +461,11 @@
                                                         @if ($lembur->foto_dokumentasi)
                                                             <div
                                                                 class="mt-4 pt-3 border-t border-indigo-100/50 flex justify-start">
-                                                                <button type="button"
-                                                                    onclick="openImageModal('{{ asset('storage/' . $lembur->foto_dokumentasi) }}')"
+                                                                <a href="{{ $lembur->foto_dokumentasi }}" target="_blank"
                                                                     class="px-3 py-1.5 rounded-lg bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 font-bold text-[10px] uppercase tracking-wider transition-all flex items-center shadow-sm">
-                                                                    <i class="fas fa-image mr-1.5 text-sm"></i> Lihat Bukti
+                                                                    <i class="fas fa-link mr-1.5 text-sm"></i> Buka Link
                                                                     Lembur
-                                                                </button>
+                                                                </a>
                                                             </div>
                                                         @endif
                                                     </div>
@@ -869,12 +868,18 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Ganti Foto
-                                        Dokumentasi (Max 2MB)</label>
-                                    <input type="file" name="foto_dokumentasi" accept="image/*"
-                                        class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
-                                    <span class="text-[9px] text-slate-400 block mt-1 italic">*Kosongkan jika tidak ingin
-                                        mengganti foto</span>
+                                    <label class="text-slate-500 text-[10px] uppercase mb-1 block font-bold">Link
+                                        Dokumentasi</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                            <i class="fas fa-link text-xs"></i>
+                                        </span>
+                                        <input type="url" name="foto_dokumentasi"
+                                            x-model="activeCase.foto_dokumentasi" placeholder="https://..."
+                                            class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2.5 text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm">
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block mt-1 italic">*Masukkan link Google Drive
+                                        atau URL gambar</span>
                                 </div>
                             </div>
                         </template>
