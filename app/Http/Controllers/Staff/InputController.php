@@ -97,7 +97,7 @@ class InputController extends Controller
             } else {
                 $formattedRows['infra'] = [['kategori' => 'Network', 'nama_kegiatan' => '', 'deskripsi' => '']];
             }
-        } elseif (in_array($user->divisi_id, [6, 8])) { // 6: BACKOFFICE, 8: PURCHASING (Sesuaikan ID-nya)
+        } elseif (in_array($user->divisi_id, [4, 5])) { // 4: BACKOFFICE, 5: PURCHASING (Sesuaikan ID-nya)
             if ($isRejected) {
                 foreach ($report->details as $detail) {
                     $formattedRows['bo'][] = ['judul' => $detail->deskripsi_kegiatan, 'deskripsi' => ''];
