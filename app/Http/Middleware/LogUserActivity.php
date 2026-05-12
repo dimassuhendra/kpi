@@ -29,8 +29,10 @@ class LogUserActivity
         $user = Auth::check() ? Auth::user()->nama_lengkap . ' (ID: ' . Auth::user()->id . ')' : 'Guest / Belum Login';
 
         $method = $request->method();
-        $ip = $request->ip();
-
+        $ip = $request->header('X-Forwarded-For')
+            ? trim(explode(',', $request->header('X-Forwarded-For'))[0])
+            : $request->ip();
+            
         // 3. Terjemahkan Method agar mudah dipahami orang awam
         $tindakan = match ($method) {
             'GET' => 'Membuka halaman',
