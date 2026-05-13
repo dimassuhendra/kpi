@@ -12,6 +12,19 @@ class UpdateController extends Controller
     {
         $updates = [
             [
+                'version' => '5.14',
+                'date' => '14 Mei 2026',
+                'title' => 'Integrasi Backoffice (BOT & Purchasing) & General Analytics - V2',
+                'description' => 'Sistem kini diperluas untuk mengakomodasi manajemen kinerja divisi Backoffice. Pembaruan ini menghadirkan analitik visual modern untuk memantau produktivitas berbasis teks serta penyesuaian format laporan ekspor.',
+                'changes' => [
+                    'Manager: Menambahkan modul storage management untuk memudahkan pengelolaan file laporan dan foto bukti.',
+                    'Manager dan GM: Menambahkan chart untuk menampoilkan daily notulen meeting yang diinput oleh BOT',
+                    'Staff : Menambahkan form input notulen meeting untuk divisi BOT',
+                    'Staff : Penambahan chart di dashboard staff BOT dan Purchasing',
+                ],
+                'type' => 'Major'
+            ],
+            [
                 'version' => '5.9',
                 'date' => '09 Mei 2026',
                 'title' => 'Integrasi Backoffice (BOT & Purchasing) & General Analytics',
