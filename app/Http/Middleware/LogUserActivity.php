@@ -32,7 +32,7 @@ class LogUserActivity
         $ip = $request->header('X-Forwarded-For')
             ? trim(explode(',', $request->header('X-Forwarded-For'))[0])
             : $request->ip();
-            
+
         // 3. Terjemahkan Method agar mudah dipahami orang awam
         $tindakan = match ($method) {
             'GET' => 'Membuka halaman',
@@ -121,11 +121,13 @@ class LogUserActivity
             'manager.users.destroy' => 'Menghapus Data User',
             'manager.export.all' => 'Download Data Semua Staff',
             'manager.profile.index' => 'Halaman Profile Manager',
+            'manager.storage.index' => 'Melihat Manajemen Penyimpanan',
+            'manager.storage.bulk_delete' => 'Menghapus File Masal',
             'manager.profile.update' => 'Menyimpan Pembaruan Profile Manager',
         ];
 
         // Cek apakah route ada di kamus, jika tidak ada, rapikan nama route aslinya
-        return $kamus[$routeName] ?? "Aktivitas pada: " . str_replace(['.', '_', '-'], ' ', title_case($routeName));
+        return $kamus[$routeName] ?? "Aktivitas pada: " . str_replace(['.', '_', '-'], ' ', Str::title($routeName));
     }
 
     private function sendToTelegram($message)

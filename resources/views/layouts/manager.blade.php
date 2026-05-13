@@ -135,6 +135,8 @@
                         @endif
                         <a href="{{ route('manager.reports.index') }}"
                             class="nav-link {{ request()->routeIs('manager.reports.*') ? 'active' : '' }} uppercase">Archive</a>
+                        <a href="{{ route('manager.storage.index') }}"
+                            class="nav-link {{ request()->routeIs('manager.storage.*') ? 'active' : '' }} uppercase">Storage Management</a>
                         <a href="{{ route('manager.profile.index') }}"
                             class="nav-link {{ request()->routeIs('manager.profile.*') ? 'active' : '' }} uppercase">Profile</a>
                         <a href="{{ route('updates.index') }}" onclick="markUpdateRead()"
@@ -216,6 +218,16 @@
                         <i
                             class="fas fa-box-archive {{ request()->routeIs('manager.reports.*') ? 'text-primary' : 'text-slate-400' }}"></i>
                         Archive
+                    </span>
+                    <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
+                </a>
+
+                <a href="{{ route('manager.storage.index') }}"
+                    class="flex items-center justify-between p-4 rounded-2xl transition-all {{ request()->routeIs('manager.storage.*') ? 'bg-blue-50 text-primary border border-blue-100' : 'text-slate-600 hover:bg-slate-50' }} font-bold text-sm uppercase tracking-wide">
+                    <span class="flex items-center gap-3">
+                        <i
+                            class="fas fa-hdd {{ request()->routeIs('manager.storage.*') ? 'text-primary' : 'text-slate-400' }}"></i>
+                        Storage Management
                     </span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </a>

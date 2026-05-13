@@ -18,6 +18,7 @@ use App\Http\Controllers\Manager\ValidationController;
 use App\Http\Controllers\Manager\ReportController;
 use App\Http\Controllers\Manager\UserController;
 use App\Http\Controllers\Manager\ManagerProfileController;
+use App\Http\Controllers\Manager\StorageController;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -73,6 +74,12 @@ Route::middleware(['auth', 'role:manager,gm'])->prefix('manager')->name('manager
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::post('/export-pdf', [UserController::class, 'exportPdf'])->name('export.pdf');
     Route::get('/export-all-staff', [UserController::class, 'exportAll'])->name('export.all');
+
+    // Modul Storage Management
+    Route::get('/storage-management', [StorageController::class, 'index'])->name('storage.index');
+    Route::post('/storage-management/bulk-delete', [StorageController::class, 'bulkDestroy'])->name('storage.bulk_delete');
+    Route::delete('/storage-management/{type}/{id}', [StorageController::class, 'destroy'])->name('storage.destroy');
+
 
     Route::get('/profile', [ManagerProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ManagerProfileController::class, 'update'])->name('profile.update');
