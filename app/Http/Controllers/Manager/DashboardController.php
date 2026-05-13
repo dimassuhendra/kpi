@@ -416,6 +416,27 @@ class DashboardController extends Controller
             })->values();
 
             $chartData['bo']['timeline'] = $recentActivities;
+
+            // 5. Ambil Notulen Briefing untuk Slider (Sesuai Filter Tanggal & Staff)
+            $notulenSlider = \App\Models\MeetingNote::with('user')
+                ->whereIn('user_id', $staffIds)
+                ->whereHas('dailyReport', function ($q) use ($start, $end) {
+                    $q->whereBetween('tanggal', [$start->format('Y-m-d'), $end->format('Y-m-d')]);
+                })
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($note) {
+                    return [
+                        'id' => $note->id,
+                        'staff' => $note->user->nama_lengkap,
+                        'judul' => $note->judul_briefing,
+                        'isi' => $note->isi_notulen,
+                        'tanggal' => \Carbon\Carbon::parse($note->dailyReport->tanggal)->translatedFormat('d M Y'),
+                        'hari' => \Carbon\Carbon::parse($note->dailyReport->tanggal)->translatedFormat('l'),
+                    ];
+                });
+
+            $chartData['bo']['notulen_slider'] = $notulenSlider;
         }
 
         // ========================================================================

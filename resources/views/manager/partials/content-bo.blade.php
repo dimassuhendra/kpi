@@ -35,6 +35,77 @@
         </div>
     </div>
 
+    {{-- BARIS 2: Briefing Archive (Slider) --}}
+    <div class="mb-6">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-1">
+                        <i class="fas fa-history text-indigo-500 mr-2"></i>Daily Briefing Archive
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Geser horizontal untuk
+                        melihat riwayat instruksi</p>
+                </div>
+
+                {{-- Tombol Navigasi Slider --}}
+                <div class="flex gap-2">
+                    <button @click="$refs.notulenSlider.scrollBy({left: -350, behavior: 'smooth'})"
+                        class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-left text-xs"></i>
+                    </button>
+                    <button @click="$refs.notulenSlider.scrollBy({left: 350, behavior: 'smooth'})"
+                        class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm flex items-center justify-center">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Slider Wrapper --}}
+            <div x-ref="notulenSlider" class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory custom-scrollbar"
+                style="scroll-behavior: smooth;">
+                <template x-for="(note, index) in chartData.bo.notulen_slider" :key="index">
+                    <div
+                        class="snap-start min-w-[320px] md:min-w-[400px] bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:border-indigo-300 transition-all group flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="block text-[9px] font-black text-indigo-500 uppercase leading-none mb-1"
+                                    x-text="note.hari"></span>
+                                <span class="block text-xs font-black text-slate-800" x-text="note.tanggal"></span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] font-black text-slate-400 uppercase block">PIC Briefing</span>
+                                <span class="text-[10px] font-bold text-indigo-600" x-text="note.staff"></span>
+                            </div>
+                        </div>
+
+                        <h4 class="text-sm font-black text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors line-clamp-1"
+                            x-text="note.judul"></h4>
+
+                        <div
+                            class="bg-white/60 backdrop-blur-sm border border-slate-200 p-4 rounded-xl h-[160px] overflow-y-auto custom-scrollbar shadow-inner">
+                            <p class="text-[11px] text-slate-600 leading-relaxed whitespace-pre-line font-mono"
+                                x-text="note.isi"></p>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Empty State --}}
+                <template x-if="!chartData.bo.notulen_slider || chartData.bo.notulen_slider.length === 0">
+                    <div
+                        class="w-full flex flex-col items-center justify-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                            <i class="fas fa-comment-slash text-2xl text-slate-200"></i>
+                        </div>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Belum ada arsip briefing
+                        </p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    {{-- BARIS 3: Word Cloud & Timeline Feed (Lanjutkan kode Wordcloud & Timeline Anda di sini) --}}
+
     {{-- BARIS 2: Word Cloud & Timeline Feed --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -264,7 +335,7 @@
                             // Render list item HTML
                             let listHtml = details.map(item =>
                                 `<li style="margin-bottom: 3px; line-height: 1.3;">&bull; ${item}</li>`
-                                ).join('');
+                            ).join('');
 
                             // Jika ada lebih dari 5, tandai ada yang lain
                             if (details.length >= 5) {
