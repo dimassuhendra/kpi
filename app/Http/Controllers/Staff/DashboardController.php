@@ -124,19 +124,92 @@ class DashboardController extends Controller
 
         // --- 4. LOGIKA DIVISI BACKOFFICE (ID 4 / 3 sesuai db) ---
         else {
-            // Ambil tanggal kerja terakhir (sebelum hari ini)
-            $lastReportDate = DailyReport::where('user_id', $user->id)
-                ->whereDate('tanggal', '<', $now->toDateString())
-                ->orderBy('tanggal', 'DESC')
-                ->value('tanggal');
-
-            if ($lastReportDate) {
-                $yesterdayActivities = KegiatanDetail::whereHas('dailyReport', function ($q) use ($user, $lastReportDate) {
-                    $q->where('user_id', $user->id)->whereDate('tanggal', $lastReportDate);
+            // Ambil semua detail kegiatan user bulan ini untuk analisa
+            $allDetails = KegiatanDetail::with('dailyReport')
+                ->whereHas('dailyReport', function ($q) use ($user, $now) {
+                    $q->where('user_id', $user->id)
+                        ->whereMonth('tanggal', $now->month)
+                        ->whereYear('tanggal', $now->year);
                 })->get();
+
+            $activityCounts = [];
+            $activityDetails = [];
+            $wordFrequencies = [];
+            $stopWords = ['dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'dengan', 'ini', 'itu', 'pada', 'dalam', 'adalah', 'sebagai', 'tidak', 'akan', 'atau', 'juga', 'bisa', 'ada', 'ya', 'sudah', 'belum', 'saat', 'menjadi', 'karena', 'oleh', 'atas', 'kegiatan', 'aktivitas', 'hari', 'jam', 'menit'];
+
+            foreach ($allDetails as $d) {
+                $title = trim($d->nama_kegiatan ?: $d->deskripsi_kegiatan);
+                $deskripsiLengkap = strtolower($title . ' ' . ($d->deskripsi_kegiatan ?? ''));
+
+                if (empty($title) || $title == '-') continue;
+
+                // A. Logika Kategori (Sama dengan Manager)
+                if (strpos($title, ':') !== false) {
+                    $parts = explode(':', $title, 2);
+                    $kategori = trim($parts[0]);
+                } else {
+                    $words = explode(' ', $title);
+                    $kategori = $words[0] . (isset($words[1]) && strlen($words[1]) > 3 ? ' ' . $words[1] : '');
+                }
+                $kategori = strtoupper($kategori);
+
+                if (!isset($activityCounts[$kategori])) {
+                    $activityCounts[$kategori] = 0;
+                    $activityDetails[$kategori] = [];
+                }
+                $activityCounts[$kategori]++;
+                if (count($activityDetails[$kategori]) < 5) $activityDetails[$kategori][] = $title;
+
+                // B. Logika Word Cloud
+                $cleanText = preg_replace('/[^\p{L}\p{N}\s]/u', '', $deskripsiLengkap);
+                $textWords = explode(' ', $cleanText);
+                foreach ($textWords as $word) {
+                    $word = trim($word);
+                    if (strlen($word) > 2 && !in_array($word, $stopWords) && !is_numeric($word)) {
+                        $wordFrequencies[$word] = ($wordFrequencies[$word] ?? 0) + 1;
+                    }
+                }
             }
 
-            // Tren Volume Pekerjaan 7 Hari Terakhir
+            // Top 5 Activities
+            arsort($activityCounts);
+            $top5 = array_slice($activityCounts, 0, 5, true);
+            $chartData['bo']['top_activities_labels'] = array_keys($top5);
+            $chartData['bo']['top_activities_series'] = array_values($top5);
+            $topDetails = [];
+            foreach (array_keys($top5) as $lbl) {
+                $topDetails[] = $activityDetails[$lbl];
+            }
+            $chartData['bo']['top_activities_details'] = $topDetails;
+
+            // Word Cloud
+            arsort($wordFrequencies);
+            $topWords = array_slice($wordFrequencies, 0, 60, true);
+            $wordCloudArray = [];
+            foreach ($topWords as $word => $count) {
+                $wordCloudArray[] = [$word, $count * 3 + 10];
+            }
+            $chartData['bo']['wordcloud_data'] = $wordCloudArray;
+
+            // Notulen Briefing (Melihat briefing dari divisi user)
+            $chartData['bo']['notulen_slider'] = \App\Models\MeetingNote::with(['user', 'dailyReport'])
+                ->whereHas('user', function ($q) use ($user) {
+                    $q->where('divisi_id', $user->divisi_id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get()
+                ->map(function ($note) {
+                    return [
+                        'staff'   => $note->user->nama_lengkap,
+                        'judul'   => $note->judul_briefing,
+                        'isi'     => $note->isi_notulen,
+                        'tanggal' => Carbon::parse($note->dailyReport->tanggal)->translatedFormat('d M Y'),
+                        'hari'    => Carbon::parse($note->dailyReport->tanggal)->translatedFormat('l'),
+                    ];
+                });
+
+            // Trend Volume (7 hari terakhir)
             $trendLabels = [];
             $trendVolume = [];
             for ($i = 6; $i >= 0; $i--) {
@@ -148,6 +221,17 @@ class DashboardController extends Controller
             }
             $chartData['bo']['trend_labels'] = $trendLabels;
             $chartData['bo']['trend_volume'] = $trendVolume;
+
+            // Personal Timeline Feed (15 terakhir)
+            $chartData['bo']['timeline'] = $allDetails->sortByDesc('id')->take(15)->map(function ($item) {
+                return [
+                    'staff' => 'Me',
+                    'judul' => $item->nama_kegiatan ?? $item->judul_kegiatan,
+                    'deskripsi' => $item->deskripsi_kegiatan,
+                    'waktu' => Carbon::parse($item->created_at)->diffForHumans(),
+                    'tanggal' => Carbon::parse($item->dailyReport->tanggal)->format('d M Y')
+                ];
+            })->values();
         }
 
         return view('staff.dashboard', compact(
