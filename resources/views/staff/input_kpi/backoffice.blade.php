@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    @if (auth()->user()->divisi_id == 6)
+    @if (auth()->user()->divisi_id == 4)
         <div class="pt-8 border-t border-slate-200" x-data="{
             hasNotulen: {{ $report && $report->meetingNote ? 'true' : 'false' }},
             judul: '{{ $report->meetingNote->judul_briefing ?? '' }}',
