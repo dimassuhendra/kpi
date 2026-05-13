@@ -46,6 +46,15 @@ class DailyReport extends Model
         return $this->hasMany(LemburReport::class, 'daily_report_id');
     }
 
+    /**
+     * Relasi ke Notulen (Satu laporan harian memiliki satu notulen)
+     */
+    public function meetingNote()
+    {
+        // Pastikan menggunakan MeetingNote::class sesuai nama file model yang Anda buat
+        return $this->hasOne(MeetingNote::class, 'daily_report_id');
+    }
+
     protected $casts = [
         'tanggal' => 'date',
     ];

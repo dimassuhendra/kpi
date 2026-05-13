@@ -25,7 +25,7 @@ class InputController extends Controller
         $shifts = Shift::all();
 
         // Cari laporan hari ini (baik yang pending atau rejected)
-        $report = DailyReport::with('details')
+        $report = DailyReport::with(['details', 'meetingNote'])
             ->where('user_id', $user->id)
             ->where('tanggal', $hariIni)
             ->first();
@@ -97,7 +97,7 @@ class InputController extends Controller
             } else {
                 $formattedRows['infra'] = [['kategori' => 'Network', 'nama_kegiatan' => '', 'deskripsi' => '']];
             }
-        } elseif (in_array($user->divisi_id, [4, 5])) { // 4: BACKOFFICE, 5: PURCHASING (Sesuaikan ID-nya)
+        } elseif (in_array($user->divisi_id, [6, 8])) { // 6: BACKOFFICE, 8: PURCHASING (Sesuaikan ID-nya)
             if ($isRejected) {
                 foreach ($report->details as $detail) {
                     $formattedRows['bo'][] = ['judul' => $detail->deskripsi_kegiatan, 'deskripsi' => ''];
@@ -342,6 +342,21 @@ class InputController extends Controller
                         'variabel_kpi_id'    => $vKpi ? $vKpi->id : null,
                         'value_raw'          => null,
                         'waktu_respon_menit' => null,
+                    ]);
+                }
+            }
+            // --- LOGIKA NOTULEN BRIEFING (BOT ONLY) ---
+            if ($user->divisi_id == 6) {
+                // Hapus notulen lama jika sedang melakukan revisi (agar tidak duplikat)
+                \App\Models\MeetingNote::where('daily_report_id', $report->id)->delete();
+
+                // Simpan jika judul diisi (karena opsional)
+                if ($request->filled('notulen_judul')) {
+                    \App\Models\MeetingNote::create([
+                        'daily_report_id' => $report->id,
+                        'user_id' => $user->id,
+                        'judul_briefing' => $request->notulen_judul,
+                        'isi_notulen' => $request->notulen_isi,
                     ]);
                 }
             }

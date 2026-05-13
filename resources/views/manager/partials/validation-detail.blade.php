@@ -65,6 +65,32 @@
         </div>
     @endif
 
+    {{-- SECTION: NOTULEN BRIEFING (Khusus BOT / Jika ada datanya) --}}
+    @if ($report->meetingNote)
+        <div class="bg-indigo-600 rounded-2xl overflow-hidden shadow-md border border-indigo-700 mb-6">
+            <div class="px-5 py-3 bg-indigo-700/50 flex justify-between items-center">
+                <h4 class="font-black text-white text-[10px] uppercase tracking-[0.2em] flex items-center">
+                    <i class="fas fa-file-alt mr-2 text-indigo-300"></i> Notulen Briefing Harian
+                </h4>
+                <span class="text-[9px] bg-indigo-500 text-white px-2 py-0.5 rounded font-bold uppercase">
+                    Internal BOT
+                </span>
+            </div>
+            <div class="p-5 bg-white">
+                <div class="mb-4">
+                    <span class="block text-[10px] text-indigo-400 uppercase font-black mb-1">Topik Utama</span>
+                    <h3 class="text-sm font-black text-slate-800">{{ $report->meetingNote->judul_briefing }}</h3>
+                </div>
+                <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                    <span class="block text-[9px] text-indigo-400 uppercase font-black mb-2">Isi Pembahasan:</span>
+                    <div class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-line font-mono">
+                        {{ $report->meetingNote->isi_notulen }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- SECTION 2: TECHNICAL CASES / AKTIVITAS UTAMA --}}
     @if ($cases->count() > 0)
         <div>

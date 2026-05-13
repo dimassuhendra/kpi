@@ -83,7 +83,7 @@ class ValidationController extends Controller
     {
         try {
             // PERUBAHAN: Tambahkan 'lemburReport' ke dalam eager loading
-            $report = DailyReport::with(['user', 'details.variabelKpi', 'shift', 'lemburReport'])->findOrFail($id);
+            $report = DailyReport::with(['user', 'details.variabelKpi', 'shift', 'lemburReport', 'meetingNote'])->findOrFail($id);
 
             $cases = $report->details->where('tipe_kegiatan', 'case');
             $activities = $report->details->where('tipe_kegiatan', 'activity');
@@ -232,6 +232,7 @@ class ValidationController extends Controller
             // --- LOGIKA KHUSUS BOT, PURCHASING, BACKOFFICE ---
             $semuaAktivitas = $report->details;
 
+            // 1. Menampilkan Aktivitas Harian
             if ($semuaAktivitas->isNotEmpty()) {
                 $message .= "*Activities:*\n";
                 $counter = 1;
@@ -241,6 +242,12 @@ class ValidationController extends Controller
                     $counter++;
                 }
                 $message .= "\n";
+            }
+
+            // 2. Menampilkan Notulen (Tanpa Header Tambahan & Tanpa Simbol Tebal)
+            if ($report->meetingNote) {
+                $message .= $report->meetingNote->judul_briefing . "\n";
+                $message .= "```\n" . $report->meetingNote->isi_notulen . "\n```\n\n";
             }
         }
 
