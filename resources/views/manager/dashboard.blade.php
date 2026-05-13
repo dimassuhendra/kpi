@@ -29,9 +29,9 @@
                             TAC
                         @elseif($selectedDivisi == '2')
                             INFRASTRUCTURE
-                        @elseif($selectedDivisi == '6')
-                            BOT
                         @elseif($selectedDivisi == '4')
+                            BOT
+                        @elseif($selectedDivisi == '5')
                             PURCHASING
                         @else
                             UMUM
@@ -50,8 +50,8 @@
                     class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '2' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     Infra
                 </button>
-                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '6']) }}'"
-                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '6' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
+                <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '4']) }}'"
+                    class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 {{ $selectedDivisi == '4' ? 'bg-secondary text-white shadow-md' : 'text-white hover:bg-accent' }}">
                     BOT
                 </button>
                 <button @click="window.location.href='{{ route('manager.dashboard', ['divisi_id' => '5']) }}'"

@@ -346,7 +346,7 @@ class InputController extends Controller
                 }
             }
             // --- LOGIKA NOTULEN BRIEFING (BOT ONLY) ---
-            if ($user->divisi_id == 6) {
+            if ($user->divisi_id == 4) {
                 // Hapus notulen lama jika sedang melakukan revisi (agar tidak duplikat)
                 \App\Models\MeetingNote::where('daily_report_id', $report->id)->delete();
 
