@@ -254,7 +254,28 @@
                                         </div>
                                     @endif
 
-                                    {{-- LIST KEGIATAN --}}
+                                    {{-- SECTION NOTULEN (KHUSUS BOT / JIKA ADA DATA) --}}
+                                    @if ($log->meetingNote)
+                                        <div
+                                            class="mb-6 bg-indigo-50 border border-indigo-200 rounded-2xl overflow-hidden shadow-sm">
+                                            <div
+                                                class="px-4 py-2 bg-indigo-100/50 border-b border-indigo-200 flex justify-between items-center">
+                                                <span
+                                                    class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                                                    <i class="fas fa-file-alt mr-1"></i> Notulen Briefing
+                                                </span>
+                                            </div>
+                                            <div class="p-4">
+                                                <h5 class="text-sm font-bold text-slate-800 mb-2">
+                                                    {{ $log->meetingNote->judul_briefing }}</h5>
+                                                <div
+                                                    class="bg-white p-3 rounded-xl border border-indigo-100 text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-line">
+                                                    {{ $log->meetingNote->isi_notulen }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     {{-- LIST KEGIATAN --}}
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         @foreach ($log->details as $detail)
@@ -519,6 +540,20 @@
                                         <p class="text-[10px] font-bold text-rose-700 uppercase mb-1"><i
                                                 class="fas fa-exclamation-circle mr-1"></i>Catatan Manager</p>
                                         <p class="text-xs text-rose-600 italic">"{{ $log->catatan_manager }}"</p>
+                                    </div>
+                                @endif
+
+                                {{-- NOTULEN MOBILE --}}
+                                @if ($log->meetingNote)
+                                    <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl mb-4">
+                                        <p class="text-[9px] font-black text-indigo-400 uppercase mb-2">Notulen Briefing
+                                        </p>
+                                        <p class="text-xs font-bold text-slate-800 mb-2">
+                                            {{ $log->meetingNote->judul_briefing }}</p>
+                                        <div
+                                            class="text-[11px] text-slate-600 bg-white p-3 rounded-lg border border-indigo-50 whitespace-pre-line font-mono">
+                                            {{ $log->meetingNote->isi_notulen }}
+                                        </div>
                                     </div>
                                 @endif
 
