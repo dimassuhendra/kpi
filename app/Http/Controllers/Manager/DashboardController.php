@@ -314,7 +314,7 @@ class DashboardController extends Controller
             $wordFrequencies = [];
 
             // Daftar stop words (kata yang tidak akan dimasukkan ke wordcloud)
-            $stopWords = ['dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'dengan', 'ini', 'itu', 'pada', 'dalam', 'adalah', 'sebagai', 'tidak', 'akan', 'atau', 'juga', 'bisa', 'ada', 'ya', 'sudah', 'belum', 'saat', 'menjadi', 'karena', 'oleh', 'atas', 'kegiatan', 'aktivitas', 'hari', 'jam', 'menit'];
+            $stopWords = ['terkait', 'telah', 'arah', 'titip', 'mengenai', 'dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'dengan', 'ini', 'itu', 'pada', 'dalam', 'adalah', 'sebagai', 'tidak', 'akan', 'atau', 'juga', 'bisa', 'ada', 'ya', 'sudah', 'belum', 'saat', 'menjadi', 'karena', 'oleh', 'atas', 'kegiatan', 'aktivitas', 'hari', 'jam', 'menit', 'kepada'];
 
             foreach ($allDetails as $d) {
                 $title = trim($d->nama_kegiatan ?: $d->deskripsi_kegiatan);
@@ -424,6 +424,7 @@ class DashboardController extends Controller
                     $q->whereBetween('tanggal', [$start->format('Y-m-d'), $end->format('Y-m-d')]);
                 })
                 ->orderBy('created_at', 'desc')
+                ->take(15)
                 ->get()
                 ->map(function ($note) {
                     return [

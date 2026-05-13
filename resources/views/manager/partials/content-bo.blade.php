@@ -73,7 +73,7 @@
                                 <span class="block text-xs font-black text-slate-800" x-text="note.tanggal"></span>
                             </div>
                             <div class="text-right">
-                                <span class="text-[9px] font-black text-slate-400 uppercase block">PIC Briefing</span>
+                                <span class="text-[9px] font-black text-slate-400 uppercase block">Disubmit oleh</span>
                                 <span class="text-[10px] font-bold text-indigo-600" x-text="note.staff"></span>
                             </div>
                         </div>
