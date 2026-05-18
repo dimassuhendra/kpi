@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- TAMBAHKAN activeTab: 'laporan' PADA X-DATA --}}
-    <div class="container mx-auto px-4 md:px-0" x-data="{ editModal: false, activeCase: {}, activeTab: 'laporan' }">
+    <div class="w-full px-4 md:px-0" x-data="{ editModal: false, activeCase: {}, activeTab: 'laporan' }">
 
         {{-- Header Section --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">

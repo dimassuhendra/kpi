@@ -1,7 +1,7 @@
 @extends('layouts.staff')
 
 @section('content')
-    <div class="container mx-auto max-w-4xl px-4 md:px-0 py-6">
+    <div class="w-full px-4 md:px-0 py-6">
         <div class="mb-8">
             <h1 class="text-2xl md:text-3xl font-header font-bold text-slate-800 text-center md:text-left">Pengaturan Profil
             </h1>

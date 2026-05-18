@@ -108,10 +108,9 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col antialiased" x-data="{ mobileMenu: false }">
-
+<body class="w-full min-h-screen flex flex-col antialiased m-0 p-0 overflow-x-hidden" x-data="{ mobileMenu: false }">
     <nav class="nav-glass sticky top-0 z-[60] w-full">
-        <div class="max-w-[1440px] mx-auto px-4 lg:px-10">
+        <div class="w-full px-4 lg:px-10">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center gap-4 lg:gap-12">
                     <a href="#" class="flex items-center group">
@@ -136,7 +135,8 @@
                         <a href="{{ route('manager.reports.index') }}"
                             class="nav-link {{ request()->routeIs('manager.reports.*') ? 'active' : '' }} uppercase">Archive</a>
                         <a href="{{ route('manager.storage.index') }}"
-                            class="nav-link {{ request()->routeIs('manager.storage.*') ? 'active' : '' }} uppercase">Storage Management</a>
+                            class="nav-link {{ request()->routeIs('manager.storage.*') ? 'active' : '' }} uppercase">Storage
+                            Management</a>
                         <a href="{{ route('manager.profile.index') }}"
                             class="nav-link {{ request()->routeIs('manager.profile.*') ? 'active' : '' }} uppercase">Profile</a>
                         <a href="{{ route('updates.index') }}" onclick="markUpdateRead()"
@@ -266,8 +266,7 @@
     </nav>
 
     <main class="flex-grow relative z-10">
-        <div class="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
-
+        <div class="w-full px-4 lg:px-10 py-6">
             <div class="hero-container mb-6 lg:mb-10">
                 <div class="hero-image"></div>
                 <div class="hero-overlay"></div>
@@ -319,7 +318,7 @@
     </main>
 
     <footer class="mt-auto py-8 border-t border-slate-200 bg-white relative z-10">
-        <div class="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="w-full px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
                 <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">
                     &copy; 2026 MyBolo <span class="text-primary">Console</span>

@@ -42,13 +42,21 @@
         h2,
         h3,
         h4 {
-            font-family: 'Bree Serif', serif;
+            /* Diubah dari Bree Serif ke Fredoka agar sesuai dengan font yang diimpor */
+            font-family: 'Fredoka', serif;
         }
     </style>
 </head>
 
-<body>
-    @yield('content')
+{{-- Tambahkan class w-full (width 100%), min-h-screen (tinggi minimal selayar), dan overflow-x-hidden untuk mencegah scroll horizontal --}}
+
+<body class="w-full min-h-screen m-0 p-0 overflow-x-hidden antialiased text-slate-800">
+
+    {{-- Bungkus content dengan main tag yang lebarnya 100% --}}
+    <main class="w-full h-full block">
+        @yield('content')
+    </main>
+
 </body>
 
 </html>

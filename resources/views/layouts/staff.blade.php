@@ -106,10 +106,10 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col antialiased" x-data="{ mobileMenu: false }">
+<body class="w-full min-h-screen flex flex-col antialiased m-0 p-0 overflow-x-hidden" x-data="{ mobileMenu: false }">
 
     <nav class="nav-glass sticky top-0 z-[60] w-full">
-        <div class="max-w-[1440px] mx-auto px-4 lg:px-10">
+        <div class="w-full px-4 lg:px-10">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center gap-4 lg:gap-12">
                     <a href="#" class="flex items-center group">
@@ -131,15 +131,11 @@
                             Case</a>
                         <a href="{{ route('staff.kpi.logs') }}"
                             class="nav-link {{ request()->routeIs('staff.kpi.logs') ? 'active' : '' }} uppercase">Logs</a>
-                        @if (Auth::user()->divisi_id == 1)
-                            <a href="{{ route('staff.kpi.achievements') }}"
-                                class="nav-link {{ request()->routeIs('staff.kpi.achievements') ? 'active' : '' }} uppercase">Stats</a>
-                        @endif
                         <a href="{{ route('staff.profile.edit') }}"
                             class="nav-link {{ request()->routeIs('staff.profile.*') ? 'active' : '' }} uppercase">Profile</a>
                         <a href="{{ route('updates.index') }}" onclick="markUpdateRead()"
                             class="nav-link {{ request()->routeIs('updates.index') ? 'active' : '' }} uppercase flex items-center gap-1">
-                            Pembaruan
+                            Updates
                             <span id="update-badge-staff"
                                 class="hidden h-2 w-2 rounded-full bg-accent animate-ping"></span>
                         </a>
@@ -211,7 +207,7 @@
                 <a href="{{ route('updates.index') }}" onclick="markUpdateRead()"
                     class="flex items-center justify-between p-4 rounded-2xl {{ request()->routeIs('updates.index') ? 'bg-blue-50 text-primary' : 'text-slate-600' }} font-bold text-sm uppercase">
                     <span class="flex items-center gap-3">
-                        Pembaruan
+                        Updates
                         <span id="update-badge-mobile-staff"
                             class="hidden text-[9px] bg-accent text-white px-1.5 py-0.5 rounded-full">Baru</span>
                     </span>
@@ -232,7 +228,7 @@
     </nav>
 
     <main class="flex-grow relative z-10">
-        <div class="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
+        <div class="w-full px-4 lg:px-10 py-6">
 
             <div class="hero-container mb-6 lg:mb-10">
                 <div class="hero-image"></div>
@@ -241,17 +237,7 @@
                 <div class="relative z-10 h-full p-6 lg:p-10 flex flex-col justify-between gap-8">
                     <div class="flex justify-between items-start">
                         <div class="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
-                            <div
-                                class="px-3 py-1.5 rounded-xl lg:rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center gap-2 w-fit">
-                                <i class="fas fa-signal text-accent text-[10px]"></i>
-                                <div class="flex flex-col leading-none">
-                                    <span
-                                        class="text-accent text-[7px] lg:text-[8px] font-black uppercase tracking-wider mb-0.5">Station
-                                        Status</span>
-                                    <span class="text-[9px] lg:text-[10px] font-bold text-white uppercase">Operational
-                                        / Online</span>
-                                </div>
-                            </div>
+                            
                         </div>
 
                         <div class="text-right text-white">
@@ -268,9 +254,6 @@
                         <h1 class="text-xl lg:text-3xl font-black text-white tracking-tight uppercase">
                             Selamat Bekerja, </br><span class="text-accent">{{ Auth::user()->nama_lengkap }}</span>
                         </h1>
-                        <p class="text-slate-300 text-[9px] font-bold uppercase tracking-[0.2em] mt-1">
-                            "Berikan layanan terbaik untuk efisiensi operasional hari ini."
-                        </p>
                     </div>
                 </div>
             </div>
@@ -282,13 +265,10 @@
     </main>
 
     <footer class="mt-auto py-8 border-t border-slate-200 bg-white relative z-10">
-        <div class="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="w-full px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">
                 &copy; 2026 MyBolo <span class="text-primary">Staff Station</span>
             </p>
-            <div class="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                Operational Excellence <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-            </div>
         </div>
     </footer>
 

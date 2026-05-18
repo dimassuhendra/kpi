@@ -1,7 +1,7 @@
 @extends('layouts.manager')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="w-full">
     <div class="flex items-center justify-between mb-8">
         <div>
             <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Account Settings</h2>

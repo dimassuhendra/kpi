@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- WRAPPER UTAMA DENGAN ALPINE.JS --}}
-    <div class="max-w-6xl mx-auto space-y-6 pb-20" x-data="{ activeTab: 'pending' }">
+    <div class="w-full space-y-6 pb-20" x-data="{ activeTab: 'pending' }">
 
         {{-- Header Section --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 ml-2 gap-4">

@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- TAMBAHKAN activeTab: 'daily' pada inisialisasi Alpine --}}
-    <div class="container mx-auto px-4 lg:px-0" x-data="kpiForm()">
+    <div class="w-full px-4 lg:px-0" x-data="kpiForm()">
 
         {{-- MODAL REJECTED ALERT --}}
         @if ($isRejected)

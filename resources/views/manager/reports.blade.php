@@ -1,7 +1,7 @@
 @extends('layouts.manager')
 
 @section('content')
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="w-full space-y-6">
 
         {{-- Logika untuk Menentukan Judul Laporan --}}
         @php

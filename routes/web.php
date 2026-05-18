@@ -9,7 +9,6 @@ use App\Http\Controllers\UpdateController;
 
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\ProfileController as StaffProfileController;
-use App\Http\Controllers\Staff\AchievementController as StaffAchievementController;
 use App\Http\Controllers\Staff\LogsController as StaffLogsController;
 use App\Http\Controllers\Staff\InputController as StaffInputController;
 
@@ -45,8 +44,6 @@ Route::group(['middleware' => ['auth', 'role:staff'], 'prefix' => 'staff'], func
     Route::delete('/staff/kpi/case-destroy/{id}', [StaffLogsController::class, 'destroyCase'])->name('staff.kpi.case-destroy');
     Route::put('/kpi/case-update/{id}', [StaffLogsController::class, 'updateCase'])->name('staff.kpi.case_update');
     Route::get('/logs/export/excel', [StaffLogsController::class, 'exportExcel'])->name('staff.logs.export.excel');
-
-    Route::get('/kpi/achievements', [StaffAchievementController::class, 'achievements'])->name('staff.kpi.achievements');
 
     Route::get('/profile', [StaffProfileController::class, 'editProfile'])->name('staff.profile.edit');
     Route::put('/profile', [StaffProfileController::class, 'updateProfile'])->name('staff.profile.update');
